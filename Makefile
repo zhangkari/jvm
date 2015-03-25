@@ -1,8 +1,8 @@
 PROJ = jvm
 CC = gcc
 CFLAGS =  -Iinclude \
-		  -g 
-	      #-DDEBUG #-m32
+		  -g \
+	      -DDEBUG #-m32
 
 LDFLAGS = -pthread
 SRC = $(wildcard *.c) $(wildcard src/*.c)

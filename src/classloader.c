@@ -8,7 +8,7 @@
 
 #include <classloader.h>
 #include <comm.h>
-    
+
 enum tag_value {
     CONSTANT_Utf8       = 1,
     CONSTANT_Integer    = 3,
@@ -108,7 +108,7 @@ struct field_info {
     uint16 name_index;
     uint16 descriptor_index;
     uint16 attr_count;
-//    attr_info attr[ 0 /*attr_count*/];
+    //    attr_info attr[ 0 /*attr_count*/];
 };
 
 struct method_info {
@@ -116,7 +116,7 @@ struct method_info {
     uint16 name_index;
     uint16 descriptor_index;
     uint16 attr_count;
-//    attr_info attr[ 0 /*attr_count*/ ];
+    //    attr_info attr[ 0 /*attr_count*/ ];
 };
 
 
@@ -153,7 +153,7 @@ struct ClsLoader_s {
     uint16      minor_version;
     uint16      major_version;
     uint16      const_pool_count;
-    cp_info     const_pool[ 0 /*const_pool_count - 1*/];
+    cp_info     *const_pool /*[const_pool_count - 1] */;
     uint16      access_flags;
     uint16      this_class;
     uint16      super_class;
@@ -187,5 +187,163 @@ ClsLoader_t* load_class(const char *path)
         return NULL;
     }
 
+    do {
+        if (1 != fread(&loader->magic, sizeof(loader->magic), 1, fp)) {
+            LogE("Failed read magic");
+            break;
+        }
+
+        if (1 != fread(
+                    &loader->minor_version, 
+                    sizeof(loader->minor_version),
+                    1,
+                    fp)) {
+            LogE("Failed read minor_version");
+            break;
+        }
+
+        if (1 != fread(
+                    &loader->major_version, 
+                    sizeof(loader->major_version),
+                    1,
+                    fp)) {
+            LogE("Failed read major_version");
+            break;
+        }
+
+        if (1 != fread(&loader->const_pool_count,
+                    sizeof(loader->const_pool_count),
+                    1,
+                    fp)) {
+            LogE("Failed read constant pool count");
+            break;
+        }
+
+        loader->magic = ntohl(loader->magic);
+        loader->minor_version = ntohs(loader->minor_version);
+        loader->major_version = ntohs(loader->major_version);
+        loader->const_pool_count = ntohs(loader->const_pool_count);
+
+        loader->const_pool = (cp_info *)calloc(
+                loader->const_pool_count - 1,
+                sizeof (cp_info));
+        if (NULL == loader->const_pool) {
+            LogE("Failed calloc for const pool");
+            break;
+        }
+
+
+        utf8_info utf8;
+        integer_info integerinfo;
+        float_info floatinfo;
+        long_info longinfo;
+        double_info doubleinfo;
+        class_info clsinfo;
+        string_info strinfo;
+        fieldref_info fieldref;
+        methodref_info methodref;
+
+        char *buff = NULL;
+
+        int i;
+        for (i = 0; i < loader->const_pool_count - 1; ++i) {
+            uint8 tag;
+            fread(&tag, sizeof(tag), 1, fp);
+            printf("tag=%d\n", tag);
+
+            switch (tag) {
+                case CONSTANT_Utf8:
+                    printf("Utf8\n");
+                    fread(&utf8, sizeof(utf8), 1, fp);
+                    buff = (char *)calloc(utf8.length, 1);
+                    fread(buff, utf8.length, 1, fp);
+                    printf("buff:%s\n", buff);
+                    break;
+
+                case CONSTANT_Integer:
+                    printf("Integer\n");
+                    fread(&integerinfo, sizeof(integerinfo), 1, fp);
+                    break;
+
+                case CONSTANT_Float:
+                    printf("Float\n");
+                    fread(&floatinfo, sizeof(floatinfo), 1, fp);
+                    break;
+
+                case CONSTANT_Long:
+                    printf("Long\n");
+                    fread(&longinfo, sizeof(longinfo), 1, fp);
+                    break;
+
+                case CONSTANT_Double:
+                    printf("Double\n");
+                    fread(&doubleinfo, sizeof(doubleinfo), 1, fp);
+                    break;
+
+                case CONSTANT_Class:
+                    printf("Class\n");
+                    fread(&clsinfo, sizeof(clsinfo), 1, fp);
+                    break;
+
+                case CONSTANT_String:
+                    printf("String\n");
+                    fread(&strinfo, sizeof(strinfo), 1, fp);
+                    break;
+
+                case CONSTANT_Fieldref:
+                    printf("Filedref\n");
+                    fread(&fieldref, sizeof(fieldref), 1, fp);
+                    break;
+
+                case CONSTANT_Methodref:
+                    printf("Methodref\n");
+                    fread(&methodref, sizeof(methodref), 1, fp);
+                    break;
+
+                case CONSTANT_InterfaceMethodref:
+                    printf("InterfaceMethod ref\n");
+                    break;
+
+                case CONSTANT_NameAndType:
+                    printf("NameAndType\n");
+                    break;
+
+                case CONSTANT_MethodHandle:
+                    printf("MethodHandle\n");
+                    break;
+
+                case CONSTANT_MethodType:
+                    printf("MethodType\n");
+                    break;
+
+                case CONSTANT_InvokeDynamic:
+                    printf("InvokeDynamic\n");
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+        if (i < loader->const_pool_count - 1) {
+            break;
+        }
+
+
+#ifdef DEBUG
+        printf("magic:%X\n", loader->magic);
+        printf("minor version:%d\n", loader->minor_version);
+        printf("major version:%d\n", loader->major_version);
+        printf("constant pool count:%d\n", loader->const_pool_count);
+#endif
+
+        return loader;
+
+    } while (0);
+
+
+    free(loader);
     fclose(fp);
+
+    return NULL;
 }
