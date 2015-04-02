@@ -1,10 +1,10 @@
 /****************************
- * file name:   classloader.h
+ * file name:   ClassFile.h
  *
  * *************************/
 
-#ifndef __CLASSLOADER__H__
-#define __CLASSLOADER__H__
+#ifndef __CLASSFILE__H__
+#define __CLASSFILE__H__
 
 typedef struct CONSTANT_Long_info long_info;
 typedef struct CONSTANT_Utf8_info utf8_info;
@@ -25,8 +25,8 @@ typedef struct cp_info cp_info;
 typedef struct field_info field_info;
 typedef struct method_info method_info;
 typedef struct attr_info attr_info;
-typedef struct ClsLoader_s ClsLoader_t;
+typedef struct ClassFile ClassFile;
 
-ClsLoader_t* load_class(const char *path);
+ClassFile* load_class(const char *path);
 
 #endif

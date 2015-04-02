@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <classloader.h>
+#include <ClassFile.h>
 
 int main(int argc, char *argv[]) 
 {
@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    ClsLoader_t *loader = load_class(argv[1]);
-    if (NULL == loader) {
+    ClassFile *clsFile = load_class(argv[1]);
+    if (NULL == clsFile) {
         return -1;
     }
 
-    free(loader);
-    loader = NULL;
+    free(clsFile);
+    clsFile = NULL;
 }

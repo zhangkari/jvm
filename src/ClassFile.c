@@ -1,12 +1,12 @@
 /****************************
- * file name:   classloader.c
+ * file name:   ClassFile.c
  *
  * *************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <classloader.h>
+#include <ClassFile.h>
 #include <comm.h>
 
 enum tag_value {
@@ -148,7 +148,7 @@ struct attr_info {
     uint8  info[ 0 /*attr_length*/];
 };
 
-struct ClsLoader_s {
+struct ClassFile {
     uint32      magic;
     uint16      minor_version;
     uint16      major_version;
@@ -167,7 +167,7 @@ struct ClsLoader_s {
     attr_info   attributes[ 0 /*attributes_count*/]; 
 };
 
-ClsLoader_t* load_class(const char *path)
+ClassFile* load_class(const char *path)
 {
     if (NULL == path) {
         fprintf(stderr, "path is NULL\n");
@@ -180,22 +180,22 @@ ClsLoader_t* load_class(const char *path)
         return NULL;
     }
 
-    ClsLoader_t *loader = (ClsLoader_t *)calloc(sizeof(*loader), 1);
-    if (NULL == loader) {
-        LogE("Failed calloc mem for loader");
+    ClassFile *clsFile = (ClassFile *)calloc(sizeof(*clsFile), 1);
+    if (NULL == clsFile) {
+        LogE("Failed calloc mem for clsFile");
         fclose(fp);
         return NULL;
     }
 
     do {
-        if (1 != fread(&loader->magic, sizeof(loader->magic), 1, fp)) {
+        if (1 != fread(&clsFile->magic, sizeof(clsFile->magic), 1, fp)) {
             LogE("Failed read magic");
             break;
         }
 
         if (1 != fread(
-                    &loader->minor_version, 
-                    sizeof(loader->minor_version),
+                    &clsFile->minor_version, 
+                    sizeof(clsFile->minor_version),
                     1,
                     fp)) {
             LogE("Failed read minor_version");
@@ -203,31 +203,31 @@ ClsLoader_t* load_class(const char *path)
         }
 
         if (1 != fread(
-                    &loader->major_version, 
-                    sizeof(loader->major_version),
+                    &clsFile->major_version, 
+                    sizeof(clsFile->major_version),
                     1,
                     fp)) {
             LogE("Failed read major_version");
             break;
         }
 
-        if (1 != fread(&loader->const_pool_count,
-                    sizeof(loader->const_pool_count),
+        if (1 != fread(&clsFile->const_pool_count,
+                    sizeof(clsFile->const_pool_count),
                     1,
                     fp)) {
             LogE("Failed read constant pool count");
             break;
         }
 
-        loader->magic = ntohl(loader->magic);
-        loader->minor_version = ntohs(loader->minor_version);
-        loader->major_version = ntohs(loader->major_version);
-        loader->const_pool_count = ntohs(loader->const_pool_count);
+        clsFile->magic = ntohl(clsFile->magic);
+        clsFile->minor_version = ntohs(clsFile->minor_version);
+        clsFile->major_version = ntohs(clsFile->major_version);
+        clsFile->const_pool_count = ntohs(clsFile->const_pool_count);
 
-        loader->const_pool = (cp_info *)calloc(
-                loader->const_pool_count - 1,
+        clsFile->const_pool = (cp_info *)calloc(
+                clsFile->const_pool_count - 1,
                 sizeof (cp_info));
-        if (NULL == loader->const_pool) {
+        if (NULL == clsFile->const_pool) {
             LogE("Failed calloc for const pool");
             break;
         }
@@ -246,7 +246,7 @@ ClsLoader_t* load_class(const char *path)
         char *buff = NULL;
 
         int i;
-        for (i = 0; i < loader->const_pool_count - 1; ++i) {
+        for (i = 0; i < clsFile->const_pool_count - 1; ++i) {
             uint8 tag;
             fread(&tag, sizeof(tag), 1, fp);
             printf("tag=%d\n", tag);
@@ -325,24 +325,24 @@ ClsLoader_t* load_class(const char *path)
             }
 
         }
-        if (i < loader->const_pool_count - 1) {
+        if (i < clsFile->const_pool_count - 1) {
             break;
         }
 
 
 #ifdef DEBUG
-        printf("magic:%X\n", loader->magic);
-        printf("minor version:%d\n", loader->minor_version);
-        printf("major version:%d\n", loader->major_version);
-        printf("constant pool count:%d\n", loader->const_pool_count);
+        printf("magic:%X\n", clsFile->magic);
+        printf("minor version:%d\n", clsFile->minor_version);
+        printf("major version:%d\n", clsFile->major_version);
+        printf("constant pool count:%d\n", clsFile->const_pool_count);
 #endif
 
-        return loader;
+        return clsFile;
 
     } while (0);
 
 
-    free(loader);
+    free(clsFile);
     fclose(fp);
 
     return NULL;
