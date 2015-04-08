@@ -2,7 +2,7 @@
  * file name:   ClassFile.c
  *
  * *************************/
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -120,6 +120,10 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 
 	printf("sizeof(cp_info)=%d\n", sizeof(cp_info));
 
+	utf8_info *utf8 = NULL;
+	methodref_info *methodref = NULL;
+	class_info *cls = NULL;
+
 	do {
 		if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
 			LogE("Failed read cp_info.tag");
@@ -129,6 +133,9 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 
 		switch (info->tag) {
 			case CONSTANT_Utf8:
+				utf8 = read_utf8_info(fp);
+				assert (NULL != utf8);
+				info->info = utf8;
 				break;
 
 			case CONSTANT_Integer:
@@ -144,6 +151,9 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_Class:
+				cls = read_class_info(fp);
+				assert(NULL != cls);
+				info->info = cls;
 				break;
 
 			case CONSTANT_String:
@@ -153,6 +163,9 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_Methodref:
+				methodref = read_methodref_info(fp);
+				assert(NULL != methodref);
+				info->info = methodref;
 				break;
 
 			case CONSTANT_InterfaceMethodref:
@@ -170,6 +183,8 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 			case CONSTANT_InvokeDynamic:
 				break;
 		}
+
+		return info;
 
 	} while (0);
 
@@ -205,9 +220,62 @@ PRIVATE utf8_info* read_utf8_info(FILE *fp) {
 		printf("length=%d\n", info->length);
 		printf("length=%d\n", ntohs(info->length));
 
+		return info;
+
 	} while (0);
 
 	free (info);
 	return NULL;
 
+}
+
+PRIVATE methodref_info* read_methodref_info(FILE *fp) {
+	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	methodref_info *info = (methodref_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for methodref info");
+		return NULL;
+	}
+
+	if (1 != fread(info, sizeof(*info), 1, fp)) {
+		LogE("Failed read methodref_info");
+		free (info);
+		return NULL;
+	}
+
+	printf("tag=%d,class_index=%d, name_and_type_index=%d\n",
+			info->tag, info->class_index, info->name_and_type_index);
+	return info;
+}
+
+PRIVATE class_info* read_class_info(FILE *fp) {
+	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	class_info *cls = (class_info *)calloc(1, sizeof(*cls));
+	if (NULL == cls) {
+		LogE("Failed calloc mem for class_info");
+		return NULL;
+	}
+
+	if (1 != fread(&cls->tag, sizeof(cls->tag), 1, fp)) {
+		LogE("Failed read class_info.tag");
+		free (cls);
+		return NULL;
+	}
+
+	if (1 != fread(&cls->name_index, sizeof(cls->name_index), 1, fp)) {
+		LogE("Failed read class_info.name_index");
+		free (cls);
+		return NULL;
+	}
+
+	printf("tag=%d, name_index=%d\n", cls->tag, ntohs(cls->name_index));
+	return cls;
 }

@@ -190,5 +190,7 @@ struct ClassFile {
 PUBLIC ClassFile* load_class(const char *path);
 PRIVATE cp_info* read_cp_info(FILE *fp);
 PRIVATE utf8_info* read_utf8_info(FILE *fp);
+PRIVATE methodref_info* read_methodref_info(FILE *fp);
+PRIVATE class_info* read_class_info(FILE *fp);
 
 #endif
