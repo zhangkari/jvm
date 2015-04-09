@@ -134,6 +134,10 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 	utf8_info *utf8 = NULL;
 	methodref_info *methodref = NULL;
 	class_info *cls = NULL;
+    integer_info *integer = NULL;
+    string_info *string = NULL;
+    fieldref_info *fieldref = NULL;
+    nametype_info *nametype = NULL;
 
 	do {
 		if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
@@ -149,15 +153,21 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_Integer:
+                integer = read_integer_info(fp);
+                assert (NULL != integer);
+                info->info = integer;
 				break;
 
 			case CONSTANT_Float:
+                printf("Float\n");
 				break;
 
 			case CONSTANT_Long:
+                printf("Long\n");
 				break;
 
 			case CONSTANT_Double:
+                printf("Double\n");
 				break;
 
 			case CONSTANT_Class:
@@ -167,9 +177,15 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_String:
+                string = read_string_info(fp);
+                assert(NULL != string);
+                info->info = string;
 				break;
 
 			case CONSTANT_Fieldref:
+                fieldref = read_fieldref_info(fp);
+                assert(NULL != fieldref);
+                info->info = fieldref;
 				break;
 
 			case CONSTANT_Methodref:
@@ -179,18 +195,25 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_InterfaceMethodref:
+                printf("InterfaceMethodRef\n");
 				break;
 
 			case CONSTANT_NameAndType:
+                nametype = read_nametype_info(fp);
+                assert(NULL != nametype);
+                info->info = nametype;
 				break;
 
 			case CONSTANT_MethodHandle:
+                printf("MethodHandle\n");
 				break;
 
 			case CONSTANT_MethodType:
+                printf("MethodType\n");
 				break;
 
 			case CONSTANT_InvokeDynamic:
+                printf("InvokeDynamic\n");
 				break;
 		}
 
@@ -273,6 +296,8 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		free (info);
 		return NULL;
 	}
+	info->class_index = ntohs(info->class_index);
+
 	if (1 != fread(&info->name_and_type_index, 
 				sizeof(info->name_and_type_index),
 				1,
@@ -281,8 +306,6 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		free (info);
 		return NULL;
 	}
-
-	info->class_index = ntohs(info->class_index);
 	info->name_and_type_index = ntohs(info->name_and_type_index);
 
 	return info;
@@ -312,7 +335,6 @@ PRIVATE class_info* read_class_info(FILE *fp) {
 		free (cls);
 		return NULL;
 	}
-
 	cls->name_index = ntohs(cls->name_index);
 	return cls;
 }
@@ -365,7 +387,7 @@ PRIVATE void log_utf8_info(utf8_info *info)
 		return;
 	}
 
-	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
+	printf("tag=%-2d, type:%s, length:%-2d, bytes:%s\n", 
 			info->tag, "Utf8_info", info->length, info->bytes);
 }
 
@@ -376,10 +398,8 @@ PRIVATE void log_integer_info(integer_info *info)
 		return;
 	}
 
-#if 0
-	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
-			info->tag, "Integer_info", info->length, info->bytes);
-#endif
+	printf("tag=%-2d, type:%s, bytes:%d\n", 
+			info->tag, "Integer_info", info->bytes);
 }
 
 PRIVATE void log_float_info(float_info *info)
@@ -390,7 +410,7 @@ PRIVATE void log_float_info(float_info *info)
 	}
 
 #if 0
-	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
+	printf("tag=%-2d, type:%s, length:%d, bytes:%s\n", 
 			info->tag, "Float_info", info->length, info->bytes);
 #endif
 }
@@ -402,7 +422,7 @@ PRIVATE void log_long_info(long_info *info)
 		return;
 	}
 
-	printf("tag=%d, type:%s, high bytes:%d, low bytes:%d\n", 
+	printf("tag=%-2d, type:%s, high bytes:%d, low bytes:%d\n", 
 			info->tag, "Long_info", info->high_bytes, info->low_bytes);
 }
 
@@ -425,6 +445,246 @@ PRIVATE void log_cp_info(const cp_info *info)
 		case CONSTANT_Long:
 			log_long_info((long_info *)info->info);
 			break;
+        
+        case CONSTANT_Double:
+            break;
 
+        case CONSTANT_Class:
+            log_class_info((class_info *)info->info);
+            break;
+
+        case CONSTANT_String:
+            log_string_info((string_info *)info->info);
+            break;
+
+        case CONSTANT_Fieldref:
+            log_fieldref_info((fieldref_info *)info->info);
+            break;
+
+        case CONSTANT_Methodref:
+            log_methodref_info((methodref_info*)info->info);
+            break;
+
+        case CONSTANT_InterfaceMethodref:
+            break;
+
+        case CONSTANT_NameAndType:
+            log_nametype_info((nametype_info *)info->info);
+            break;
+
+        case CONSTANT_MethodHandle:
+            break;
+
+        case CONSTANT_InvokeDynamic:
+            break;
 	}
+}
+
+PRIVATE integer_info* read_integer_info(FILE *fp)
+{
+	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	integer_info *info = (integer_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for integer_info");
+		return NULL;
+	}
+
+	fseek(fp, -1, SEEK_CUR);
+	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+		LogE("Failed read integer_info.tag");
+		free (info);
+		return NULL;
+	}
+    
+    if (1 != fread(&info->bytes, sizeof(info->bytes), 1, fp)) {
+        LogE("Failed read integer_info.bytes");
+        free (info);
+        return NULL;
+    }
+    info->bytes = ntohl(info->bytes);
+
+    return info;
+}
+
+PRIVATE void log_methodref_info(const methodref_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%-2d, type:%s, class_index:%d, " 
+            "name_and_type_index:%d\n", info->tag, "MethodRef_info",
+			info->class_index, info->name_and_type_index);
+
+}
+
+PRIVATE string_info* read_string_info(FILE *fp)
+{
+	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	string_info *info = (string_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for string_info");
+		return NULL;
+	}
+
+	fseek(fp, -1, SEEK_CUR);
+	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+		LogE("Failed read string_info.tag");
+		free (info);
+		return NULL;
+	}
+
+    if (1 != fread(&info->string_index, sizeof(info->string_index),
+                1, fp)) {
+        LogE("Failed read string_info.string_index");
+        free (info);
+        return NULL;
+    }
+    info->string_index = ntohs(info->string_index);
+
+    return info;
+}
+
+PRIVATE void log_string_info(const string_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%-2d, type:%s, string_index:%d\n",
+            info->tag, "String_info", info->string_index);
+
+}
+
+PRIVATE fieldref_info* read_fieldref_info(FILE *fp)
+{
+ 	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	fieldref_info *info = (fieldref_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for fieldref_info");
+		return NULL;
+	}
+
+	fseek(fp, -1, SEEK_CUR);
+	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+		LogE("Failed read fieldref_info.tag");
+		free (info);
+		return NULL;
+	}
+   
+    if (1 != fread(&info->class_index, 
+                sizeof(info->class_index),
+                1,
+                fp)) {
+        LogE("Failed read fieldref_info.class_index");
+        free(info);
+        return NULL;
+    }
+    info->class_index = ntohs(info->class_index);
+
+    if (1 != fread(&info->name_and_type_index, 
+                sizeof(info->name_and_type_index),
+                1,
+                fp)) {
+        LogE("Failed read fieldref_info.name_and_type_index");
+        free(info);
+        return NULL;
+    }
+    info->name_and_type_index = ntohs(info->name_and_type_index);
+
+    return info;
+}
+
+PRIVATE void log_fieldref_info(const fieldref_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%-2d, type:%s, class_index:%d," 
+            "name_and_type_index:%d\n",
+            info->tag, "FieldRef_info", info->class_index,
+            info->name_and_type_index);
+}
+
+PRIVATE nametype_info* read_nametype_info(FILE *fp)
+{
+ 	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	nametype_info *info = (nametype_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for nametype_info");
+		return NULL;
+	}
+
+	fseek(fp, -1, SEEK_CUR);
+	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+		LogE("Failed read nametype_info.tag");
+		free (info);
+		return NULL;
+	}
+   
+    if (1 != fread(&info->name_index, 
+                sizeof(info->name_index),
+                1,
+                fp)) {
+        LogE("Failed read name_info.name_index");
+        free(info);
+        return NULL;
+    }
+    info->name_index = ntohs(info->name_index);
+
+    if (1 != fread(&info->descriptor_index, 
+                sizeof(info->descriptor_index),
+                1,
+                fp)) {
+        LogE("Failed read nametype_info.descriptor_index");
+        free(info);
+        return NULL;
+    }
+    info->descriptor_index = ntohs(info->descriptor_index);
+
+    return info;
+}
+
+PRIVATE void log_nametype_info(const nametype_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%-2d, type:%s, name_index:%d," 
+            "descriptor_index:%d\n",
+            info->tag, "NameAndType_info", info->name_index,
+            info->descriptor_index);
+}
+
+PRIVATE void log_class_info(const class_info *info)
+{
+    if (NULL == info) {
+        LogE("info = NULL");
+        return;
+    }
+
+    printf("tag=%-2d, type:%s, name_index=%d\n",
+            info->tag, "Class_info", info->name_index);
 }

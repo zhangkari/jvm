@@ -196,6 +196,11 @@ PRIVATE void log_utf8_info(utf8_info *info);
 PRIVATE void log_integer_info(integer_info *info);
 PRIVATE void log_float_info(float_info *info);
 PRIVATE void log_long_info(long_info *info);
+PRIVATE void log_methodref_info(const methodref_info *info);
+PRIVATE void log_string_info(const string_info *info);
+PRIVATE void log_fieldref_info(const fieldref_info *info);
+PRIVATE void log_nametype_info(const nametype_info *info);
+PRIVATE void log_class_info(const class_info *info);
 PRIVATE void log_cp_info(const cp_info *info);
 PRIVATE void logClassFile(const ClassFile *file);
 
@@ -203,6 +208,10 @@ PRIVATE cp_info* read_cp_info(FILE *fp);
 PRIVATE utf8_info* read_utf8_info(FILE *fp);
 PRIVATE methodref_info* read_methodref_info(FILE *fp);
 PRIVATE class_info* read_class_info(FILE *fp);
+PRIVATE integer_info* read_integer_info(FILE *fp);
+PRIVATE string_info* read_string_info(FILE *fp);
+PRIVATE nametype_info* read_nametype_info(FILE *fp);
+PRIVATE fieldref_info* read_fieldref_info(FILE *fp);
 
 PRIVATE int read_uint16(uint16 *value, FILE *fp);
 PRIVATE int read_uint32(uint32 *value, FILE *fp);
