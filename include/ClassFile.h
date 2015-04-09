@@ -75,12 +75,12 @@ struct CONSTANT_String_info {
 
 struct CONSTANT_Integer_info {
     uint8  tag;
-    uint16 bytes;
+    uint32 bytes;
 };
 
 struct CONSTANT_Float_info {
     uint8  tag;
-    uint16 bytes;
+    uint32 bytes;
 };
 
 struct CONSTANT_Long_info {
@@ -104,7 +104,7 @@ struct CONSTANT_NameAndType_info {
 struct CONSTANT_Utf8_info {
     uint8  tag;
     uint16 length;
-    uint8  bytes[ 0 /*length*/];
+    uint8  *bytes;
 };
 
 struct CONSTANT_MethodHandle_info {
@@ -173,7 +173,7 @@ struct ClassFile {
     uint16      minor_version;
     uint16      major_version;
     uint16      const_pool_count;
-    cp_info     *const_pool /*[const_pool_count - 1] */;
+    cp_info     **const_pool /*[const_pool_count - 1] */;
     uint16      access_flags;
     uint16      this_class;
     uint16      super_class;
@@ -187,10 +187,24 @@ struct ClassFile {
     attr_info   attributes[ 0 /*attributes_count*/]; 
 };
 
+/**
+ * Load class file
+ */
 PUBLIC ClassFile* load_class(const char *path);
+
+PRIVATE void log_utf8_info(utf8_info *info);
+PRIVATE void log_integer_info(integer_info *info);
+PRIVATE void log_float_info(float_info *info);
+PRIVATE void log_long_info(long_info *info);
+PRIVATE void log_cp_info(const cp_info *info);
+PRIVATE void logClassFile(const ClassFile *file);
+
 PRIVATE cp_info* read_cp_info(FILE *fp);
 PRIVATE utf8_info* read_utf8_info(FILE *fp);
 PRIVATE methodref_info* read_methodref_info(FILE *fp);
 PRIVATE class_info* read_class_info(FILE *fp);
+
+PRIVATE int read_uint16(uint16 *value, FILE *fp);
+PRIVATE int read_uint32(uint32 *value, FILE *fp);
 
 #endif

@@ -30,71 +30,84 @@ PUBLIC ClassFile* load_class(const char *path)
     }
 
     do {
-        if (1 != fread(&clsFile->magic, sizeof(clsFile->magic), 1, fp)) {
+
+		if (read_uint32(&clsFile->magic, fp) < 0) {
             LogE("Failed read magic");
             break;
         }
+        clsFile->magic = ntohl(clsFile->magic);
 
-        if (1 != fread(
-                    &clsFile->minor_version, 
-                    sizeof(clsFile->minor_version),
-                    1,
-                    fp)) {
+		if (read_uint16(&clsFile->minor_version, fp) < 0) {
             LogE("Failed read minor_version");
             break;
         }
+        clsFile->minor_version = ntohs(clsFile->minor_version);
 
-        if (1 != fread(
-                    &clsFile->major_version, 
-                    sizeof(clsFile->major_version),
-                    1,
-                    fp)) {
+		if (read_uint16(&clsFile->major_version, fp) < 0) {
             LogE("Failed read major_version");
             break;
         }
+        clsFile->major_version = ntohs(clsFile->major_version);
 
-        if (1 != fread(&clsFile->const_pool_count,
-                    sizeof(clsFile->const_pool_count),
-                    1,
-                    fp)) {
+		if (read_uint16(&clsFile->const_pool_count, fp) < 0) {
             LogE("Failed read constant pool count");
             break;
         }
-
-        clsFile->magic = ntohl(clsFile->magic);
-        clsFile->minor_version = ntohs(clsFile->minor_version);
-        clsFile->major_version = ntohs(clsFile->major_version);
         clsFile->const_pool_count = ntohs(clsFile->const_pool_count);
 
-        clsFile->const_pool = (cp_info *)calloc(
-                clsFile->const_pool_count - 1,
-                sizeof (cp_info));
+        clsFile->const_pool = (cp_info **)calloc(
+				1,
+                sizeof (clsFile->const_pool));
         if (NULL == clsFile->const_pool) {
             LogE("Failed calloc for const pool");
             break;
         }
 
         int i;
-        for (i = 0; i < clsFile->const_pool_count - 1; ++i) {
+        for (i = 1; i < clsFile->const_pool_count; ++i) {
 			cp_info *info = read_cp_info(fp);
 			if (NULL == info) {
 				LogE("Failed read cp_info");
 				break;
 			}
+
+			clsFile->const_pool[i] = info;
         }
 
         if (i < clsFile->const_pool_count - 1) {
+			LogE("read const_pool occurs errors");
             break;
         }
 
+		if (read_uint16(&clsFile->access_flags, fp) < 0) {
+			LogE("Failed read access_flags");
+			break;
+		}
+		clsFile->access_flags = ntohs(clsFile->access_flags);
+
+		if (read_uint16(&clsFile->this_class, fp) < 0) {
+			LogE("Failed read this_class");
+			break;
+		}
+		clsFile->this_class = ntohs(clsFile->this_class);
+
+		if (read_uint16(&clsFile->super_class, fp) < 0) {
+			LogE("Failed read super_class");
+			break;
+		}
+		clsFile->super_class = ntohs(clsFile->super_class);
+
+		if (read_uint16(&clsFile->interfaces_count, fp) < 0) {
+			LogE("Failed read interfaces_count");
+			break;
+		}
+		clsFile->interfaces_count = ntohs(clsFile->interfaces_count);
 
 #ifdef DEBUG
-        printf("magic:%X\n", clsFile->magic);
-        printf("minor version:%d\n", clsFile->minor_version);
-        printf("major version:%d\n", clsFile->major_version);
-        printf("constant pool count:%d\n", clsFile->const_pool_count);
+		logClassFile(clsFile);
 #endif
 
+		fclose(fp);
         return clsFile;
 
     } while (0);
@@ -118,8 +131,6 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 		return NULL;
 	}
 
-	printf("sizeof(cp_info)=%d\n", sizeof(cp_info));
-
 	utf8_info *utf8 = NULL;
 	methodref_info *methodref = NULL;
 	class_info *cls = NULL;
@@ -129,7 +140,6 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 			LogE("Failed read cp_info.tag");
 			break;
 		}
-		printf("tag=%d\n", info->tag);
 
 		switch (info->tag) {
 			case CONSTANT_Utf8:
@@ -204,21 +214,33 @@ PRIVATE utf8_info* read_utf8_info(FILE *fp) {
 		return NULL;
 	}
 
+
+	fseek(fp, -1, SEEK_CUR);
 	do {
 		if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
 			LogE("Failed read utf8_info.tag");
 			break;
 		}
 
-		printf("tag=%d\n", info->tag);
-
 		if (1 != fread(&info->length, sizeof(info->length), 1, fp)) {
 			printf("Failed read utf8_info.length");
 			break;
 		}
 
-		printf("length=%d\n", info->length);
-		printf("length=%d\n", ntohs(info->length));
+		info->length = ntohs(info->length);
+
+		info->bytes = (uint8 *)calloc(info->length, sizeof(info->bytes));
+		if (NULL == info->bytes) {
+			break;
+		}
+		if (info->length != fread(info->bytes, 
+					sizeof(*info->bytes),
+					info->length,
+					fp)) {
+			LogE("Failed read utf8_info.bytes");
+			free (info->bytes);
+			break;
+		}
 
 		return info;
 
@@ -226,7 +248,6 @@ PRIVATE utf8_info* read_utf8_info(FILE *fp) {
 
 	free (info);
 	return NULL;
-
 }
 
 PRIVATE methodref_info* read_methodref_info(FILE *fp) {
@@ -241,14 +262,29 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		return NULL;
 	}
 
-	if (1 != fread(info, sizeof(*info), 1, fp)) {
-		LogE("Failed read methodref_info");
+	fseek(fp, -1, SEEK_CUR);
+	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+		LogE("Failed read methodref_info.tag");
+		free (info);
+		return NULL;
+	}
+	if (1 != fread(&info->class_index, sizeof(info->class_index), 1, fp)) {
+		LogE("Failed read methodref_info.class_index");
+		free (info);
+		return NULL;
+	}
+	if (1 != fread(&info->name_and_type_index, 
+				sizeof(info->name_and_type_index),
+				1,
+				fp)) {
+		LogE("Failed read methodref_info.name_and_type_index");
 		free (info);
 		return NULL;
 	}
 
-	printf("tag=%d,class_index=%d, name_and_type_index=%d\n",
-			info->tag, info->class_index, info->name_and_type_index);
+	info->class_index = ntohs(info->class_index);
+	info->name_and_type_index = ntohs(info->name_and_type_index);
+
 	return info;
 }
 
@@ -264,6 +300,7 @@ PRIVATE class_info* read_class_info(FILE *fp) {
 		return NULL;
 	}
 
+	fseek(fp, -1, SEEK_CUR);
 	if (1 != fread(&cls->tag, sizeof(cls->tag), 1, fp)) {
 		LogE("Failed read class_info.tag");
 		free (cls);
@@ -276,6 +313,118 @@ PRIVATE class_info* read_class_info(FILE *fp) {
 		return NULL;
 	}
 
-	printf("tag=%d, name_index=%d\n", cls->tag, ntohs(cls->name_index));
+	cls->name_index = ntohs(cls->name_index);
 	return cls;
+}
+
+PRIVATE int read_uint16(uint16 *value, FILE *fp) {
+	VALIDATE_NOT_NULL2(value, fp);
+	if (1 != fread(value, sizeof(*value), 1, fp)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+PRIVATE int read_uint32(uint32 *value, FILE *fp) {
+	VALIDATE_NOT_NULL2(value, fp);
+	if (1 != fread(value, sizeof(*value), 1, fp)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+PRIVATE void logClassFile(const ClassFile *file)
+{
+	if (NULL == file) {
+		LogE("file = NULL");
+		return;
+	}
+
+	printf("magic:%X\n", file->magic);
+	printf("minor version:%u\n", file->minor_version);
+	printf("major version:%u\n", file->major_version);
+	printf("const pool count:%u\n", file->const_pool_count);
+	int i;
+	for (i = 1; i < file->const_pool_count; ++i) {
+		log_cp_info(file->const_pool[i]);
+	}
+
+	printf("access flags:%X\n", file->access_flags);
+	printf("this class:%d\n", file->this_class);
+	printf("super class:%d\n", file->super_class);
+	printf("interfaces count:%d\n", file->interfaces_count);
+}
+
+
+PRIVATE void log_utf8_info(utf8_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
+			info->tag, "Utf8_info", info->length, info->bytes);
+}
+
+PRIVATE void log_integer_info(integer_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+#if 0
+	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
+			info->tag, "Integer_info", info->length, info->bytes);
+#endif
+}
+
+PRIVATE void log_float_info(float_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+#if 0
+	printf("tag=%d, type:%s, length:%d, bytes:%s\n", 
+			info->tag, "Float_info", info->length, info->bytes);
+#endif
+}
+
+PRIVATE void log_long_info(long_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("tag=%d, type:%s, high bytes:%d, low bytes:%d\n", 
+			info->tag, "Long_info", info->high_bytes, info->low_bytes);
+}
+
+
+PRIVATE void log_cp_info(const cp_info *info)
+{
+	switch (info->tag) {
+		case CONSTANT_Utf8:
+			log_utf8_info((utf8_info *)info->info);
+			break;
+
+		case CONSTANT_Integer:
+			log_integer_info((integer_info *)info->info);
+			break;
+
+		case CONSTANT_Float:
+			log_float_info((float_info *)info->info);
+			break;
+
+		case CONSTANT_Long:
+			log_long_info((long_info *)info->info);
+			break;
+
+	}
 }
