@@ -9,6 +9,8 @@
 #include <ClassFile.h>
 #include <comm.h>
 
+#define MAGIC_NUMBER 0XCAFEBABE
+
 PUBLIC ClassFile* load_class(const char *path)
 {
     if (NULL == path) {
@@ -30,12 +32,15 @@ PUBLIC ClassFile* load_class(const char *path)
     }
 
     do {
-
 		if (read_uint32(&clsFile->magic, fp) < 0) {
             LogE("Failed read magic");
             break;
         }
         clsFile->magic = ntohl(clsFile->magic);
+		if (MAGIC_NUMBER != clsFile->magic) {
+			printf("Error:%s is invalid.\n", path);
+			break;
+		}
 
 		if (read_uint16(&clsFile->minor_version, fp) < 0) {
             LogE("Failed read minor_version");
@@ -66,17 +71,8 @@ PUBLIC ClassFile* load_class(const char *path)
         int i;
         for (i = 1; i < clsFile->const_pool_count; ++i) {
 			cp_info *info = read_cp_info(fp);
-			if (NULL == info) {
-				LogE("Failed read cp_info");
-				break;
-			}
-
+			assert (NULL != info);
 			clsFile->const_pool[i] = info;
-        }
-
-        if (i < clsFile->const_pool_count - 1) {
-			LogE("read const_pool occurs errors");
-            break;
         }
 
 		if (read_uint16(&clsFile->access_flags, fp) < 0) {
@@ -102,6 +98,62 @@ PUBLIC ClassFile* load_class(const char *path)
 			break;
 		}
 		clsFile->interfaces_count = ntohs(clsFile->interfaces_count);
+
+		clsFile->interfaces = (uint16 *)calloc(clsFile->interfaces_count,
+				sizeof(uint16));
+		if (NULL == clsFile->interfaces) {
+			LogE("Failed calloc mem for interfaces");
+			break;
+		}
+
+		for (i = 0; i < clsFile->interfaces_count; ++i) {
+			if (read_uint16(clsFile->interfaces + i, fp) < 0) {
+				LogE("Failed read interfaces[%d]", i);
+				assert (0 != 0);
+			}
+
+			clsFile->interfaces[i] = ntohs(clsFile->interfaces[i]);
+		}
+
+		if (read_uint16(&clsFile->field_count, fp) < 0) {
+			LogE("Failed read field_count");
+			break;
+		}
+
+		clsFile->field_count = ntohs(clsFile->field_count);
+		clsFile->fields = (field_info **)calloc(1, sizeof(field_info **));
+		if (NULL == clsFile->fields) {
+			LogE("Failed calloc mem for fields");
+			break;
+		}
+		for (i = 0; i < clsFile->field_count; ++i) {
+			field_info *info = read_field_info(fp);
+			assert (NULL != info);
+			clsFile->fields[i] = info;
+		}
+
+		if (read_uint16(&clsFile->methods_count, fp) < 0) {
+			LogE("Failed read methods_count");
+			break;
+		}
+		clsFile->methods_count = ntohs(clsFile->methods_count);
+		clsFile->methods = (method_info **)calloc(1, sizeof(method_info *));
+		for (i = 0; i < clsFile->methods_count; ++i) {
+			method_info *info = read_method_info(fp);
+			assert (NULL != info);
+			clsFile->methods[i] = info;
+		}
+
+		if (read_uint16(&clsFile->attributes_count, fp) < 0) {
+			LogE("Failed read attributes_count");
+			break;
+		}
+		clsFile->attributes_count = ntohs(clsFile->attributes_count);
+
+		clsFile->attributes = (attr_info **)calloc(1, sizeof(attr_info *));
+		for (i = 0; i < clsFile->attributes_count; ++i) {
+			clsFile->attributes[i] = read_attr_info(fp);		
+		}
 
 #ifdef DEBUG
 		logClassFile(clsFile);
@@ -177,18 +229,21 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_String:
+				printf("string\n");
                 string = read_string_info(fp);
                 assert(NULL != string);
                 info->info = string;
 				break;
 
 			case CONSTANT_Fieldref:
+				printf("Fieldref\n");
                 fieldref = read_fieldref_info(fp);
                 assert(NULL != fieldref);
                 info->info = fieldref;
 				break;
 
 			case CONSTANT_Methodref:
+				printf("methodref\n");
 				methodref = read_methodref_info(fp);
 				assert(NULL != methodref);
 				info->info = methodref;
@@ -249,7 +304,6 @@ PRIVATE utf8_info* read_utf8_info(FILE *fp) {
 			printf("Failed read utf8_info.length");
 			break;
 		}
-
 		info->length = ntohs(info->length);
 
 		info->bytes = (uint8 *)calloc(info->length, sizeof(info->bytes));
@@ -279,36 +333,38 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		return NULL;
 	}
 
+	LogEnter();
+
 	methodref_info *info = (methodref_info *)calloc(1, sizeof(*info));
 	if (NULL == info) {
 		LogE("Failed calloc mem for methodref info");
 		return NULL;
 	}
 
-	fseek(fp, -1, SEEK_CUR);
-	if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
-		LogE("Failed read methodref_info.tag");
-		free (info);
-		return NULL;
-	}
-	if (1 != fread(&info->class_index, sizeof(info->class_index), 1, fp)) {
-		LogE("Failed read methodref_info.class_index");
-		free (info);
-		return NULL;
-	}
-	info->class_index = ntohs(info->class_index);
+	do {
+		fseek(fp, -1, SEEK_CUR);
+		if (1 != fread(&info->tag, sizeof(info->tag), 1, fp)) {
+			LogE("Failed read methodref_info.tag");
+			break;
+		}
+		if (read_uint16(&info->class_index, fp) < 0) {
+			LogE("Failed read methodref_info.class_index");
+			break;
+		}
+		info->class_index = ntohs(info->class_index);
 
-	if (1 != fread(&info->name_and_type_index, 
-				sizeof(info->name_and_type_index),
-				1,
-				fp)) {
-		LogE("Failed read methodref_info.name_and_type_index");
-		free (info);
-		return NULL;
-	}
-	info->name_and_type_index = ntohs(info->name_and_type_index);
+		if (read_uint16(&info->name_and_type_index, fp) < 0) {
+			LogE("Failed read methodref_info.name_and_type_index");
+			break;
+		}
+		info->name_and_type_index = ntohs(info->name_and_type_index);
+		LogLeave();
+		return info;
 
-	return info;
+	} while (0);
+
+	free (info);
+	return NULL;
 }
 
 PRIVATE class_info* read_class_info(FILE *fp) {
@@ -367,16 +423,37 @@ PRIVATE void logClassFile(const ClassFile *file)
 	printf("magic:%X\n", file->magic);
 	printf("minor version:%u\n", file->minor_version);
 	printf("major version:%u\n", file->major_version);
+
 	printf("const pool count:%u\n", file->const_pool_count);
 	int i;
 	for (i = 1; i < file->const_pool_count; ++i) {
+		printf("const #%-2d = ", i);
 		log_cp_info(file->const_pool[i]);
 	}
 
 	printf("access flags:%X\n", file->access_flags);
 	printf("this class:%d\n", file->this_class);
 	printf("super class:%d\n", file->super_class);
+
 	printf("interfaces count:%d\n", file->interfaces_count);
+	for (i = 0; i < file->interfaces_count; ++i) {
+		printf("interfaces:%d\n", file->interfaces[i]);
+	}
+
+	printf("field count:%d\n", file->field_count);
+	for (i = 0; i < file->field_count; ++i) {
+		log_field_info(file->fields[i]);
+	}
+
+	printf("methods count:%d\n", file->methods_count);
+	for (i = 0; i < file->methods_count; ++i) {
+		log_method_info(file->methods[i]);
+	}
+
+	printf("attributes count:%d\n", file->attributes_count);
+	for (i = 0; i < file->attributes_count; ++i) {
+		log_attr_info(file->attributes[i]);
+	}
 }
 
 
@@ -387,8 +464,7 @@ PRIVATE void log_utf8_info(utf8_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, length:%-2d, bytes:%s\n", 
-			info->tag, "Utf8_info", info->length, info->bytes);
+	printf(" %s\t%s;\n", "Asciz", info->bytes); 
 }
 
 PRIVATE void log_integer_info(integer_info *info)
@@ -398,8 +474,8 @@ PRIVATE void log_integer_info(integer_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, bytes:%d\n", 
-			info->tag, "Integer_info", info->bytes);
+	printf(" %s, bytes:%d\n", 
+			"Integer", info->bytes);
 }
 
 PRIVATE void log_float_info(float_info *info)
@@ -409,10 +485,8 @@ PRIVATE void log_float_info(float_info *info)
 		return;
 	}
 
-#if 0
-	printf("tag=%-2d, type:%s, length:%d, bytes:%s\n", 
-			info->tag, "Float_info", info->length, info->bytes);
-#endif
+	printf(" %s, bytes:%d\n", 
+			"Float", info->bytes);
 }
 
 PRIVATE void log_long_info(long_info *info)
@@ -422,8 +496,8 @@ PRIVATE void log_long_info(long_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, high bytes:%d, low bytes:%d\n", 
-			info->tag, "Long_info", info->high_bytes, info->low_bytes);
+	printf(" %s, high bytes:%d, low bytes:%d\n", 
+			"Long", info->high_bytes, info->low_bytes);
 }
 
 
@@ -466,6 +540,7 @@ PRIVATE void log_cp_info(const cp_info *info)
             break;
 
         case CONSTANT_InterfaceMethodref:
+			printf("InterfaceMethodref\n");
             break;
 
         case CONSTANT_NameAndType:
@@ -473,9 +548,11 @@ PRIVATE void log_cp_info(const cp_info *info)
             break;
 
         case CONSTANT_MethodHandle:
+			printf("MethodHanle\n");
             break;
 
         case CONSTANT_InvokeDynamic:
+			printf("InvokeDynamic\n");
             break;
 	}
 }
@@ -517,10 +594,13 @@ PRIVATE void log_methodref_info(const methodref_info *info)
 		return;
 	}
 
+	LogEnter();
+
 	printf("tag=%-2d, type:%s, class_index:%d, " 
             "name_and_type_index:%d\n", info->tag, "MethodRef_info",
 			info->class_index, info->name_and_type_index);
 
+	LogLeave();
 }
 
 PRIVATE string_info* read_string_info(FILE *fp)
@@ -561,8 +641,8 @@ PRIVATE void log_string_info(const string_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, string_index:%d\n",
-            info->tag, "String_info", info->string_index);
+	printf(" %s\t#%d;\n",
+            "String", info->string_index);
 
 }
 
@@ -672,10 +752,8 @@ PRIVATE void log_nametype_info(const nametype_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, name_index:%d," 
-            "descriptor_index:%d\n",
-            info->tag, "NameAndType_info", info->name_index,
-            info->descriptor_index);
+	printf(" %s,\t#%d;#%d;\n", 
+            "NameAndType", info->name_index, info->descriptor_index);
 }
 
 PRIVATE void log_class_info(const class_info *info)
@@ -685,6 +763,213 @@ PRIVATE void log_class_info(const class_info *info)
         return;
     }
 
-    printf("tag=%-2d, type:%s, name_index=%d\n",
-            info->tag, "Class_info", info->name_index);
+    printf(" %s,\t#%d\n",
+            "Class", info->name_index);
 }
+
+PRIVATE field_info* read_field_info(FILE *fp)
+{
+	if (NULL == fp) {
+		return NULL;
+	}
+
+	field_info *info = (field_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for field_info");
+		return NULL;
+	}
+
+	do {
+		if (read_uint16(&info->access_flags, fp) < 0) {
+			LogE("Failed read field_info.access_flags");
+			break;
+		}
+		info->access_flags = ntohs(info->access_flags);
+
+		if (read_uint16(&info->name_index, fp) < 0) {
+			LogE("Failed read field_info.name_index");
+			break;
+		}
+		info->name_index = ntohs(info->name_index);
+
+		if (read_uint16(&info->descriptor_index, fp) < 0) {
+			LogE("Failed read field_info.descriptor_index");
+			break;
+		}
+		info->descriptor_index = ntohs(info->descriptor_index);
+
+		if (read_uint16(&info->attr_count, fp) < 0) {
+			LogE("Failed read field_info.attr_count");
+			break;
+		}
+		info->attr_count = ntohs(info->attr_count);
+
+		info->attr = (attr_info **)calloc(1, sizeof(*info->attr));
+		if (NULL == info->attr) {
+			LogE("Failed calloc mem for field_info.attr");
+			break;
+		}
+
+		int i;
+		for (i = 0; i < info->attr_count; ++i) {
+			attr_info *attr = read_attr_info(fp);
+			assert (NULL != attr);
+			info->attr[i] = attr;
+		}
+
+		return info;
+
+	} while (0);
+
+	free (info);
+	return NULL;
+}
+
+PRIVATE attr_info* read_attr_info(FILE *fp)
+{
+	if (NULL == fp) {
+		LogE("fp = NULL");
+		return NULL;
+	}
+
+	attr_info *info = (attr_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for attr_info");
+		return NULL;
+	}
+
+	do {
+		if (read_uint16(&info->attr_name_index, fp) < 0) {
+			LogE("Failed read attr_info.attr_name_index");
+			break;
+		}
+		info->attr_name_index = ntohs(info->attr_name_index);
+
+		if (read_uint32(&info->attr_length, fp) < 0) {
+			LogE("Failed read attr_info.attr_length");
+			break;
+		}
+		info->attr_length = ntohl(info->attr_length);
+
+		info->info = (uint8 *)calloc(info->attr_length, sizeof(*info->info));
+		if (NULL == info->info) {
+			LogE("Failed calloc mem for attr_info.info");
+			break;
+		}
+
+		if (info->attr_length != fread(info->info, sizeof(*info->info), info->attr_length, fp)) {
+			LogE("Failed read attr_info.info");
+			break;
+		}
+
+		return info;
+
+	} while (0);
+
+	free (info);
+
+	return NULL;
+}
+
+PRIVATE void log_field_info (field_info *info) {
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("access flags:%X\n", info->access_flags);
+	printf("name index:%d\n", info->name_index);
+	printf("descriptor_index:%d\n", info->descriptor_index);
+	printf("attr count:%d\n", info->attr_count);
+	int i;
+	for (i = 0; i < info->attr_count; ++i) {
+		log_attr_info(info->attr[i]);
+	}
+}
+
+PRIVATE void log_attr_info (attr_info *info)
+{
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("attr name index:%d\n", info->attr_name_index);
+	printf("attr length:%d\n", info->attr_length);
+	printf("attr info:%s\n", info->info);
+}
+
+PRIVATE void log_method_info (method_info *info) {
+	if (NULL == info) {
+		LogE("info = NULL");
+		return;
+	}
+
+	printf("access flags:%X\n", info->access_flags);
+	printf("name index:%d\n", info->name_index);
+	printf("descriptor_index:%d\n", info->descriptor_index);
+	printf("attr count:%d\n", info->attr_count);
+	int i;
+	for (i = 0; i < info->attr_count; ++i) {
+		log_attr_info(info->attr[i]);
+	}
+}
+
+PRIVATE method_info* read_method_info(FILE *fp)
+{
+	if (NULL == fp) {
+		return NULL;
+	}
+
+	method_info *info = (method_info *)calloc(1, sizeof(*info));
+	if (NULL == info) {
+		LogE("Failed calloc mem for field_info");
+		return NULL;
+	}
+
+	do {
+		if (read_uint16(&info->access_flags, fp) < 0) {
+			LogE("Failed read method_info.access_flags");
+			break;
+		}
+		info->access_flags = ntohs(info->access_flags);
+
+		if (read_uint16(&info->name_index, fp) < 0) {
+			LogE("Failed read method_info.name_index");
+			break;
+		}
+		info->name_index = ntohs(info->name_index);
+
+		if (read_uint16(&info->descriptor_index, fp) < 0) {
+			LogE("Failed read method_info.descriptor_index");
+			break;
+		}
+		info->descriptor_index = ntohs(info->descriptor_index);
+
+		if (read_uint16(&info->attr_count, fp) < 0) {
+			LogE("Failed read method_info.attr_count");
+			break;
+		}
+		info->attr_count = ntohs(info->attr_count);
+
+		info->attr = (attr_info **)calloc(1, sizeof(*info->attr));
+		if (NULL == info->attr) {
+			LogE("Failed calloc mem for method_info.attr");
+			break;
+		}
+
+		int i;
+		for (i = 0; i < info->attr_count; ++i) {
+			attr_info *attr = read_attr_info(fp);
+			assert (NULL != attr);
+			info->attr[i] = attr;
+		}
+
+		return info;
+
+	} while (0);
+
+	free (info);
+	return NULL;
+}
+

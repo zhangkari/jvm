@@ -16,6 +16,9 @@
 #define LogD(format, ...) fprintf(stdout, D#format" %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__)
 #define LogE(format, ...) fprintf(stdout, E#format" %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__)
 
+#define LogEnter() fprintf(stdout, "++++ %s ++++\n", __func__);
+#define LogLeave() fprintf(stdout, "---- %s ----\n", __func__);
+
 #define VALIDATE_NOT_NULL(X) \
     do { \
         if (NULL == X) { \

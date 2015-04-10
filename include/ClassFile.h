@@ -129,7 +129,7 @@ struct field_info {
     uint16 name_index;
     uint16 descriptor_index;
     uint16 attr_count;
-    attr_info *attr; /*attr_count*/
+    attr_info **attr; /*attr_count*/
 };
 
 struct method_info {
@@ -137,7 +137,7 @@ struct method_info {
     uint16 name_index;
     uint16 descriptor_index;
     uint16 attr_count;
-    attr_info *attr; /*attr_count*/
+    attr_info **attr; /*attr_count*/
 };
 
 enum access_flags {
@@ -153,6 +153,7 @@ enum access_flags {
     ACC_VOLATILE    = 0x0040,
     ACC_BRIDGE      = 0x0040,  // method_info
     ACC_TRANSLENT   = 0x0080,
+	ACC_VARARGS		= 0x0080,  // method info
     ACC_NATIVE      = 0x0100, 
     ACC_INTERFACE   = 0x0200,
     ACC_ABSTRACT    = 0x0400,
@@ -165,7 +166,7 @@ enum access_flags {
 struct attr_info {
     uint16 attr_name_index;
     uint32 attr_length;
-    uint8  info[ 0 /*attr_length*/];
+    uint8  *info; /*attr_length*/
 };
 
 struct ClassFile {
@@ -178,13 +179,13 @@ struct ClassFile {
     uint16      this_class;
     uint16      super_class;
     uint16      interfaces_count;
-    uint16      interfaces[ 0 /*interface_count*/];
+    uint16      *interfaces; /*interface_count*/
     uint16      field_count;
-    field_info  fields[ 0 /*fileds_count*/]; 
+    field_info  **fields;  /*fileds_count*/
     uint16      methods_count;
-    method_info methods[ 0 /*methods_count*/];
+    method_info **methods;  /*methods_count*/
     uint16      attributes_count;
-    attr_info   attributes[ 0 /*attributes_count*/]; 
+    attr_info   **attributes;  /*attributes_count*/
 };
 
 /**
@@ -201,6 +202,9 @@ PRIVATE void log_string_info(const string_info *info);
 PRIVATE void log_fieldref_info(const fieldref_info *info);
 PRIVATE void log_nametype_info(const nametype_info *info);
 PRIVATE void log_class_info(const class_info *info);
+PRIVATE void log_field_info (field_info *info);
+PRIVATE void log_method_info (method_info *info);
+PRIVATE void log_attr_info (attr_info *info);
 PRIVATE void log_cp_info(const cp_info *info);
 PRIVATE void logClassFile(const ClassFile *file);
 
@@ -212,6 +216,9 @@ PRIVATE integer_info* read_integer_info(FILE *fp);
 PRIVATE string_info* read_string_info(FILE *fp);
 PRIVATE nametype_info* read_nametype_info(FILE *fp);
 PRIVATE fieldref_info* read_fieldref_info(FILE *fp);
+PRIVATE field_info* read_field_info(FILE *fp);
+PRIVATE method_info* read_method_info(FILE *fp);
+PRIVATE attr_info* read_attr_info(FILE *fp);
 
 PRIVATE int read_uint16(uint16 *value, FILE *fp);
 PRIVATE int read_uint32(uint32 *value, FILE *fp);
