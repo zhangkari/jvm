@@ -121,7 +121,7 @@ PUBLIC ClassFile* load_class(const char *path)
 		}
 
 		clsFile->field_count = ntohs(clsFile->field_count);
-		clsFile->fields = (field_info **)calloc(1, sizeof(field_info **));
+		clsFile->fields = (field_info **)calloc(clsFile->field_count, sizeof(field_info *));
 		if (NULL == clsFile->fields) {
 			LogE("Failed calloc mem for fields");
 			break;
@@ -137,7 +137,7 @@ PUBLIC ClassFile* load_class(const char *path)
 			break;
 		}
 		clsFile->methods_count = ntohs(clsFile->methods_count);
-		clsFile->methods = (method_info **)calloc(1, sizeof(method_info *));
+		clsFile->methods = (method_info **)calloc(clsFile->methods_count, sizeof(method_info *));
 		for (i = 0; i < clsFile->methods_count; ++i) {
 			method_info *info = read_method_info(fp);
 			assert (NULL != info);
@@ -150,7 +150,7 @@ PUBLIC ClassFile* load_class(const char *path)
 		}
 		clsFile->attributes_count = ntohs(clsFile->attributes_count);
 
-		clsFile->attributes = (attr_info **)calloc(1, sizeof(attr_info *));
+		clsFile->attributes = (attr_info **)calloc(clsFile->attributes_count, sizeof(attr_info *));
 		for (i = 0; i < clsFile->attributes_count; ++i) {
 			clsFile->attributes[i] = read_attr_info(fp);		
 		}
@@ -333,8 +333,6 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		return NULL;
 	}
 
-	LogEnter();
-
 	methodref_info *info = (methodref_info *)calloc(1, sizeof(*info));
 	if (NULL == info) {
 		LogE("Failed calloc mem for methodref info");
@@ -358,7 +356,6 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 			break;
 		}
 		info->name_and_type_index = ntohs(info->name_and_type_index);
-		LogLeave();
 		return info;
 
 	} while (0);
@@ -464,7 +461,7 @@ PRIVATE void log_utf8_info(utf8_info *info)
 		return;
 	}
 
-	printf(" %s\t%s;\n", "Asciz", info->bytes); 
+	printf(" %s\t\t%s;\n", "Asciz", info->bytes); 
 }
 
 PRIVATE void log_integer_info(integer_info *info)
@@ -474,7 +471,7 @@ PRIVATE void log_integer_info(integer_info *info)
 		return;
 	}
 
-	printf(" %s, bytes:%d\n", 
+	printf(" %s;\t\tbytes:%d\n", 
 			"Integer", info->bytes);
 }
 
@@ -594,13 +591,8 @@ PRIVATE void log_methodref_info(const methodref_info *info)
 		return;
 	}
 
-	LogEnter();
-
-	printf("tag=%-2d, type:%s, class_index:%d, " 
-            "name_and_type_index:%d\n", info->tag, "MethodRef_info",
+	printf(" %s;\t\t#%d;#%d;\n", "MethodRef", 
 			info->class_index, info->name_and_type_index);
-
-	LogLeave();
 }
 
 PRIVATE string_info* read_string_info(FILE *fp)
@@ -641,7 +633,7 @@ PRIVATE void log_string_info(const string_info *info)
 		return;
 	}
 
-	printf(" %s\t#%d;\n",
+	printf(" %s\t\t#%d;\n",
             "String", info->string_index);
 
 }
@@ -696,9 +688,8 @@ PRIVATE void log_fieldref_info(const fieldref_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, class_index:%d," 
-            "name_and_type_index:%d\n",
-            info->tag, "FieldRef_info", info->class_index,
+	printf(" %s;\t\t#%d;#%d;\n", 
+            "FieldRef", info->class_index,
             info->name_and_type_index);
 }
 
@@ -752,7 +743,7 @@ PRIVATE void log_nametype_info(const nametype_info *info)
 		return;
 	}
 
-	printf(" %s,\t#%d;#%d;\n", 
+	printf(" %s;\t#%d;#%d;\n", 
             "NameAndType", info->name_index, info->descriptor_index);
 }
 
@@ -763,7 +754,7 @@ PRIVATE void log_class_info(const class_info *info)
         return;
     }
 
-    printf(" %s,\t#%d\n",
+    printf(" %s;\t\t#%d\n",
             "Class", info->name_index);
 }
 
