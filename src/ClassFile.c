@@ -61,8 +61,8 @@ PUBLIC ClassFile* load_class(const char *path)
         clsFile->const_pool_count = ntohs(clsFile->const_pool_count);
 
         clsFile->const_pool = (cp_info **)calloc(
-				1,
-                sizeof (clsFile->const_pool));
+				clsFile->const_pool_count,
+                sizeof (cp_info *));
         if (NULL == clsFile->const_pool) {
             LogE("Failed calloc for const pool");
             break;
