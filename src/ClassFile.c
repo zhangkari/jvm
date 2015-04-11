@@ -229,21 +229,18 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_String:
-				printf("string\n");
                 string = read_string_info(fp);
                 assert(NULL != string);
                 info->info = string;
 				break;
 
 			case CONSTANT_Fieldref:
-				printf("Fieldref\n");
                 fieldref = read_fieldref_info(fp);
                 assert(NULL != fieldref);
                 info->info = fieldref;
 				break;
 
 			case CONSTANT_Methodref:
-				printf("methodref\n");
 				methodref = read_methodref_info(fp);
 				assert(NULL != methodref);
 				info->info = methodref;
