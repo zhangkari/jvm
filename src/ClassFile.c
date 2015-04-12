@@ -436,22 +436,22 @@ PRIVATE void logClassFile(const ClassFile *file)
 
 	printf("field count:%d\n", file->field_count);
 	for (i = 0; i < file->field_count; ++i) {
-		log_field_info(file->fields[i]);
+		log_field_info(file, file->fields[i]);
 	}
 
 	printf("methods count:%d\n", file->methods_count);
 	for (i = 0; i < file->methods_count; ++i) {
-		log_method_info(file->methods[i]);
+		log_method_info(file, file->methods[i]);
 	}
 
 	printf("attributes count:%d\n", file->attributes_count);
 	for (i = 0; i < file->attributes_count; ++i) {
-		log_attr_info(file->attributes[i]);
+		log_attr_info(file, file->attributes[i]);
 	}
 }
 
 
-PRIVATE void log_utf8_info(utf8_info *info)
+PRIVATE void log_utf8_info(const utf8_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -461,7 +461,7 @@ PRIVATE void log_utf8_info(utf8_info *info)
 	printf(" %s\t\t%s;\n", "Asciz", info->bytes); 
 }
 
-PRIVATE void log_integer_info(integer_info *info)
+PRIVATE void log_integer_info(const integer_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -472,7 +472,7 @@ PRIVATE void log_integer_info(integer_info *info)
 			"Integer", info->bytes);
 }
 
-PRIVATE void log_float_info(float_info *info)
+PRIVATE void log_float_info(const float_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -483,7 +483,7 @@ PRIVATE void log_float_info(float_info *info)
 			"Float", info->bytes);
 }
 
-PRIVATE void log_long_info(long_info *info)
+PRIVATE void log_long_info(const long_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -859,7 +859,9 @@ PRIVATE attr_info* read_attr_info(FILE *fp)
 	return NULL;
 }
 
-PRIVATE void log_field_info (field_info *info) {
+PRIVATE void log_field_info (
+        const ClassFile *file, 
+        const field_info *info) {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
@@ -871,11 +873,11 @@ PRIVATE void log_field_info (field_info *info) {
 	printf("attr count:%d\n", info->attr_count);
 	int i;
 	for (i = 0; i < info->attr_count; ++i) {
-		log_attr_info(info->attr[i]);
+		log_attr_info(file, info->attr[i]);
 	}
 }
 
-PRIVATE void log_attr_info (attr_info *info)
+PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -884,10 +886,24 @@ PRIVATE void log_attr_info (attr_info *info)
 
 	printf("attr name index:%d\n", info->attr_name_index);
 	printf("attr length:%d\n", info->attr_length);
-	printf("attr info:%s\n", info->info);
+
+    utf8_info *utf8 = file->const_pool[info->attr_name_index]->info;
+    char *attr_name = utf8->bytes;
+    printf("attr name:%s\n", attr_name);
+    if (!strncmp(attr_name, "Code", 4)) {
+        code_attr *code = NULL;
+        if (cast_code_attr(info->info, info->attr_length, &code) < 0) {
+            LogE("Failed cast to code_attr");
+            return;
+        }
+        log_code_attr(code);
+        free_code_attr(code);
+    }
 }
 
-PRIVATE void log_method_info (method_info *info) {
+PRIVATE void log_method_info (
+        const ClassFile *file, 
+        const method_info *info) {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
@@ -899,7 +915,7 @@ PRIVATE void log_method_info (method_info *info) {
 	printf("attr count:%d\n", info->attr_count);
 	int i;
 	for (i = 0; i < info->attr_count; ++i) {
-		log_attr_info(info->attr[i]);
+		log_attr_info(file, info->attr[i]);
 	}
 }
 
@@ -959,5 +975,75 @@ PRIVATE method_info* read_method_info(FILE *fp)
 
 	free (info);
 	return NULL;
+}
+
+PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
+{
+    VALIDATE_NOT_NULL2(buffer, attr);
+    if (len < 12) {
+        LogE("Invalid param, buff len must >= 12");
+        return -1;
+    }
+
+    *attr = (code_attr *)calloc(1, sizeof(*attr));
+    if (NULL == *attr) {
+        LogE("Failed calloc mem for code_attr");
+        return -1;
+    }
+
+    void *buff = buffer;
+    (*attr)->max_stack = *((uint16 *)buff);
+    (*attr)->max_stack = ntohs((*attr)->max_stack);
+    buff += 2;
+    (*attr)->max_locals = *((uint16 *)buff);
+    (*attr)->max_locals = ntohs((*attr)->max_locals);
+    buff += 2;
+    (*attr)->code_length = *((uint32 *)buff);
+    (*attr)->code_length = ntohl((*attr)->code_length);
+    buff += 4;
+
+    ///
+    /// TO DO
+    //
+
+    return 0;
+}
+
+PRIVATE void free_code_attr(code_attr *attr) {
+    if (NULL != attr) {
+
+        free(attr);
+    }
+}
+
+PRIVATE void log_code_attr(const code_attr *code)
+{
+    if (NULL == code) {
+        LogE("NULL pointer execption");
+        return;
+    }
+
+    printf("max stack:%d\n", code->max_stack);
+    printf("max locals:%d\n", code->max_locals);
+    printf("code length:%d\n", code->code_length);
+
+#if 0
+    int i;
+    for (i = 0; i < code->code_length; ++i) {
+        printf("%d\n", code->code[i]);
+    }
+
+    printf("exception table length:%d\n",
+            code->exception_table_length);
+    for (i = 0; i < code->exception_table_length; ++i) {
+        
+    }
+
+    printf("attr count:%d\n", code->attr_count);
+    for (i = 0; i < code->attr_count; ++i) {
+        
+    }
+
+#endif
 }
 
