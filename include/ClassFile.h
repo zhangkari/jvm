@@ -184,9 +184,9 @@ struct code_attr {
     uint32 code_length;
     uint8  *code;
     uint16 exception_table_length;
-    exception_table **exception_table;
+    exception_table *exception_table;
     uint16 attr_count;
-    attr_info **attr;
+    attr_info *attr;
 };
 
 struct ClassFile {
@@ -225,7 +225,8 @@ PRIVATE void log_class_info(const class_info *info);
 PRIVATE void log_field_info (const ClassFile *file, const field_info *info);
 PRIVATE void log_method_info (const ClassFile *file, const method_info *info);
 PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info);
-PRIVATE void log_code_attr(const code_attr *attr);    
+PRIVATE void log_code_attr(const ClassFile *file, const code_attr *attr);    
+PRIVATE void log_exception_table(const exception_table *tbl);
 PRIVATE void log_cp_info(const cp_info *info);
 PRIVATE void logClassFile(const ClassFile *file);
 
