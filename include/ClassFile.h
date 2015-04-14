@@ -29,6 +29,8 @@ typedef struct method_info method_info;
 typedef struct attr_info attr_info;
 typedef struct exception_table exception_table; 
 typedef struct code_attr code_attr; 
+typedef struct constvalue_attr constvalue_attr;
+typedef struct sourcefile_attr sourcefile_attr;
 typedef struct ClassFile ClassFile;
 
 enum tag_value {
@@ -187,6 +189,14 @@ struct code_attr {
     exception_table *exception_table;
     uint16 attr_count;
     attr_info *attr;
+};
+
+struct constvalue_attr {
+	uint16 value_index;
+};
+
+struct sourcefile_attr {
+	uint16 source_index;
 };
 
 struct ClassFile {

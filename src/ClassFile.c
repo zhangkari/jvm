@@ -910,7 +910,15 @@ PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
         }
         log_code_attr(file, code);
         free_code_attr(code);
-    }
+    } else if(!strcmp(attr_name, "ConstantValue")) {
+		uint16 idx = *((uint16 *)info->info);
+		idx = ntohs(idx);
+		printf("ConstantValue index:%d\n", idx);
+	} else if (!strcmp(attr_name, "SourceFile")) {
+		uint16 idx = *((uint16 *)info->info);
+		idx = ntohs(idx);
+		printf("SourceFile index:%d\n", idx);
+	}
 }
 
 PRIVATE void log_method_info (
@@ -997,7 +1005,7 @@ PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
         return -1;
     }
 
-    *attr = (code_attr *)calloc(1, sizeof(*attr));
+    *attr = (code_attr *)calloc(1, sizeof(code_attr));
     if (NULL == *attr) {
         LogE("Failed calloc mem for code_attr");
         return -1;
