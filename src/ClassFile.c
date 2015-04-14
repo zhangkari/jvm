@@ -851,13 +851,13 @@ PRIVATE attr_info* read_attr_info(FILE *fp)
 		}
 		info->attr_length = ntohl(info->attr_length);
 
-		info->info = (uint8 *)calloc(info->attr_length, sizeof(*info->info));
+		info->info = (uint8 *)calloc(info->attr_length, 1);
 		if (NULL == info->info) {
 			LogE("Failed calloc mem for attr_info.info");
 			break;
 		}
 
-		if (info->attr_length != fread(info->info, sizeof(*info->info), info->attr_length, fp)) {
+		if (info->attr_length != fread(info->info, 1, info->attr_length, fp)) {
 			LogE("Failed read attr_info.info");
 			break;
 		}
@@ -1123,7 +1123,7 @@ PRIVATE void log_code_attr(const ClassFile *file, const code_attr *code)
 
     int i;
     for (i = 0; i < code->code_length; ++i) {
-        printf("%d\n", code->code[i]);
+        printf("%0x\n", code->code[i]);
     }
 
     printf("exception table length:%d\n",
