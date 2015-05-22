@@ -10,9 +10,10 @@
  *      rearchitect & redesign
  * ****************************/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <ClassFile.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <instruction.h>
 
 int main(int argc, char *argv[]) 
 {
@@ -28,4 +29,11 @@ int main(int argc, char *argv[])
 
     free(clsFile);
     clsFile = NULL;
+
+	/*
+	int i;
+	for (i = 0; i < 0xc9; ++i) {
+		printf("%s\n", stropcode(i));
+	}
+	*/
 }
