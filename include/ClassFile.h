@@ -27,6 +27,10 @@ typedef struct cp_info cp_info;
 typedef struct field_info field_info;
 typedef struct method_info method_info;
 typedef struct attr_info attr_info;
+typedef struct exception_table exception_table; 
+typedef struct code_attr code_attr; 
+typedef struct constvalue_attr constvalue_attr;
+typedef struct sourcefile_attr sourcefile_attr;
 typedef struct ClassFile ClassFile;
 
 enum tag_value {
@@ -166,7 +170,33 @@ enum access_flags {
 struct attr_info {
     uint16 attr_name_index;
     uint32 attr_length;
-    uint8  *info; /*attr_length*/
+    void   *info;
+};
+
+struct exception_table {
+    uint16 start_pc;
+    uint16 end_pc;
+    uint16 handler_pc;
+    uint16 catch_type;
+};
+
+struct code_attr {
+    uint16 max_stack;
+    uint16 max_locals;
+    uint32 code_length;
+    uint8  *code;
+    uint16 exception_table_length;
+    exception_table *exception_table;
+    uint16 attr_count;
+    attr_info *attr;
+};
+
+struct constvalue_attr {
+	uint16 value_index;
+};
+
+struct sourcefile_attr {
+	uint16 source_index;
 };
 
 struct ClassFile {
@@ -193,18 +223,20 @@ struct ClassFile {
  */
 PUBLIC ClassFile* load_class(const char *path);
 
-PRIVATE void log_utf8_info(utf8_info *info);
-PRIVATE void log_integer_info(integer_info *info);
-PRIVATE void log_float_info(float_info *info);
-PRIVATE void log_long_info(long_info *info);
+PRIVATE void log_utf8_info(const utf8_info *info);
+PRIVATE void log_integer_info(const integer_info *info);
+PRIVATE void log_float_info(const float_info *info);
+PRIVATE void log_long_info(const long_info *info);
 PRIVATE void log_methodref_info(const methodref_info *info);
 PRIVATE void log_string_info(const string_info *info);
 PRIVATE void log_fieldref_info(const fieldref_info *info);
 PRIVATE void log_nametype_info(const nametype_info *info);
 PRIVATE void log_class_info(const class_info *info);
-PRIVATE void log_field_info (field_info *info);
-PRIVATE void log_method_info (method_info *info);
-PRIVATE void log_attr_info (attr_info *info);
+PRIVATE void log_field_info (const ClassFile *file, const field_info *info);
+PRIVATE void log_method_info (const ClassFile *file, const method_info *info);
+PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info);
+PRIVATE void log_code_attr(const ClassFile *file, const code_attr *attr);    
+PRIVATE void log_exception_table(const exception_table *tbl);
 PRIVATE void log_cp_info(const cp_info *info);
 PRIVATE void logClassFile(const ClassFile *file);
 
@@ -219,6 +251,9 @@ PRIVATE fieldref_info* read_fieldref_info(FILE *fp);
 PRIVATE field_info* read_field_info(FILE *fp);
 PRIVATE method_info* read_method_info(FILE *fp);
 PRIVATE attr_info* read_attr_info(FILE *fp);
+PRIVATE attr_info* read_code_attr(const attr_info *info, FILE *fp);
+PRIVATE int cast_code_attr(void *buff, uint16 len, code_attr **attr);
+PRIVATE void free_code_attr(code_attr *attr);
 
 PRIVATE int read_uint16(uint16 *value, FILE *fp);
 PRIVATE int read_uint32(uint32 *value, FILE *fp);

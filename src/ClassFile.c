@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ClassFile.h>
 #include <comm.h>
@@ -61,8 +62,8 @@ PUBLIC ClassFile* load_class(const char *path)
         clsFile->const_pool_count = ntohs(clsFile->const_pool_count);
 
         clsFile->const_pool = (cp_info **)calloc(
-				1,
-                sizeof (clsFile->const_pool));
+				clsFile->const_pool_count,
+                sizeof (cp_info *));
         if (NULL == clsFile->const_pool) {
             LogE("Failed calloc for const pool");
             break;
@@ -99,21 +100,24 @@ PUBLIC ClassFile* load_class(const char *path)
 		}
 		clsFile->interfaces_count = ntohs(clsFile->interfaces_count);
 
-		clsFile->interfaces = (uint16 *)calloc(clsFile->interfaces_count,
-				sizeof(uint16));
-		if (NULL == clsFile->interfaces) {
-			LogE("Failed calloc mem for interfaces");
-			break;
-		}
+        clsFile->interfaces = NULL;
+        if (clsFile->interfaces_count > 0) {
+            clsFile->interfaces = (uint16 *)calloc(clsFile->interfaces_count,
+                    sizeof(uint16));
+            if (NULL == clsFile->interfaces) {
+                LogE("Failed calloc mem for interfaces");
+                break;
+            }
 
-		for (i = 0; i < clsFile->interfaces_count; ++i) {
-			if (read_uint16(clsFile->interfaces + i, fp) < 0) {
-				LogE("Failed read interfaces[%d]", i);
-				assert (0 != 0);
-			}
+            for (i = 0; i < clsFile->interfaces_count; ++i) {
+                if (read_uint16(clsFile->interfaces + i, fp) < 0) {
+                    LogE("Failed read interfaces[%d]", i);
+                    assert (0 != 0);
+                }
 
-			clsFile->interfaces[i] = ntohs(clsFile->interfaces[i]);
-		}
+                clsFile->interfaces[i] = ntohs(clsFile->interfaces[i]);
+            }
+        }
 
 		if (read_uint16(&clsFile->field_count, fp) < 0) {
 			LogE("Failed read field_count");
@@ -121,39 +125,47 @@ PUBLIC ClassFile* load_class(const char *path)
 		}
 
 		clsFile->field_count = ntohs(clsFile->field_count);
-		clsFile->fields = (field_info **)calloc(1, sizeof(field_info **));
-		if (NULL == clsFile->fields) {
-			LogE("Failed calloc mem for fields");
-			break;
-		}
-		for (i = 0; i < clsFile->field_count; ++i) {
-			field_info *info = read_field_info(fp);
-			assert (NULL != info);
-			clsFile->fields[i] = info;
-		}
+        clsFile->fields = NULL;
+        if (clsFile->field_count > 0) {
+            clsFile->fields = (field_info **)calloc(clsFile->field_count, sizeof(field_info *));
+            if (NULL == clsFile->fields) {
+                LogE("Failed calloc mem for fields");
+                break;
+            }
+            for (i = 0; i < clsFile->field_count; ++i) {
+                field_info *info = read_field_info(fp);
+                assert (NULL != info);
+                clsFile->fields[i] = info;
+            }
+        }
 
 		if (read_uint16(&clsFile->methods_count, fp) < 0) {
 			LogE("Failed read methods_count");
 			break;
 		}
 		clsFile->methods_count = ntohs(clsFile->methods_count);
-		clsFile->methods = (method_info **)calloc(1, sizeof(method_info *));
-		for (i = 0; i < clsFile->methods_count; ++i) {
-			method_info *info = read_method_info(fp);
-			assert (NULL != info);
-			clsFile->methods[i] = info;
-		}
+        clsFile->methods = NULL;
+        if (clsFile->methods_count > 0) {
+            clsFile->methods = (method_info **)calloc(clsFile->methods_count, sizeof(method_info *));
+            for (i = 0; i < clsFile->methods_count; ++i) {
+                method_info *info = read_method_info(fp);
+                assert (NULL != info);
+                clsFile->methods[i] = info;
+            }
+        }
 
 		if (read_uint16(&clsFile->attributes_count, fp) < 0) {
 			LogE("Failed read attributes_count");
 			break;
 		}
 		clsFile->attributes_count = ntohs(clsFile->attributes_count);
-
-		clsFile->attributes = (attr_info **)calloc(1, sizeof(attr_info *));
-		for (i = 0; i < clsFile->attributes_count; ++i) {
-			clsFile->attributes[i] = read_attr_info(fp);		
-		}
+        clsFile->attributes = NULL;
+        if (clsFile->attributes_count > 0) {
+            clsFile->attributes = (attr_info **)calloc(clsFile->attributes_count, sizeof(attr_info *));
+            for (i = 0; i < clsFile->attributes_count; ++i) {
+                clsFile->attributes[i] = read_attr_info(fp);		
+            }
+        }
 
 #ifdef DEBUG
 		logClassFile(clsFile);
@@ -229,21 +241,18 @@ PRIVATE cp_info* read_cp_info(FILE *fp) {
 				break;
 
 			case CONSTANT_String:
-				printf("string\n");
                 string = read_string_info(fp);
                 assert(NULL != string);
                 info->info = string;
 				break;
 
 			case CONSTANT_Fieldref:
-				printf("Fieldref\n");
                 fieldref = read_fieldref_info(fp);
                 assert(NULL != fieldref);
                 info->info = fieldref;
 				break;
 
 			case CONSTANT_Methodref:
-				printf("methodref\n");
 				methodref = read_methodref_info(fp);
 				assert(NULL != methodref);
 				info->info = methodref;
@@ -333,8 +342,6 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 		return NULL;
 	}
 
-	LogEnter();
-
 	methodref_info *info = (methodref_info *)calloc(1, sizeof(*info));
 	if (NULL == info) {
 		LogE("Failed calloc mem for methodref info");
@@ -358,7 +365,6 @@ PRIVATE methodref_info* read_methodref_info(FILE *fp) {
 			break;
 		}
 		info->name_and_type_index = ntohs(info->name_and_type_index);
-		LogLeave();
 		return info;
 
 	} while (0);
@@ -442,43 +448,43 @@ PRIVATE void logClassFile(const ClassFile *file)
 
 	printf("field count:%d\n", file->field_count);
 	for (i = 0; i < file->field_count; ++i) {
-		log_field_info(file->fields[i]);
+		log_field_info(file, file->fields[i]);
 	}
 
 	printf("methods count:%d\n", file->methods_count);
 	for (i = 0; i < file->methods_count; ++i) {
-		log_method_info(file->methods[i]);
+		log_method_info(file, file->methods[i]);
 	}
 
 	printf("attributes count:%d\n", file->attributes_count);
 	for (i = 0; i < file->attributes_count; ++i) {
-		log_attr_info(file->attributes[i]);
+		log_attr_info(file, file->attributes[i]);
 	}
 }
 
 
-PRIVATE void log_utf8_info(utf8_info *info)
+PRIVATE void log_utf8_info(const utf8_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
 	}
 
-	printf(" %s\t%s;\n", "Asciz", info->bytes); 
+	printf(" %s\t\t%s;\n", "Asciz", info->bytes); 
 }
 
-PRIVATE void log_integer_info(integer_info *info)
+PRIVATE void log_integer_info(const integer_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
 	}
 
-	printf(" %s, bytes:%d\n", 
+	printf(" %s;\t\tbytes:%d\n", 
 			"Integer", info->bytes);
 }
 
-PRIVATE void log_float_info(float_info *info)
+PRIVATE void log_float_info(const float_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -489,7 +495,7 @@ PRIVATE void log_float_info(float_info *info)
 			"Float", info->bytes);
 }
 
-PRIVATE void log_long_info(long_info *info)
+PRIVATE void log_long_info(const long_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -594,13 +600,8 @@ PRIVATE void log_methodref_info(const methodref_info *info)
 		return;
 	}
 
-	LogEnter();
-
-	printf("tag=%-2d, type:%s, class_index:%d, " 
-            "name_and_type_index:%d\n", info->tag, "MethodRef_info",
+	printf(" %s;\t\t#%d;#%d;\n", "MethodRef", 
 			info->class_index, info->name_and_type_index);
-
-	LogLeave();
 }
 
 PRIVATE string_info* read_string_info(FILE *fp)
@@ -641,7 +642,7 @@ PRIVATE void log_string_info(const string_info *info)
 		return;
 	}
 
-	printf(" %s\t#%d;\n",
+	printf(" %s\t\t#%d;\n",
             "String", info->string_index);
 
 }
@@ -696,9 +697,8 @@ PRIVATE void log_fieldref_info(const fieldref_info *info)
 		return;
 	}
 
-	printf("tag=%-2d, type:%s, class_index:%d," 
-            "name_and_type_index:%d\n",
-            info->tag, "FieldRef_info", info->class_index,
+	printf(" %s;\t\t#%d;#%d;\n", 
+            "FieldRef", info->class_index,
             info->name_and_type_index);
 }
 
@@ -752,7 +752,7 @@ PRIVATE void log_nametype_info(const nametype_info *info)
 		return;
 	}
 
-	printf(" %s,\t#%d;#%d;\n", 
+	printf(" %s;\t#%d;#%d;\n", 
             "NameAndType", info->name_index, info->descriptor_index);
 }
 
@@ -763,7 +763,7 @@ PRIVATE void log_class_info(const class_info *info)
         return;
     }
 
-    printf(" %s,\t#%d\n",
+    printf(" %s;\t\t#%d\n",
             "Class", info->name_index);
 }
 
@@ -851,13 +851,13 @@ PRIVATE attr_info* read_attr_info(FILE *fp)
 		}
 		info->attr_length = ntohl(info->attr_length);
 
-		info->info = (uint8 *)calloc(info->attr_length, sizeof(*info->info));
+		info->info = (uint8 *)calloc(info->attr_length, 1);
 		if (NULL == info->info) {
 			LogE("Failed calloc mem for attr_info.info");
 			break;
 		}
 
-		if (info->attr_length != fread(info->info, sizeof(*info->info), info->attr_length, fp)) {
+		if (info->attr_length != fread(info->info, 1, info->attr_length, fp)) {
 			LogE("Failed read attr_info.info");
 			break;
 		}
@@ -871,7 +871,9 @@ PRIVATE attr_info* read_attr_info(FILE *fp)
 	return NULL;
 }
 
-PRIVATE void log_field_info (field_info *info) {
+PRIVATE void log_field_info (
+        const ClassFile *file, 
+        const field_info *info) {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
@@ -883,11 +885,11 @@ PRIVATE void log_field_info (field_info *info) {
 	printf("attr count:%d\n", info->attr_count);
 	int i;
 	for (i = 0; i < info->attr_count; ++i) {
-		log_attr_info(info->attr[i]);
+		log_attr_info(file, info->attr[i]);
 	}
 }
 
-PRIVATE void log_attr_info (attr_info *info)
+PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
@@ -896,10 +898,32 @@ PRIVATE void log_attr_info (attr_info *info)
 
 	printf("attr name index:%d\n", info->attr_name_index);
 	printf("attr length:%d\n", info->attr_length);
-	printf("attr info:%s\n", info->info);
+
+    utf8_info *utf8 = file->const_pool[info->attr_name_index]->info;
+    char *attr_name = utf8->bytes;
+    printf("attr name:%s\n", attr_name);
+    if (!strncmp(attr_name, "Code", 4)) {
+        code_attr *code = NULL;
+        if (cast_code_attr(info->info, info->attr_length, &code) < 0) {
+            LogE("Failed cast to code_attr");
+            return;
+        }
+        log_code_attr(file, code);
+        free_code_attr(code);
+    } else if(!strcmp(attr_name, "ConstantValue")) {
+		uint16 idx = *((uint16 *)info->info);
+		idx = ntohs(idx);
+		printf("ConstantValue index:%d\n", idx);
+	} else if (!strcmp(attr_name, "SourceFile")) {
+		uint16 idx = *((uint16 *)info->info);
+		idx = ntohs(idx);
+		printf("SourceFile index:%d\n", idx);
+	}
 }
 
-PRIVATE void log_method_info (method_info *info) {
+PRIVATE void log_method_info (
+        const ClassFile *file, 
+        const method_info *info) {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
@@ -911,7 +935,7 @@ PRIVATE void log_method_info (method_info *info) {
 	printf("attr count:%d\n", info->attr_count);
 	int i;
 	for (i = 0; i < info->attr_count; ++i) {
-		log_attr_info(info->attr[i]);
+		log_attr_info(file, info->attr[i]);
 	}
 }
 
@@ -973,3 +997,156 @@ PRIVATE method_info* read_method_info(FILE *fp)
 	return NULL;
 }
 
+PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
+{
+    VALIDATE_NOT_NULL2(buffer, attr);
+    if (len < 12) {
+        LogE("Invalid param, buff len must >= 12");
+        return -1;
+    }
+
+    *attr = (code_attr *)calloc(1, sizeof(code_attr));
+    if (NULL == *attr) {
+        LogE("Failed calloc mem for code_attr");
+        return -1;
+    }
+
+    void *buff = buffer;
+    (*attr)->max_stack = *((uint16 *)buff);
+    (*attr)->max_stack = ntohs((*attr)->max_stack);
+    buff += 2;
+    len -= 2;
+
+    (*attr)->max_locals = *((uint16 *)buff);
+    (*attr)->max_locals = ntohs((*attr)->max_locals);
+    buff += 2;
+    len -= 2;
+
+    (*attr)->code_length = *((uint32 *)buff);
+    (*attr)->code_length = ntohl((*attr)->code_length);
+    buff += 4;
+    len -= 4;
+    if ((*attr)->code_length <= 0) {
+        LogE("code length must > 0");
+        return -1;
+    }
+
+    (*attr)->code = (uint8 *)calloc((*attr)->code_length, sizeof(uint8));
+    if (NULL == (*attr)->code) {
+        LogE("Failed calloc mem for code");
+        return -1;
+    }
+
+    memcpy((*attr)->code, buff, (*attr)->code_length);
+    buff += (*attr)->code_length;
+    len -= (*attr)->code_length;
+
+    (*attr)->exception_table_length = *((uint16 *)buff);
+    (*attr)->exception_table_length = ntohs((*attr)->exception_table_length);
+    buff += (*attr)->exception_table_length;
+    len -= (*attr)->exception_table_length;
+
+    (*attr)->exception_table = NULL;
+    if ((*attr)->exception_table_length > 0) {
+        (*attr)->exception_table = (exception_table *)calloc((*attr)->exception_table_length, sizeof(exception_table));
+        if (NULL == (*attr)->exception_table) {
+            LogE("Failed calloc mem for exception_table");
+            return -1;
+        }
+
+        exception_table *tbl = (exception_table*)buff;
+        int i;
+        for (i = 0; i < (*attr)->exception_table_length; ++i) {
+            memcpy((*attr)->exception_table + i, tbl + i, sizeof(exception_table));
+            (*attr)->exception_table[i].start_pc = ntohs((*attr)->exception_table[i].start_pc);
+            (*attr)->exception_table[i].end_pc = ntohs((*attr)->exception_table[i].end_pc);
+            (*attr)->exception_table[i].handler_pc = ntohs((*attr)->exception_table[i].handler_pc);
+            (*attr)->exception_table[i].catch_type = ntohs((*attr)->exception_table[i].catch_type);
+
+            len -= sizeof(exception_table);
+        }
+    }
+
+    (*attr)->attr_count = *((uint16 *)buff);
+    (*attr)->attr_count = ntohs((*attr)->attr_count);
+    len -= 2;
+
+    (*attr)->attr = NULL;
+    if ((*attr)->attr_count > 0) {
+        int i;
+        for (i = 0; i < (*attr)->attr_count; ++i) {
+
+            len -= sizeof(attr_info);
+        }
+    }
+
+    if (0 == len) {
+        printf("cast OK\n");
+    } else {
+        printf("cast Error\n");
+    }
+
+    return 0;
+}
+
+PRIVATE void free_code_attr(code_attr *attr) {
+    if (NULL != attr) {
+        if (NULL != attr->code) {
+            free(attr->code);
+            attr->code = NULL;
+        }
+
+        if (NULL != attr->exception_table) {
+            free (attr->exception_table);
+            attr->exception_table = NULL;
+        }
+
+        if (NULL != attr->attr) {
+            free (attr->attr);
+            attr->attr = NULL;
+        }
+
+        free(attr);
+    }
+}
+
+PRIVATE void log_code_attr(const ClassFile *file, const code_attr *code)
+{
+    if (NULL == code) {
+        LogE("NULL pointer execption");
+        return;
+    }
+
+    printf("max stack:%d\n", code->max_stack);
+    printf("max locals:%d\n", code->max_locals);
+    printf("code length:%d\n", code->code_length);
+
+    int i;
+    for (i = 0; i < code->code_length; ++i) {
+        printf("%0x\n", code->code[i]);
+    }
+
+    printf("exception table length:%d\n",
+            code->exception_table_length);
+    for (i = 0; i < code->exception_table_length; ++i) {
+        log_exception_table(code->exception_table + i);        
+    }
+
+    printf("attr count:%d\n", code->attr_count);
+    for (i = 0; i < code->attr_count; ++i) {
+       log_attr_info (file, code->attr + i); 
+    }
+
+}
+
+PRIVATE void log_exception_table(const exception_table *tbl) {
+    if (NULL == tbl) {
+        LogE("table = NULL");
+        return;
+    }
+
+    printf("start pc:%d\n", tbl->start_pc);
+    printf("end pc:%d\n", tbl->end_pc);
+    printf("handler pc:%d\n", tbl->handler_pc);
+    printf("catch type:%d\n", tbl->catch_type);
+}
