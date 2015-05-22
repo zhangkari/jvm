@@ -12,28 +12,19 @@
 
 #include <ClassFile.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <instruction.h>
 
-int main(int argc, char *argv[]) 
-{
+int main(int argc, char *argv[]) {
     if (2 != argc) {
         printf("%s [options] class\n", argv[0]);
         return -1;
     }
 
-    ClassFile *clsFile = load_class(argv[1]);
+    ClassFile *clsFile = loadClassFile(argv[1]);
     if (NULL == clsFile) {
         return -1;
     }
-
-    free(clsFile);
+	logClassFile(clsFile);
+    freeClassFile(clsFile);
     clsFile = NULL;
-
-	/*
-	int i;
-	for (i = 0; i < 0xc9; ++i) {
-		printf("%s\n", stropcode(i));
-	}
-	*/
 }

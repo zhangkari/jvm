@@ -12,7 +12,7 @@
 
 #define MAGIC_NUMBER 0XCAFEBABE
 
-PUBLIC ClassFile* load_class(const char *path)
+PUBLIC ClassFile* loadClassFile(const char *path)
 {
     if (NULL == path) {
         fprintf(stderr, "path is NULL\n");
@@ -167,10 +167,6 @@ PUBLIC ClassFile* load_class(const char *path)
             }
         }
 
-#ifdef DEBUG
-		logClassFile(clsFile);
-#endif
-
 		fclose(fp);
         return clsFile;
 
@@ -181,6 +177,19 @@ PUBLIC ClassFile* load_class(const char *path)
     fclose(fp);
 
     return NULL;
+}
+
+/**
+ * Free class file
+ */
+PUBLIC void freeClassFile(ClassFile *clsFile)
+{
+	if (NULL == clsFile) {
+
+		// ...
+
+		free(clsFile);
+	}
 }
 
 PRIVATE cp_info* read_cp_info(FILE *fp) {
@@ -419,22 +428,58 @@ PRIVATE int read_uint32(uint32 *value, FILE *fp) {
 	return 0;
 }
 
-PRIVATE void logClassFile(const ClassFile *file)
+/** 
+ * retrieve the SourceFile attribute in attributes list
+ */
+PRIVATE const char* retrieveSourceFileName(const ClassFile *file) {
+	if (NULL == file) {
+		return "Unkown";
+	}
+
+	int i;
+	for (i = 0; i < file->attributes_count; ++i) {
+		attr_info *attr = file->attributes[i];
+		int idx = attr->attr_name_index;
+		utf8_info *name = (utf8_info *)file->const_pool[idx]->info;
+		if (!strncmp("SourceFile", name->bytes, 10)) {
+			sourcefile_attr *sfattr = (sourcefile_attr *)attr->info;
+			int nameidx = ntohs(sfattr->source_index);
+			utf8_info *sf = (utf8_info *)file->const_pool[nameidx]->info;
+			return (char *)sf->bytes;	
+		}
+	}
+
+	return "Unknow";
+}
+
+PRIVATE void printClassAttr(const ClassFile *file) {
+
+}
+
+/**
+ * log ClassFile information
+ */
+PUBLIC void logClassFile(const ClassFile *file)
 {
 	if (NULL == file) {
 		LogE("file = NULL");
 		return;
 	}
 
-	printf("magic:%X\n", file->magic);
+	int i;
+	const char* sourceFile = retrieveSourceFileName(file);
+	printf("Compiled from %s\n", sourceFile);
+
+	printClassAttr(file);
+
+	printf("SourceFile: %s\n", sourceFile);	
 	printf("minor version:%u\n", file->minor_version);
 	printf("major version:%u\n", file->major_version);
 
 	printf("const pool count:%u\n", file->const_pool_count);
-	int i;
 	for (i = 1; i < file->const_pool_count; ++i) {
 		printf("const #%-2d = ", i);
-		log_cp_info(file->const_pool[i]);
+		log_cp_info(file, file->const_pool[i]);
 	}
 
 	printf("access flags:%X\n", file->access_flags);
@@ -507,7 +552,7 @@ PRIVATE void log_long_info(const long_info *info)
 }
 
 
-PRIVATE void log_cp_info(const cp_info *info)
+PRIVATE void log_cp_info(const ClassFile *clsFile, const cp_info *info)
 {
 	switch (info->tag) {
 		case CONSTANT_Utf8:
@@ -530,7 +575,7 @@ PRIVATE void log_cp_info(const cp_info *info)
             break;
 
         case CONSTANT_Class:
-            log_class_info((class_info *)info->info);
+            log_class_info(clsFile, (class_info *)info->info);
             break;
 
         case CONSTANT_String:
@@ -542,7 +587,7 @@ PRIVATE void log_cp_info(const cp_info *info)
             break;
 
         case CONSTANT_Methodref:
-            log_methodref_info((methodref_info*)info->info);
+            log_methodref_info(clsFile, (methodref_info*)info->info);
             break;
 
         case CONSTANT_InterfaceMethodref:
@@ -550,7 +595,7 @@ PRIVATE void log_cp_info(const cp_info *info)
             break;
 
         case CONSTANT_NameAndType:
-            log_nametype_info((nametype_info *)info->info);
+            log_nametype_info(clsFile, (nametype_info *)info->info);
             break;
 
         case CONSTANT_MethodHandle:
@@ -593,15 +638,26 @@ PRIVATE integer_info* read_integer_info(FILE *fp)
     return info;
 }
 
-PRIVATE void log_methodref_info(const methodref_info *info)
+PRIVATE void log_methodref_info(const ClassFile *clsFile, const methodref_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
 	}
 
-	printf(" %s;\t\t#%d;#%d;\n", "MethodRef", 
-			info->class_index, info->name_and_type_index);
+	class_info *cls = (class_info *)clsFile->const_pool[info->class_index]->info;
+	utf8_info *clsname = (utf8_info *)clsFile->const_pool[cls->name_index]->info;
+	nametype_info *nametype = (nametype_info *)clsFile->const_pool[info->name_and_type_index]->info;
+	utf8_info *name = (utf8_info *)clsFile->const_pool[nametype->name_index]->info;
+	utf8_info *signature = (utf8_info *)clsFile->const_pool[nametype->descriptor_index]->info;
+
+	printf(" %s\t\t#%d.#%d;\t// %s.%s:%s\n", 
+			"Method", 
+			info->class_index, 
+			info->name_and_type_index,
+			clsname->bytes,
+			name->bytes,
+			signature->bytes);
 }
 
 PRIVATE string_info* read_string_info(FILE *fp)
@@ -745,26 +801,35 @@ PRIVATE nametype_info* read_nametype_info(FILE *fp)
     return info;
 }
 
-PRIVATE void log_nametype_info(const nametype_info *info)
+PRIVATE void log_nametype_info(const ClassFile *clsFile, const nametype_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
 	}
 
-	printf(" %s;\t#%d;#%d;\n", 
-            "NameAndType", info->name_index, info->descriptor_index);
+	utf8_info *name = (utf8_info*)clsFile->const_pool[info->name_index]->info;
+	utf8_info *signature = (utf8_info*)clsFile->const_pool[info->descriptor_index]->info;
+	printf(" %s;\t#%d:#%d;// %s:%s\n", 
+            "NameAndType", 
+			info->name_index, 
+			info->descriptor_index,
+			name->bytes,
+			signature->bytes);
 }
 
-PRIVATE void log_class_info(const class_info *info)
+PRIVATE void log_class_info(const ClassFile *cf, const class_info *info)
 {
-    if (NULL == info) {
+    if (NULL == info || NULL == cf) {
         LogE("info = NULL");
         return;
     }
 
-    printf(" %s;\t\t#%d\n",
-            "Class", info->name_index);
+	utf8_info *utf8 = (utf8_info*)cf->const_pool[info->name_index]->info;
+    printf(" %s;\t\t#%d;\t// %s\n",
+            "Class", 
+			info->name_index, 
+			utf8->bytes);
 }
 
 PRIVATE field_info* read_field_info(FILE *fp)

@@ -221,24 +221,33 @@ struct ClassFile {
 /**
  * Load class file
  */
-PUBLIC ClassFile* load_class(const char *path);
+PUBLIC ClassFile* loadClassFile(const char *path);
+
+/**
+ * Log class file information
+ */
+PUBLIC void logClassFile(const ClassFile *file);
+
+/**
+ * Free class file
+ */
+PUBLIC void freeClassFile(ClassFile *clsFile);
 
 PRIVATE void log_utf8_info(const utf8_info *info);
 PRIVATE void log_integer_info(const integer_info *info);
 PRIVATE void log_float_info(const float_info *info);
 PRIVATE void log_long_info(const long_info *info);
-PRIVATE void log_methodref_info(const methodref_info *info);
+PRIVATE void log_methodref_info(const ClassFile *cf, const methodref_info *info);
 PRIVATE void log_string_info(const string_info *info);
 PRIVATE void log_fieldref_info(const fieldref_info *info);
-PRIVATE void log_nametype_info(const nametype_info *info);
-PRIVATE void log_class_info(const class_info *info);
+PRIVATE void log_nametype_info(const ClassFile *cf, const nametype_info *info);
+PRIVATE void log_class_info(const ClassFile *cf, const class_info *info);
 PRIVATE void log_field_info (const ClassFile *file, const field_info *info);
 PRIVATE void log_method_info (const ClassFile *file, const method_info *info);
 PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info);
 PRIVATE void log_code_attr(const ClassFile *file, const code_attr *attr);    
 PRIVATE void log_exception_table(const exception_table *tbl);
-PRIVATE void log_cp_info(const cp_info *info);
-PRIVATE void logClassFile(const ClassFile *file);
+PRIVATE void log_cp_info(const ClassFile* file, const cp_info *info);
 
 PRIVATE cp_info* read_cp_info(FILE *fp);
 PRIVATE utf8_info* read_utf8_info(FILE *fp);
