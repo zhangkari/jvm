@@ -7,6 +7,8 @@
 #ifndef __INSTRUCTION__H__
 #define __INSTRUCTION__H__
 
+#include <comm.h>
+
 typedef enum {
 	opcode_min = -1,
 	nop,			// 0x00
@@ -217,7 +219,11 @@ typedef enum {
 	impdep2 = 0xff,
 } opcode;
 
+// name of opcode
 extern const char* const opcode_name[];
+
+// length of operand
+extern uint8 operand_len[];
 
 bool validate_opcode(int opcode);
 const char* stropcode(int opcode);

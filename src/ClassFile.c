@@ -4,11 +4,12 @@
  * *************************/
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
+#include <malloc.h>
 #include <string.h>
-
 #include <ClassFile.h>
 #include <comm.h>
+#include <instruction.h>
 
 #define MAGIC_NUMBER 0XCAFEBABE
 
@@ -453,7 +454,57 @@ PRIVATE const char* retrieveSourceFileName(const ClassFile *file) {
 }
 
 PRIVATE void printClassAttr(const ClassFile *file) {
+    class_info *this = (class_info *)file->const_pool[file->this_class]->info;
+    class_info *super = (class_info *)file->const_pool[file->super_class]->info;
 
+    utf8_info *this_name = (utf8_info *)file->const_pool[this->name_index]->info;
+    utf8_info *super_name = (utf8_info *)file->const_pool[super->name_index]->info;
+
+
+    if (file->access_flags & ACC_PUBLIC) {
+        printf("public ");
+    } else if(file->access_flags & ACC_PRIVATE) {
+        printf("private ");
+    } else if(file->access_flags & ACC_PROTECTED) {
+        printf("protected ");
+    }
+
+    if (file->access_flags & ACC_STATIC) {
+        printf("static ");
+    }
+
+    if (file->access_flags & ACC_FINAL) {
+        printf ("final ");
+    }
+
+    if (file->access_flags & ACC_NATIVE) {
+        printf("native ");
+    }
+
+    if (file->access_flags & ACC_ABSTRACT) {
+        printf("abstract ");
+    }
+
+    printf("class %s extends %s ",
+            this_name->bytes,
+            super_name->bytes);
+
+    int interfaces = file->interfaces_count;
+    if (interfaces > 0) {
+        printf("implements ");
+        int i;
+        for (i = 0; i < interfaces; ++i) {
+            int idx = file->interfaces[i];
+            class_info *cls = (class_info *)file->const_pool[idx]->info;
+            utf8_info *name = (utf8_info *)file->const_pool[cls->name_index]->info;
+            printf("%s", name->bytes);
+            if (i != interfaces - 1) {
+                printf(", ");
+            }
+        }
+    }
+
+    printf(";\n");
 }
 
 /**
@@ -579,11 +630,11 @@ PRIVATE void log_cp_info(const ClassFile *clsFile, const cp_info *info)
             break;
 
         case CONSTANT_String:
-            log_string_info((string_info *)info->info);
+            log_string_info(clsFile, (string_info *)info->info);
             break;
 
         case CONSTANT_Fieldref:
-            log_fieldref_info((fieldref_info *)info->info);
+            log_fieldref_info(clsFile, (fieldref_info *)info->info);
             break;
 
         case CONSTANT_Methodref:
@@ -691,16 +742,18 @@ PRIVATE string_info* read_string_info(FILE *fp)
     return info;
 }
 
-PRIVATE void log_string_info(const string_info *info)
+PRIVATE void log_string_info(const ClassFile *cf, const string_info *info)
 {
 	if (NULL == info) {
 		LogE("info = NULL");
 		return;
 	}
 
-	printf(" %s\t\t#%d;\n",
-            "String", info->string_index);
-
+    utf8_info *utf8 = (utf8_info *)cf->const_pool[info->string_index]->info;
+	printf(" %s\t\t#%d;\t%s\n",
+            "String", 
+            info->string_index,
+            utf8->bytes);
 }
 
 PRIVATE fieldref_info* read_fieldref_info(FILE *fp)
@@ -746,16 +799,27 @@ PRIVATE fieldref_info* read_fieldref_info(FILE *fp)
     return info;
 }
 
-PRIVATE void log_fieldref_info(const fieldref_info *info)
+PRIVATE void log_fieldref_info(const ClassFile *clsFile, const fieldref_info *info)
 {
-	if (NULL == info) {
-		LogE("info = NULL");
+	if (NULL == info || NULL == clsFile) {
+		LogE("info = NULL || clsFile = NULL");
 		return;
 	}
 
-	printf(" %s;\t\t#%d;#%d;\n", 
-            "FieldRef", info->class_index,
-            info->name_and_type_index);
+    class_info *cls = (class_info *)clsFile->const_pool[info->class_index]->info;
+    nametype_info *type = (nametype_info *)clsFile->const_pool[info->name_and_type_index]->info;
+
+    utf8_info *clsname = (utf8_info *)clsFile->const_pool[cls->name_index]->info;
+    utf8_info *fieldname = (utf8_info *)clsFile->const_pool[type->name_index]->info;
+    utf8_info *signature = (utf8_info *)clsFile->const_pool[type->descriptor_index]->info;
+
+	printf(" %s;\t\t#%d;#%d;\t// %s.%s:%s\n", 
+            "FieldRef", 
+            info->class_index,
+            info->name_and_type_index,
+            clsname->bytes,
+            fieldname->bytes,
+            signature->bytes);
 }
 
 PRIVATE nametype_info* read_nametype_info(FILE *fp)
@@ -978,11 +1042,11 @@ PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
     } else if(!strcmp(attr_name, "ConstantValue")) {
 		uint16 idx = *((uint16 *)info->info);
 		idx = ntohs(idx);
-		printf("ConstantValue index:%d\n", idx);
+//		printf("ConstantValue index:%d\n", idx);
 	} else if (!strcmp(attr_name, "SourceFile")) {
 		uint16 idx = *((uint16 *)info->info);
 		idx = ntohs(idx);
-		printf("SourceFile index:%d\n", idx);
+//		printf("SourceFile index:%d\n", idx);
 	}
 }
 
@@ -1136,6 +1200,9 @@ PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
     (*attr)->attr_count = ntohs((*attr)->attr_count);
     len -= 2;
 
+    printf("attr_count=%d\n", (*attr)->attr_count);
+    printf("len=%d\n", len);
+
     (*attr)->attr = NULL;
     if ((*attr)->attr_count > 0) {
         int i;
@@ -1144,6 +1211,8 @@ PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
             len -= sizeof(attr_info);
         }
     }
+
+    printf("len=%d\n", len);
 
     if (0 == len) {
         printf("cast OK\n");
@@ -1182,15 +1251,21 @@ PRIVATE void log_code_attr(const ClassFile *file, const code_attr *code)
         return;
     }
 
-    printf("max stack:%d\n", code->max_stack);
-    printf("max locals:%d\n", code->max_locals);
+    printf("Stack=%d, ", code->max_stack);
+    printf("Locals:%d, ", code->max_locals);
+    printf("Args_size:%d ", 1);
     printf("code length:%d\n", code->code_length);
 
-    int i;
-    for (i = 0; i < code->code_length; ++i) {
-        printf("%0x\n", code->code[i]);
+    int i = 0;
+    while (i < code->code_length) {
+      //  printf("%0x ", code->code[i]);
+        printf("%d\t%s\n", i, opcode_name[code->code[i]]);
+        int len = operand_len[code->code[i]];
+        i += 1;
+        i += len;
     }
 
+#if 0
     printf("exception table length:%d\n",
             code->exception_table_length);
     for (i = 0; i < code->exception_table_length; ++i) {
@@ -1201,6 +1276,8 @@ PRIVATE void log_code_attr(const ClassFile *file, const code_attr *code)
     for (i = 0; i < code->attr_count; ++i) {
        log_attr_info (file, code->attr + i); 
     }
+
+#endif
 
 }
 
