@@ -533,6 +533,7 @@ PUBLIC void logClassFile(const ClassFile *file)
 		log_cp_info(file, file->const_pool[i]);
 	}
 
+    /*
 	printf("access flags:%X\n", file->access_flags);
 	printf("this class:%d\n", file->this_class);
 	printf("super class:%d\n", file->super_class);
@@ -546,16 +547,19 @@ PUBLIC void logClassFile(const ClassFile *file)
 	for (i = 0; i < file->field_count; ++i) {
 		log_field_info(file, file->fields[i]);
 	}
+    */
 
 	printf("methods count:%d\n", file->methods_count);
 	for (i = 0; i < file->methods_count; ++i) {
 		log_method_info(file, file->methods[i]);
 	}
 
+    /*
 	printf("attributes count:%d\n", file->attributes_count);
 	for (i = 0; i < file->attributes_count; ++i) {
 		log_attr_info(file, file->attributes[i]);
 	}
+    */
 }
 
 
@@ -1025,12 +1029,14 @@ PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
 		return;
 	}
 
+    /*
 	printf("attr name index:%d\n", info->attr_name_index);
 	printf("attr length:%d\n", info->attr_length);
+    */
 
     utf8_info *utf8 = file->const_pool[info->attr_name_index]->info;
     char *attr_name = utf8->bytes;
-    printf("attr name:%s\n", attr_name);
+   // printf("attr name:%s\n", attr_name);
     if (!strncmp(attr_name, "Code", 4)) {
         code_attr *code = NULL;
         if (cast_code_attr(info->info, info->attr_length, &code) < 0) {
@@ -1053,15 +1059,43 @@ PRIVATE void log_attr_info (const ClassFile *file, const attr_info *info)
 PRIVATE void log_method_info (
         const ClassFile *file, 
         const method_info *info) {
-	if (NULL == info) {
-		LogE("info = NULL");
+	if (NULL == info || NULL == file) {
+		LogE("info = NULL || clsFile == NULL");
 		return;
 	}
 
-	printf("access flags:%X\n", info->access_flags);
-	printf("name index:%d\n", info->name_index);
-	printf("descriptor_index:%d\n", info->descriptor_index);
+    if (info->access_flags & ACC_PUBLIC) {
+        printf("public ");
+    } else if (info->access_flags & ACC_PRIVATE) {
+        printf("private ");
+    } else if (info->access_flags & ACC_PROTECTED) {
+        printf("protected ");
+    }
+
+    if (info->access_flags & ACC_SYNCHRONIZED) {
+        printf("synchronized ");
+    }
+    if (info->access_flags & ACC_FINAL) {
+        printf("final ");
+    }
+    if (info->access_flags & ACC_STATIC) {
+        printf("static ");
+    }
+    if (info->access_flags & ACC_NATIVE) {
+        printf("native ");
+    }
+    if (info->access_flags & ACC_ABSTRACT) {
+        printf ("abstract ");
+    }
+
+    utf8_info* func_name = (utf8_info *)file->const_pool[info->name_index]->info;
+	printf("%s ", func_name->bytes);
+    utf8_info *signature = (utf8_info *)file->const_pool[info->descriptor_index]->info;
+	printf("%s;\n", signature->bytes);
+
+    /*
 	printf("attr count:%d\n", info->attr_count);
+    */
 	int i;
 	for (i = 0; i < info->attr_count; ++i) {
 		log_attr_info(file, info->attr[i]);
@@ -1171,7 +1205,7 @@ PRIVATE int cast_code_attr(void *buffer, uint16 len, code_attr **attr)
     len -= (*attr)->code_length;
 
     (*attr)->exception_table_length = *((uint16 *)buff);
-    (*attr)->exception_table_length = ntohs((*attr)->exception_table_length);
+    (*attr)->exception_table_length = ntohl((*attr)->exception_table_length);
     buff += (*attr)->exception_table_length;
     len -= (*attr)->exception_table_length;
 
@@ -1253,7 +1287,7 @@ PRIVATE void log_code_attr(const ClassFile *file, const code_attr *code)
 
     printf("Stack=%d, ", code->max_stack);
     printf("Locals:%d, ", code->max_locals);
-    printf("Args_size:%d ", 1);
+    printf("Args_size:%d ", code->max_locals);
     printf("code length:%d\n", code->code_length);
 
     int i = 0;
