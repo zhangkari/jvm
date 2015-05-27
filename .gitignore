@@ -1,3 +1,6 @@
 *.o
+*.so
+*.a
+*.lo
 *.exe
 jvm
