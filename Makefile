@@ -9,8 +9,10 @@ SRC = $(wildcard *.c) $(wildcard src/*.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 
 $(PROJ) : $(OBJ)
+	make -C libs
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $@
 
 .PHONEY:clean $(PROJ)
 clean:
+	make -C libs clean
 	@rm -rvf $(PROJ) $(TEST) $(OBJ)
