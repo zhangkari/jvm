@@ -67,89 +67,89 @@ enum Prime_Class_Type {
 };
 
 typedef struct ConstPoolEntry {
-	u1 tag;
+	U1 tag;
 	union {
 		struct {
-			u2 name_index;
+			U2 name_index;
 		} class_info;
 
 		struct {
-			u2 class_index;
-			u2 name_type_index;
+			U2 class_index;
+			U2 name_type_index;
 		} fieldref_info;
 
 		struct {
-			u2 class_index;
-			u2 name_type_index;
+			U2 class_index;
+			U2 name_type_index;
 		} methodref_info;
 
 		struct {
-			u2 class_index;
-			u2 name_type_index;
+			U2 class_index;
+			U2 name_type_index;
 		} ifmethodref_info;
 
 		struct {
-			u2 string_index;
+			U2 string_index;
 		} string_info;
 
 		struct {
-			u4 bytes;
+			U4 bytes;
 		} integer_info;
 
 		struct {
-			u4 bytes;
+			U4 bytes;
 		} float_info;
 
 		struct {
-			u4 high_bytes;
-			u4 low_bytes;
+			U4 high_bytes;
+			U4 low_bytes;
 		} long_info;
 
 		struct {
-			u4 high_bytes;
-			u4 low_bytes;
+			U4 high_bytes;
+			U4 low_bytes;
 		} double_info;
 
 		struct {
-			u2 name_index;
-			u2 profile_index;
+			U2 name_index;
+			U2 profile_index;
 		} nametype_info;
 
 		struct {
-			u2 length;
-			u1 *bytes;
+			U2 length;
+			U1 *bytes;
 		} utf8_info;
 
 		struct {
-			u1 ref_kind;
-			u2 ref_index;
+			U1 ref_kind;
+			U2 ref_index;
 		} methodhandle_info;
 
 		struct {
-			u2 profile_index;
+			U2 profile_index;
 		} methodtype_info;
 
 		struct {
-			u2 bootstrap_method_attr_index;
-			u2 name_type_index;
+			U2 bootstrap_method_attr_index;
+			U2 name_type_index;
 		} invokedynamic_info;
 	};
 } ConstPoolEntry;
 
 typedef struct ConstPool {
-	u2 length;
+	U2 length;
 	ConstPoolEntry *entries;
 } ConstPool;
 
 typedef struct ExceptionEntry {
-    u2 start_pc;
-    u2 end_pc;
-    u2 handler_pc;
-    u2 catch_type;
+    U2 start_pc;
+    U2 end_pc;
+    U2 handler_pc;
+    U2 catch_type;
 } ExceptionEntry;
 
 typedef struct ExceptionTable {
-	u4 length;
+	U4 length;
 	struct ExceptionEntry* entries;
 } ExceptionTable;
 
@@ -164,8 +164,8 @@ typedef struct FieldEntry {
 	char *name;	
 	char *type;
 	char *signature;
-	u2	acc_flags;
-	u2	constant;
+	U2	acc_flags;
+	U2	constant;
 } FieldEntry;
 
 typedef struct MethodEntry {
@@ -173,11 +173,11 @@ typedef struct MethodEntry {
 	char *name;
 	char *type;
 	char *signature; 
-	u2	acc_flags;
-	u2	max_stack;
-	u2	max_locals;
-	u2	args_count;
-	u4	code_length;
+	U2	acc_flags;
+	U2	max_stack;
+	U2	max_locals;
+	U2	args_count;
+	U4	code_length;
 	void *code;
 	ExceptionTable *excep_tbl;
 } MethodEntry;
@@ -188,16 +188,16 @@ typedef struct ClassEntry {
 	char *super_name;
 	char *source_file;
 	Class *super;
-	u1 state;
-	u2 acc_flags;
-	u2 fileds_count;
+	U1 state;
+	U2 acc_flags;
+	U2 fileds_count;
 	FieldEntry  *fields;
-	u2 methods_count;		// class method
+	U2 methods_count;		// class method
 	MethodEntry *methods;
-	u2 interfaces_count;
+	U2 interfaces_count;
 	Class **interfaces;
 	Object *class_loader;
-	u4	method_table_size;	// instance method
+	U4	method_table_size;	// instance method
 	MethodEntry *method_table;
 } ClassEntry;
 
@@ -210,5 +210,7 @@ extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);
 extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
 
+extern Class* loadClassFromFile(char *path, char *classname);
+extern Class* loadClassFromJar(char *path, char *classname);
 
 #endif

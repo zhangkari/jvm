@@ -70,6 +70,29 @@ bool exitVM(VM *vm) {
 
 }
 
-int main(int argc, char *argv[]) {
+void setDefaultInitArgs(InitArgs *args)
+{
 
+}
+
+int readSysConfig(char *path, Property *props) {
+	return 0;
+}
+
+int setInitArgs(Property *props, int nprop, InitArgs *args) {
+	return 0;
+}
+
+int parseCmdLine(int argc, char **argv, Property *props) {
+	return 0;
+}
+
+int main(int argc, char *argv[]) {
+	InitArgs initArgs;	
+	setDefaultInitArgs(&initArgs);
+	Property props[argc - 1];
+	int len = parseCmdLine(argc, argv, props);
+	setInitArgs(props, len, &initArgs);
+
+	Class *entry_class = loadClassFromFile(argv[1], argv[1]);
 }

@@ -230,7 +230,7 @@ const char* const opcode_name[] ={
 	"breakpoint"
 };
 
-u1 operand_len[] = {
+U1 operand_len[] = {
     0,  // 0x00 nop
     0,  // 0x01 
     0,  // 0x02

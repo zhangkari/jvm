@@ -19,9 +19,9 @@
 #define FALSE 0
 #define bool char
 
-typedef uint8_t  u1;
-typedef uint16_t u2;
-typedef uint32_t u4;
+typedef uint8_t  U1;
+typedef uint16_t U2;
+typedef uint32_t U4;
 
 #define KB 1024
 #define MB (KB*KB)
@@ -39,6 +39,7 @@ typedef uint32_t u4;
 
 #define JAVA_COMPAT_VERSION "0.0.1" 
 
+#define _T(x,y) x##y 
 
 typedef struct JavaStack JavaStack;
 
@@ -50,9 +51,9 @@ typedef struct Property {
 typedef struct InitArgs {
 	char *classpath;
 	char *bootpath;
-	u4 java_stack;
-	u4 min_heap;
-	u4 max_heap;
+	U4 java_stack;
+	U4 min_heap;
+	U4 max_heap;
 	Property *cmdline_props;
 	int props_count;
 	void *main_stack_base;
@@ -73,6 +74,10 @@ typedef struct VM {
 	InitArgs *intArgs;
 } VM;
 
+extern void setDefaultInitArgs(InitArgs *args);
+extern int parseCmdLine(int argc, char **argv, Property *props);
+extern int readSysConfig(char *path, Property *props);
+extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 
 extern void initVM(VM *vm);
 extern void initMem(InitArgs *args);
