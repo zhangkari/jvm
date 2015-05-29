@@ -4,15 +4,14 @@
  *
  ************************************/
 
-#include <comm.h>
 #include <instruction.h>
 
 bool validate_opcode(int opcode)
 {
 	if (opcode > opcode_min && opcode < opcode_max) {
-		return true;
+		return TRUE;
 	} else {
-		return false;
+		return FALSE;
 	}
 }
 
@@ -231,7 +230,7 @@ const char* const opcode_name[] ={
 	"breakpoint"
 };
 
-uint8 operand_len[] = {
+u1 operand_len[] = {
     0,  // 0x00 nop
     0,  // 0x01 
     0,  // 0x02
