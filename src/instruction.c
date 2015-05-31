@@ -6,8 +6,7 @@
 
 #include <instruction.h>
 
-bool validate_opcode(int opcode)
-{
+bool validate_opcode(int opcode) {
 	if (opcode > opcode_min && opcode < opcode_max) {
 		return TRUE;
 	} else {
@@ -15,8 +14,7 @@ bool validate_opcode(int opcode)
 	}
 }
 
-const char* stropcode(int opcode)
-{
+const char* stropcode(int opcode) {
 	if (validate_opcode(opcode)) {
 		return opcode_name[opcode];
 	} else {

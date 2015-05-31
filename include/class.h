@@ -209,6 +209,7 @@ extern Class* findSystemClass(char *classname);
 extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);
 extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
+extern void executeMethod(VM *vm, MethodEntry *method);
 
 extern Class* loadClassFromFile(char *path, char *classname);
 extern Class* loadClassFromJar(char *path, char *classname);

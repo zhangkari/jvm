@@ -27,7 +27,7 @@ bool pushStack(JavaStack *stack, StackFrame *frame) {
 		return FALSE;
 	}
 	if (stack->top + 1 >= stack->size) {
-		fprintf(stderr, "Stack is overflow");
+		fprintf(stderr, "Stack is overflow\n");
 		return FALSE;
 	}
 
@@ -37,7 +37,7 @@ bool pushStack(JavaStack *stack, StackFrame *frame) {
 
 StackFrame* popStack(JavaStack *stack) {
 	if (NULL == stack || stack->top < 1) {
-		fprintf(stderr, "Stack is bottomflow");
+		fprintf(stderr, "Stack is downflow\n");
 		return NULL;
 	}
 
@@ -58,7 +58,7 @@ void initGC(InitArgs *args) {
 
 }
 
-void initVM(VM *vm) {
+void initVM(InitArgs *args, VM *vm) {
 
 }
 

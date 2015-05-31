@@ -14,5 +14,4 @@ $(PROJ) : $(OBJ)
 
 .PHONEY:clean $(PROJ)
 clean:
-	make -C libs clean
 	@rm -rvf $(PROJ) $(TEST) $(OBJ)

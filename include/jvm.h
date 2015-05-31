@@ -67,11 +67,18 @@ typedef struct StackFrame {
 } StackFrame;
 
 typedef struct ExecEnv {
-	JavaStack *stack;
+    U1 *cur_heap;
+    U1 *cur_stack;
+    JavaStack *stack;
 } ExecEnv;
 
 typedef struct VM {
+    U1 *heap_base;
+    U4 heap_size;
+    U1 *stack_base;
+    U4 stack_size;
 	InitArgs *intArgs;
+    ExecEnv *execEnv;
 } VM;
 
 extern void setDefaultInitArgs(InitArgs *args);
@@ -79,9 +86,9 @@ extern int parseCmdLine(int argc, char **argv, Property *props);
 extern int readSysConfig(char *path, Property *props);
 extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 
-extern void initVM(VM *vm);
 extern void initMem(InitArgs *args);
 extern void initGC(InitArgs *args);
+extern void initVM(InitArgs *args, VM *vm);
 extern bool startVM(VM *vm);
 extern bool exitVM(VM *vm);
 
