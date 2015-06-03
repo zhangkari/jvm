@@ -22,6 +22,7 @@
 typedef uint8_t  U1;
 typedef uint16_t U2;
 typedef uint32_t U4;
+typedef uint64_t U8;
 
 #define KB 1024
 #define MB (KB*KB)

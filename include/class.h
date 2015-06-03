@@ -112,12 +112,12 @@ typedef struct ConstPoolEntry {
 
 		struct {
 			U2 name_index;
-			U2 profile_index;
+			U2 type_index;
 		} nametype_info;
 
 		struct {
-			U2 length;
-			U1 *bytes;
+			U2 	 length;
+			char *bytes;
 		} utf8_info;
 
 		struct {
@@ -126,14 +126,14 @@ typedef struct ConstPoolEntry {
 		} methodhandle_info;
 
 		struct {
-			U2 profile_index;
+			U2 type_index;
 		} methodtype_info;
 
 		struct {
 			U2 bootstrap_method_attr_index;
 			U2 name_type_index;
 		} invokedynamic_info;
-	};
+	} info;
 } ConstPoolEntry;
 
 typedef struct ConstPool {
@@ -179,10 +179,12 @@ typedef struct MethodEntry {
 	U2	args_count;
 	U4	code_length;
 	void *code;
-	ExceptionTable *excep_tbl;
+	ExceptionTable excep_tbl;
 } MethodEntry;
 
+#define RESERVE_SIZE 4
 typedef struct ClassEntry {
+	uintptr_t reserve[RESERVE_SIZE];
 	char *name;
 	char *signature;
 	char *super_name;
@@ -192,15 +194,15 @@ typedef struct ClassEntry {
 	U2 acc_flags;
 	U2 fileds_count;
 	FieldEntry  *fields;
-	U2 methods_count;		// class method
+	ConstPool *constPool;
+	U2 methods_count;
 	MethodEntry *methods;
 	U2 interfaces_count;
 	Class **interfaces;
 	Object *class_loader;
-	U4	method_table_size;	// instance method
-	MethodEntry *method_table;
 } ClassEntry;
 
+extern ConstPool* newConstPool(int length);
 extern Class* defineClass(char *classname, char *data, int offset, int len,							Object *class_laoder);
 extern void linkClass(Class *class);
 extern Class* initClass(Class *class);

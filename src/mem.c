@@ -17,7 +17,7 @@
 #include "mem.h"
 
 void* sysAlloc(int size) {
-    return malloc(size);
+    return calloc(size, 1);
 }
 
 void sysFree(void *base) {
