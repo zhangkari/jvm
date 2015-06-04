@@ -1,3 +1,4 @@
+OBJDIR = target
 PROJ = jvm
 CC = gcc
 CFLAGS =  -Iinclude \
@@ -6,12 +7,33 @@ CFLAGS =  -Iinclude \
 
 LDFLAGS = -pthread
 SRC = $(wildcard *.c) $(wildcard src/*.c)
-OBJ = $(patsubst %.c, %.o, $(SRC))
+OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(SRC))
+DEP = $(patsubst %.c,$(OBJDIR)/%.d,$(SRC))
 
-$(PROJ) : $(OBJ)
-	make -C libs
-	$(CC) $^ $(CFLAGS) $(LDFLAGS) -o $@
+VPATH = src:include
 
-.PHONEY:clean $(PROJ)
+$(PROJ) : $(OBJDIR) $(DEP) $(OBJ)
+	@make -s -C libs
+	@$(CC) $(OBJ) $(CFLAGS) $(LDFLAGS) -o $@
+	@echo "OK"
+
+ifeq ($(wildcard target/src), )
+	@mkdir -p target/src
+endif
+
+$(OBJDIR)/%.o:%.c $(OBJDIR)/%.d
+	@echo "Compiling $@ "
+	@$(CC) -c  $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/%.d:%.c
+	@echo "Generating $@ "
+	@$(CC) -MM  $(CFLAGS) $< > $@ 
+	@sed -i 's/$(patsubst %.d,%.o,$(notdir $@))/$(patsubst %.d,%.o,$(notdir $@)) $(notdir $@)/' $@
+
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)/src
+
+.PHONEY:clean
 clean:
-	@rm -rvf $(PROJ) $(TEST) $(OBJ)
+	@make clean -s -C libs
+	@rm -rf $(OBJDIR) $(PROJ)
