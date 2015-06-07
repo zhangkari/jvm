@@ -36,4 +36,10 @@ void gcMark(VM *vm, Class *class) {
 
 }
 
+Class* allocClass()
+{
+    Class* class = (Class *)sysAlloc(sizeof(Class) + sizeof (ClassEntry));
+    return class;
+}
+
 #endif

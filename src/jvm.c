@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include "class.h"
 #include "instruction.h"
 #include "jvm.h"
@@ -94,5 +95,14 @@ int main(int argc, char *argv[]) {
 	int len = parseCmdLine(argc, argv, props);
 	setInitArgs(props, len, &initArgs);
 
-	Class *entry_class = loadClassFromFile(argv[1], argv[1]);
+    char path[256];
+    strcpy(path, argv[1]);
+    strcat(path, ".class");
+	Class *mainClass = loadClassFromFile(path, argv[1]);
+    if (NULL == mainClass) {
+        fprintf(stderr, "Failed loadClass from file\n");
+        return -1;
+    }
+    ClassEntry *clsEntry = CLASS_CE(mainClass);
+    logClassEntry(clsEntry);
 }

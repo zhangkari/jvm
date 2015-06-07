@@ -202,6 +202,8 @@ typedef struct ClassEntry {
 	Object *class_loader;
 } ClassEntry;
 
+#define CLASS_CE(cls) ((ClassEntry *)(cls + 1))
+
 extern ConstPool* newConstPool(int length);
 extern Class* defineClass(char *classname, char *data, int offset, int len,							Object *class_laoder);
 extern void linkClass(Class *class);
@@ -215,5 +217,7 @@ extern void executeMethod(VM *vm, MethodEntry *method);
 
 extern Class* loadClassFromFile(char *path, char *classname);
 extern Class* loadClassFromJar(char *path, char *classname);
+
+extern void logClassEntry(ClassEntry* clsEntry);
 
 #endif

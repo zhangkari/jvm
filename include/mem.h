@@ -11,6 +11,9 @@
 #ifndef __MEM__H__
 #define __MEM__H__
 
+#include "class.h"
+
+Class* allocClass();
 void* sysAlloc(int size);
 void sysFree(void *base);
 

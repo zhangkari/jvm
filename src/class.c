@@ -105,7 +105,10 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 		return NULL;
 	}
 
-	ClassEntry *class = sysAlloc(sizeof(ClassEntry));
+    Class* cls = allocClass();
+    assert(NULL != cls);
+
+	ClassEntry *class = CLASS_CE(cls);
 	assert(NULL != class);
 
 	U2 minor_version;
@@ -462,7 +465,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 		return NULL;
 	}
 
-	return NULL;
+	return cls;
 }
 
 void linkClass(Class *class) {
@@ -494,14 +497,7 @@ Class* loadClassFromFile(char *path, char *classname) {
 		fprintf(stderr, "path = NULL || NULL = classname\n");
 		return NULL;
 	}
-	char fname[64];
-	if (strlen(path) > 57 /*64-6*/) {
-		fprintf(stderr, "Error:class name is too long\n");
-		return NULL;
-	}
-	strcpy(fname, path);
-	strcat(fname, ".class");
-	FILE *fp = fopen(fname, "rb");
+	FILE *fp = fopen(path, "rb");
 	if (NULL == fp) {
 		fprintf(stderr, "Error:failed load class\n");
 		return NULL;
@@ -552,4 +548,143 @@ ConstPool* newConstPool(int length) {
 	}
 
 	return pool;
+}
+
+void logClassEntry(ClassEntry *clsEntry)
+{
+    if (NULL == clsEntry) {
+        return;
+    }
+
+    printf("Compiled from \"%s\"\n", clsEntry->source_file);
+
+    if (clsEntry->acc_flags & ACC_PUBLIC) {
+        printf("public ");
+    } else if (clsEntry->acc_flags & ACC_PROTECTED) {
+        printf("protected ");
+    } else if (clsEntry->acc_flags & ACC_PRIVATE) {
+        printf("private ");
+    }
+
+    if (clsEntry->acc_flags & ACC_FINAL) {
+        printf("final ");
+    }
+
+    if (clsEntry->acc_flags & ACC_STATIC) {
+        printf("static ");
+    }
+
+     
+    if (clsEntry->acc_flags & ACC_ABSTRACT) {
+        printf("abstract ");
+    }
+
+    /** ignore me **/
+    /*
+    if (clsEntry->acc_flags & ACC_SUPER) {
+        printf("super ");
+    }
+    */
+
+    if (clsEntry->acc_flags & ACC_INTERFACE) {
+        printf("interface ");
+    } else {
+        printf("class ");
+    }
+
+    printf("%s", clsEntry->name);
+    if (NULL != clsEntry->super) {
+        printf (" extends %s", CLASS_CE(clsEntry->super)->name);
+    }
+    
+    int i;
+    for (i = 0; i < clsEntry->interfaces_count; ++i) {
+        if (0 == i) {
+            printf(" implemented");
+        }
+
+        printf(" %s", CLASS_CE(clsEntry->interfaces[i])->name);
+    }
+    printf("\n");
+
+    printf("  SourceFile: \"%s\"\n", clsEntry->source_file);
+    printf("  minor version: %d\n", clsEntry->reserve[0]);
+    printf("  major version: %d\n", clsEntry->reserve[1]);
+    printf("  Constant pool count:%d\n", clsEntry->constPool->length);
+
+    int cls_idx;
+    int nametype_idx;
+    int name_idx;
+    int type_idx;
+    int index;
+
+    for (i = 1; i < clsEntry->constPool->length; ++i) {
+        printf("const #%d = ", i);
+        switch (clsEntry->constPool->entries[i].tag) {
+            case CONST_Utf8:
+                printf("Asciz\t%s\n", clsEntry->constPool->entries[i].info.utf8_info.bytes);
+                break;
+
+            case CONST_Integer:
+                break;
+
+            case CONST_Float:
+                break;
+
+            case CONST_Long:
+                break;
+
+            case CONST_Double:
+                break;
+
+            case CONST_Class:
+                name_idx = clsEntry->constPool->entries[i].info.class_info.name_index;
+                printf("class\t#%d; //%s\n",
+                        name_idx,
+                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes);
+                break;
+
+            case CONST_String:
+                break;
+
+            case CONST_Fieldref:
+                break;
+
+            case CONST_Methodref:
+                cls_idx = clsEntry->constPool->entries[i].info.methodref_info.class_index,
+                index = clsEntry->constPool->entries[cls_idx].info.class_info.name_index;
+                nametype_idx = clsEntry->constPool->entries[i].info.methodref_info.name_type_index,
+                name_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.name_index;
+                type_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.type_index;
+                printf("Method\t#%d.#%d; // %s.\"%s\":%s\n",
+                        cls_idx, 
+                        nametype_idx, 
+                        clsEntry->constPool->entries[index].info.utf8_info.bytes,
+                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
+                        clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
+                break;
+
+            case CONST_IfMethodref:
+                break;
+
+            case CONST_NameAndType:
+                name_idx = clsEntry->constPool->entries[i].info.nametype_info.name_index;
+                type_idx = clsEntry->constPool->entries[i].info.nametype_info.type_index;
+                printf("NameAndType #%d:%d;// \"%s\":%s\n",
+                        name_idx,
+                        type_idx,
+                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
+                        clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
+                break;
+
+            case CONST_MethodHandle:
+                break;
+
+            case CONST_MethodType:
+                break;
+
+            case CONST_InvokeDynamic:
+                break;
+        }
+    }
 }
