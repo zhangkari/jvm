@@ -143,7 +143,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 		switch (tag) {
 			case CONST_Utf8:
 				READ_U2(length, base);
-				constPool->entries[i].info.utf8_info.bytes = sysAlloc(length);
+				constPool->entries[i].info.utf8_info.bytes = sysAlloc(length + 1);
 				assert(NULL != constPool->entries[i].info.utf8_info.bytes);
 				strncpy(constPool->entries[i].info.utf8_info.bytes, base, length);
 				constPool->entries[i].info.utf8_info.length = length;
@@ -265,6 +265,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 
 	U2 field_count;
 	READ_U2(field_count, base);
+    class->fields_count = field_count;
 	class->fields = (FieldEntry *)sysAlloc(field_count * sizeof(FieldEntry));
 	assert(NULL != class->fields);
 
@@ -339,7 +340,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 
 				U4 code_length;
 				READ_U4(code_length, base);
-				class->methods[i].code_length = length;
+				class->methods[i].code_length = code_length;
 
 				class->methods[i].code = sysAlloc(length);
 				assert(NULL != class->methods[i].code);
@@ -575,7 +576,8 @@ void logClassEntry(ClassEntry *clsEntry)
     }
 
      
-    if (clsEntry->acc_flags & ACC_ABSTRACT) {
+    if (clsEntry->acc_flags & ACC_ABSTRACT && 
+           !(clsEntry->acc_flags & ACC_INTERFACE)) {
         printf("abstract ");
     }
 
@@ -645,6 +647,10 @@ void logClassEntry(ClassEntry *clsEntry)
                 break;
 
             case CONST_String:
+                index = clsEntry->constPool->entries[i].info.string_info.string_index;
+                printf("String\t#%d; //%s\n",
+                        index,
+                        clsEntry->constPool->entries[index].info.utf8_info.bytes);
                 break;
 
             case CONST_Fieldref:
@@ -686,5 +692,63 @@ void logClassEntry(ClassEntry *clsEntry)
             case CONST_InvokeDynamic:
                 break;
         }
+    }
+
+    for (i = 0; i < clsEntry->fields_count; ++i) {
+        if (clsEntry->fields[i].acc_flags & ACC_PUBLIC) {
+            printf("public ");
+        } else if (clsEntry->fields[i].acc_flags & ACC_PROTECTED) {
+            printf("protected ");
+        } else if (clsEntry->fields[i].acc_flags & ACC_PRIVATE) {
+            printf("private ");
+        }
+
+
+        char *type = clsEntry->fields[i].type;
+        if (!strcmp(type, "I")) {
+            printf("int ");
+        } else if (!strcmp(type, "J")) {
+            printf("long ");
+        } else if (!strcmp(type, "D")) {
+            printf("double ");
+        }
+        printf("%s;\n", clsEntry->fields[i].name);
+    }
+
+    for (i = 0; i < clsEntry->methods_count; ++i) {
+        if (clsEntry->methods[i].acc_flags & ACC_PUBLIC) {
+            printf("public ");
+        }
+        else if (clsEntry->methods[i].acc_flags & ACC_PROTECTED) {
+            printf("protected ");
+        }
+        else if (clsEntry->methods[i].acc_flags & ACC_PRIVATE) {
+            printf("private ");
+        }
+
+        printf("%s ", clsEntry->methods[i].type);
+
+        char *name = clsEntry->methods[i].name;
+        if (!strcmp(name, "<init>")) {
+            printf("%s;\n", clsEntry->name);
+        } else {
+            printf("%s;\n", clsEntry->methods[i].name);
+        }
+
+        printf("  Code:\n");
+        printf("   Stack=%d, Locals=%d, Args_size=%d\n",
+                    clsEntry->methods[i].max_stack,
+                    clsEntry->methods[i].max_locals,
+                    clsEntry->methods[i].args_count);
+
+        int j;
+        for (j = 0; j < clsEntry->methods[i].code_length; ++j) {
+            U1 code = *((U1 *)clsEntry->methods[i].code + j);
+            printf("   %d:\t %s\n", j, stropcode(code));
+            j += operand_len[code];
+        }
+
+        printf("  LineNumberTable:\n");
+        printf("   line %d: %d\n\n", 0, 0);
     }
 }

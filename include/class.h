@@ -192,7 +192,7 @@ typedef struct ClassEntry {
 	Class *super;
 	U1 state;
 	U2 acc_flags;
-	U2 fileds_count;
+	U2 fields_count;
 	FieldEntry  *fields;
 	ConstPool *constPool;
 	U2 methods_count;
