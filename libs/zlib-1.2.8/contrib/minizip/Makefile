@@ -7,7 +7,7 @@ ZIP_OBJS = minizip.o zip.o   ioapi.o ../../libz.a
 .c.o:
 	$(CC) -c $(CFLAGS) $*.c
 
-all: miniunz minizip
+all: miniunz minizip reader
 
 miniunz:  $(UNZ_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(UNZ_OBJS)
@@ -21,5 +21,8 @@ test:	miniunz minizip
 	mv readme.txt readme.old
 	./miniunz test.zip
 
+reader:reader.o
+	$(CC) $(CFLAGS) -o $@ reader.o unzip.o ioapi.o ../../libz.a
+
 clean:
-	/bin/rm -f *.o *~ minizip miniunz
+	/bin/rm -f *.o *~ minizip miniunz reader
