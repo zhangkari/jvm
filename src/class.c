@@ -110,6 +110,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 
 	ClassEntry *class = CLASS_CE(cls);
 	assert(NULL != class);
+	class->state = CLASS_BAD;
 
 	U2 minor_version;
 	U2 major_version;
@@ -249,6 +250,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 	if (0 == super_class) {
 	} else if(super_class > 0 && super_class < constPool->length) {
 		name = constPool->entries[constPool->entries[super_class].info.class_info.name_index].info.utf8_info.bytes;
+		class->super_name = strdup(name);
 	} else {
 		printf("Invalid super class index\n");
 	}
@@ -256,10 +258,12 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 	U2 ifcount;
 	READ_U2(ifcount, base);
 	class->interfaces_count = ifcount;
+	class->interfaces_index = sysAlloc(sizeof(U2) * ifcount);
 
 	U2 ifidx;
 	for (i = 0; i < ifcount; ++i) {
 		READ_U2(ifidx, base);
+		class->interfaces_index[i] = ifidx;
 		name = constPool->entries[constPool->entries[ifidx].info.class_info.name_index].info.utf8_info.bytes;	
 	}
 
@@ -466,6 +470,8 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 		return NULL;
 	}
 
+	class->state = CLASS_LOADED;
+
 	return cls;
 }
 
@@ -595,8 +601,8 @@ void logClassEntry(ClassEntry *clsEntry)
     }
 
     printf("%s", clsEntry->name);
-    if (NULL != clsEntry->super) {
-        printf (" extends %s", CLASS_CE(clsEntry->super)->name);
+    if (NULL != clsEntry->super_name) {
+        printf (" extends %s", clsEntry->super_name);
     }
     
     int i;
@@ -604,14 +610,15 @@ void logClassEntry(ClassEntry *clsEntry)
         if (0 == i) {
             printf(" implemented");
         }
-
-        printf(" %s", CLASS_CE(clsEntry->interfaces[i])->name);
+		int ifidx = clsEntry->interfaces_index[i];
+		char *name = clsEntry->constPool->entries[clsEntry->constPool->entries[ifidx].info.class_info.name_index].info.utf8_info.bytes;	
+        printf(" %s", name);
     }
     printf("\n");
 
     printf("  SourceFile: \"%s\"\n", clsEntry->source_file);
-    printf("  minor version: %d\n", clsEntry->reserve[0]);
-    printf("  major version: %d\n", clsEntry->reserve[1]);
+    printf("  minor version: %d\n", (int)clsEntry->reserve[0]);
+    printf("  major version: %d\n", (int)clsEntry->reserve[1]);
     printf("  Constant pool count:%d\n", clsEntry->constPool->length);
 
     int cls_idx;
@@ -725,6 +732,10 @@ void logClassEntry(ClassEntry *clsEntry)
         else if (clsEntry->methods[i].acc_flags & ACC_PRIVATE) {
             printf("private ");
         }
+
+		if (clsEntry->methods[i].acc_flags & ACC_ABSTRACT) {
+			printf("abstract ");
+		}
 
         printf("%s ", clsEntry->methods[i].type);
 

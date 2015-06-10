@@ -199,6 +199,7 @@ typedef struct ClassEntry {
 	MethodEntry *methods;
 	U2 interfaces_count;
 	Class **interfaces;
+	U2 *interfaces_index;
 	Object *class_loader;
 } ClassEntry;
 
