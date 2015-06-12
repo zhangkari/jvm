@@ -296,10 +296,13 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 			READ_U4(attr_length, base);
 			name = constPool->entries[nameidx].info.utf8_info.bytes;
 
-
 			if (!strcmp(name, "ConstantValue")) {
 				READ_U2(const_value_idx, base);	
 				class->fields[i].constant = constPool->entries[const_value_idx].tag;
+			} else if (!strcmp(name, "Signature")) {
+				U2 signature_idx;
+				READ_U2(signature_idx, base);
+				printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
 			}
 		}
 	}
@@ -635,6 +638,7 @@ void logClassEntry(ClassEntry *clsEntry)
                 break;
 
             case CONST_Integer:
+				printf("int\t%d\n", clsEntry->constPool->entries[i].info.integer_info.bytes);
                 break;
 
             case CONST_Float:
@@ -678,6 +682,7 @@ void logClassEntry(ClassEntry *clsEntry)
                 break;
 
             case CONST_IfMethodref:
+				printf("InterfaceMethodref_info\n");
                 break;
 
             case CONST_NameAndType:
