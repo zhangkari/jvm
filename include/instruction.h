@@ -9,16 +9,18 @@
 
 #include "jvm.h"
 
+typedef bool (*HandlerFunc)(void *);
+
 typedef struct {
-	U1 opcode;			// opcode 
-	char *name;			// name of opcode
+	U1 opcode;			        // opcode 
+	char *name;			        // name of opcode
 	union {
 		U2 u2;
 		U4 u4;
 		U8 u8;
-	} operand;			// operand
-	U1 tag;				// indicate the lenght of operand(0, 2, 4 or 8)
-	void *handler;		// handler of opcode
+	} operand;			        // operand
+	U1 tag;				        // indicate the lenght of operand(0, 2, 4 or 8)
+	HandlerFunc handler;		// handler of opcode
 } Instruction;
 
 
