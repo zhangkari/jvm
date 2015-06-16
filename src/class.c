@@ -757,12 +757,17 @@ void logClassEntry(ClassEntry *clsEntry)
                     clsEntry->methods[i].max_locals,
                     clsEntry->methods[i].args_count);
 
+
+
+		// printf instruction info
+		/*
         int j;
         for (j = 0; j < clsEntry->methods[i].code_length; ++j) {
             U1 code = *((U1 *)clsEntry->methods[i].code + j);
             printf("   %d:\t %s\n", j, stropcode(code));
             j += operand_len[code];
         }
+		*/
 
         printf("  LineNumberTable:\n");
         printf("   line %d: %d\n\n", 0, 0);

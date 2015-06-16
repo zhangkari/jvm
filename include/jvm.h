@@ -40,8 +40,6 @@ typedef uint64_t U8;
 
 #define JAVA_COMPAT_VERSION "0.0.1" 
 
-#define _T(x,y) x##y 
-
 typedef struct JavaStack JavaStack;
 
 typedef struct Property {
