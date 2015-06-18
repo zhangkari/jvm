@@ -41,7 +41,7 @@ enum {
 	lload_0,		// 0x1e
 	lload_1,		// 0x1f
 	lload_2,		// 0x20
-	faload_0,		// 0x21
+	lload_3,		// 0x21
 	fload_0,		// 0x22
 	fload_1,		// 0x23
 	fload_2,		// 0x24
@@ -227,20 +227,407 @@ DECL_FUNC(iconst_2);
 DECL_FUNC(iconst_3);
 DECL_FUNC(iconst_4);
 DECL_FUNC(iconst_5);
+DECL_FUNC(lconst_0);
+DECL_FUNC(lconst_1);
+DECL_FUNC(fconst_0);
+DECL_FUNC(fconst_1);
+DECL_FUNC(fconst_2);
+DECL_FUNC(dconst_0);
+DECL_FUNC(dconst_1);
+DECL_FUNC(bipush);
+DECL_FUNC(sipush);
+DECL_FUNC(ldc);
+DECL_FUNC(ldc_w);
+DECL_FUNC(ldc2_w);
+DECL_FUNC(iload);
+DECL_FUNC(lload);
+DECL_FUNC(fload);
+DECL_FUNC(dload);
+DECL_FUNC(aload);
+DECL_FUNC(iload_0);
+DECL_FUNC(iload_1);
+DECL_FUNC(iload_2);
+DECL_FUNC(iload_3);
+DECL_FUNC(lload_0);
+DECL_FUNC(lload_1);
+DECL_FUNC(lload_2);
+DECL_FUNC(lload_3);
+DECL_FUNC(fload_0);
+DECL_FUNC(fload_1);
+DECL_FUNC(fload_2);
+DECL_FUNC(fload_3);
+DECL_FUNC(dload_0);
+DECL_FUNC(dload_1);
+DECL_FUNC(dload_2);
+DECL_FUNC(dload_3);
+DECL_FUNC(aload_0);
+DECL_FUNC(aload_1);
+DECL_FUNC(aload_2);
+DECL_FUNC(aload_3);
+DECL_FUNC(iaload);
+DECL_FUNC(laload);
+DECL_FUNC(faload);
+DECL_FUNC(daload);
+DECL_FUNC(aaload);
+DECL_FUNC(baload);
+DECL_FUNC(caload);
+DECL_FUNC(saload);
+DECL_FUNC(istore);
+DECL_FUNC(lstore);
+DECL_FUNC(fstore);
+DECL_FUNC(dstore);
+DECL_FUNC(astore);
+DECL_FUNC(istore_0);
+DECL_FUNC(istore_1);
+DECL_FUNC(istore_2);
+DECL_FUNC(istore_3);
+DECL_FUNC(lstore_0);
+DECL_FUNC(lstore_1);
+DECL_FUNC(lstore_2);
+DECL_FUNC(lstore_3);
+DECL_FUNC(fstore_0);
+DECL_FUNC(fstore_1);
+DECL_FUNC(fstore_2);
+DECL_FUNC(fstore_3);
+DECL_FUNC(dstore_0);
+DECL_FUNC(dstore_1);
+DECL_FUNC(dstore_2);
+DECL_FUNC(dstore_3);
+DECL_FUNC(astore_0);
+DECL_FUNC(astore_1);
+DECL_FUNC(astore_2);
+DECL_FUNC(astore_3);
+DECL_FUNC(iastore);
+DECL_FUNC(lastore);
+DECL_FUNC(fastore);
+DECL_FUNC(dastore);
+DECL_FUNC(aastore);
+DECL_FUNC(bastore);
+DECL_FUNC(castore);
+DECL_FUNC(sastore);
+DECL_FUNC(pop);
+DECL_FUNC(pop2);
+DECL_FUNC(dup);
+DECL_FUNC(dup_x1);
+DECL_FUNC(dup_x2);
+DECL_FUNC(dup2);
+DECL_FUNC(dup2_x1);
+DECL_FUNC(dup2_x2);
+DECL_FUNC(swap);
+DECL_FUNC(iadd);
+DECL_FUNC(ladd);
+DECL_FUNC(fadd);
+DECL_FUNC(dadd);
+DECL_FUNC(isub);
+DECL_FUNC(lsub);
+DECL_FUNC(fsub);
+DECL_FUNC(dsub);
+DECL_FUNC(imul);
+DECL_FUNC(lmul);
+DECL_FUNC(fmul);
+DECL_FUNC(dmul);
+DECL_FUNC(idiv);
+DECL_FUNC(ldiv);
+DECL_FUNC(fdiv);
+DECL_FUNC(ddiv);
+DECL_FUNC(irem);
+DECL_FUNC(lrem);
+DECL_FUNC(frem);
+DECL_FUNC(drem);
+DECL_FUNC(ineg);
+DECL_FUNC(lneg);
+DECL_FUNC(fneg);
+DECL_FUNC(dneg);
+DECL_FUNC(ishl);
+DECL_FUNC(lshl);
+DECL_FUNC(ishr);
+DECL_FUNC(lshr);
+DECL_FUNC(iushr);
+DECL_FUNC(lushr);
+DECL_FUNC(iand);
+DECL_FUNC(land);
+DECL_FUNC(ior);
+DECL_FUNC(lor);
+DECL_FUNC(ixor);
+DECL_FUNC(lxor);
+DECL_FUNC(iinc);
+DECL_FUNC(i2l);
+DECL_FUNC(i2f);
+DECL_FUNC(i2d);
+DECL_FUNC(l2i);
+DECL_FUNC(l2f);
+DECL_FUNC(l2d);
+DECL_FUNC(f2i);
+DECL_FUNC(f2l);
+DECL_FUNC(f2d);
+DECL_FUNC(d2i);
+DECL_FUNC(d2l);
+DECL_FUNC(d2f);
+DECL_FUNC(i2b);
+DECL_FUNC(i2c);
+DECL_FUNC(i2s);
+DECL_FUNC(lcmp);
+DECL_FUNC(fcmpl);
+DECL_FUNC(fcmpg);
+DECL_FUNC(dcmpl);
+DECL_FUNC(dcmpg);
+DECL_FUNC(ifeq);
+DECL_FUNC(ifne);
+DECL_FUNC(iflt);
+DECL_FUNC(ifge);
+DECL_FUNC(ifgt);
+DECL_FUNC(ifle);
+DECL_FUNC(if_icmpeq);
+DECL_FUNC(if_icmpne);
+DECL_FUNC(if_icmplt);
+DECL_FUNC(if_icmpge);
+DECL_FUNC(if_icmpgt);
+DECL_FUNC(if_icmple);
+DECL_FUNC(if_acmpeq);
+DECL_FUNC(if_acmpne);
+DECL_FUNC(_goto);
+DECL_FUNC(jsr);
+DECL_FUNC(ret);
+DECL_FUNC(tableswitch);
+DECL_FUNC(lookupswitch);
+DECL_FUNC(ireturn);
+DECL_FUNC(lreturn);
+DECL_FUNC(freturn);
+DECL_FUNC(dreturn);
+DECL_FUNC(areturn);
+DECL_FUNC(_return);
+DECL_FUNC(getstatic);
+DECL_FUNC(putstatic);
+DECL_FUNC(getfield);
+DECL_FUNC(putfield);
+DECL_FUNC(invokevirtual);
+DECL_FUNC(invokespecial);
+DECL_FUNC(invokestatic);
+DECL_FUNC(invokeinterface);
+DECL_FUNC(invokedynamic);
+DECL_FUNC(_new);
+DECL_FUNC(newarray);
+DECL_FUNC(anewarray);
+DECL_FUNC(arraylength);
+DECL_FUNC(athrow);
+DECL_FUNC(checkcast);
+DECL_FUNC(instanceof);
+DECL_FUNC(monitorenter);
+DECL_FUNC(monitorexit);
+DECL_FUNC(wide);
+DECL_FUNC(multianewarray);
+DECL_FUNC(ifnull);
+DECL_FUNC(ifnonnull);
+DECL_FUNC(goto_w);
+DECL_FUNC(jsr_w);
+
 
 #define INST_FUNC(X) func_inst_##X
 #define _T(X) #X
 #define INIT_INST(X, Y) X, _T(X), 0, Y, INST_FUNC(X)
 static Instruction sInstructionTable[] = {
-	INIT_INST(nop, 0),
-	INIT_INST(aconst_null, 2),
-	INIT_INST(iconst_m1, 2),
-	INIT_INST(iconst_0, 2),
-	INIT_INST(iconst_1, 2),
-	INIT_INST(iconst_2, 2),
-	INIT_INST(iconst_3, 2),
-	INIT_INST(iconst_4, 2),
-	INIT_INST(iconst_5, 2),
+	INIT_INST(nop, 0),          // 0x00
+	INIT_INST(aconst_null, 0),  // 0x01
+	INIT_INST(iconst_m1, 0),    // 0x02
+	INIT_INST(iconst_0, 0),     // 0x03
+	INIT_INST(iconst_1, 0),     // 0x04
+	INIT_INST(iconst_2, 0),     // 0x05
+	INIT_INST(iconst_3, 0),     // 0x06
+	INIT_INST(iconst_4,	0),     // 0x07
+	INIT_INST(iconst_5,	0), 	// 0x08
+	INIT_INST(lconst_0, 0),		// 0x09
+	INIT_INST(lconst_1, 0),		// 0x0a
+	INIT_INST(fconst_0, 0),		// 0x0b
+	INIT_INST(fconst_1, 0),		// 0x0c
+	INIT_INST(fconst_2, 0),		// 0x0d
+	INIT_INST(dconst_0, 0),		// 0x0e
+	INIT_INST(dconst_1,	0), 	// 0x0f
+	INIT_INST(bipush, 1),		// 0x10
+	INIT_INST(sipush, 2),		// 0x11
+	INIT_INST(ldc, 1),			// 0x12
+	INIT_INST(ldc_w, 2),		// 0x13
+	INIT_INST(ldc2_w, 2),		// 0x14
+	INIT_INST(iload, 1),		// 0x15
+	INIT_INST(lload, 1),		// 0x16
+	INIT_INST(fload, 1),		// 0x17
+	INIT_INST(dload, 1),		// 0x18
+	INIT_INST(aload, 1),		// 0x19
+	INIT_INST(iload_0, 0),		// 0x1a
+	INIT_INST(iload_1, 0),		// 0x1b
+	INIT_INST(iload_2, 0),		// 0x1c
+	INIT_INST(iload_3, 0),		// 0x1d
+	INIT_INST(lload_0, 0),		// 0x1e
+	INIT_INST(lload_1, 0),		// 0x1f
+	INIT_INST(lload_2, 0),		// 0x20
+	INIT_INST(lload_3, 0),		// 0x21
+	INIT_INST(fload_0, 0),		// 0x22
+	INIT_INST(fload_1, 0),		// 0x23
+	INIT_INST(fload_2, 0),		// 0x24
+	INIT_INST(fload_3, 0),		// 0x25
+	INIT_INST(dload_0, 0),		// 0x26
+	INIT_INST(dload_1, 0),		// 0x27
+	INIT_INST(dload_2, 0),		// 0x28
+	INIT_INST(dload_3, 0),		// 0x29
+	INIT_INST(aload_0, 0),		// 0x2a
+	INIT_INST(aload_1, 0),		// 0x2b
+	INIT_INST(aload_2, 0),		// 0x2c
+	INIT_INST(aload_3, 0),  	// 0x2d
+	INIT_INST(iaload, 0),		// 0x2e
+	INIT_INST(laload, 0),		// 0x2f
+	INIT_INST(faload, 0),		// 0x30
+	INIT_INST(daload, 0),		// 0x31
+	INIT_INST(aaload, 0),		// 0x32
+	INIT_INST(baload, 0),		// 0x33
+	INIT_INST(caload, 0),		// 0x34
+	INIT_INST(saload, 0),		// 0x35
+	INIT_INST(istore, 1),		// 0x36
+	INIT_INST(lstore, 1),		// 0x37
+	INIT_INST(fstore, 1),		// 0x38
+	INIT_INST(dstore, 1),		// 0x39
+	INIT_INST(astore, 1),		// 0x3a
+	INIT_INST(istore_0, 0),		// 0x3b
+	INIT_INST(istore_1, 0),		// 0x3c
+	INIT_INST(istore_2,	0), 	// 0x3d
+	INIT_INST(istore_3,	0), 	// 0x3e
+	INIT_INST(lstore_0, 0),		// 0x3f
+	INIT_INST(lstore_1, 0),		// 0x40
+	INIT_INST(lstore_2,	0), 	// 0x41
+	INIT_INST(lstore_3, 0),		// 0x42
+	INIT_INST(fstore_0, 0),		// 0x43
+	INIT_INST(fstore_1,	0), 	// 0x44
+	INIT_INST(fstore_2, 0),		// 0x45
+	INIT_INST(fstore_3, 0),		// 0x46
+	INIT_INST(dstore_0, 0),		// 0x47
+	INIT_INST(dstore_1,	0), 	// 0x48
+	INIT_INST(dstore_2,	0), 	// 0x49
+	INIT_INST(dstore_3, 0),		// 0x4a
+	INIT_INST(astore_0, 0),		// 0x4b
+	INIT_INST(astore_1, 0),		// 0x4c
+	INIT_INST(astore_2, 0),		// 0x4d
+	INIT_INST(astore_3,	0), 	// 0x4e
+	INIT_INST(iastore, 0),		// 0x4f
+	INIT_INST(lastore, 0),		// 0x50
+	INIT_INST(fastore, 0),		// 0x51
+	INIT_INST(dastore, 0),		// 0x52
+	INIT_INST(aastore, 0),		// 0x53
+	INIT_INST(bastore, 0),		// 0x54
+	INIT_INST(castore, 0),		// 0x55
+	INIT_INST(sastore, 0),		// 0x56
+	INIT_INST(pop, 0),			// 0x57
+	INIT_INST(pop2, 0),			// 0x58
+	INIT_INST(dup, 0),			// 0x59
+	INIT_INST(dup_x1, 0),		// 0x5a
+	INIT_INST(dup_x2, 0),		// 0x5b
+	INIT_INST(dup2, 0),			// 0x5c
+	INIT_INST(dup2_x1, 0),		// 0x5d
+	INIT_INST(dup2_x2, 0),		// 0x5e
+	INIT_INST(swap, 0),			// 0x5f
+	INIT_INST(iadd, 0),			// 0x60
+	INIT_INST(ladd, 0),			// 0x61
+	INIT_INST(fadd, 0),			// 0x62
+	INIT_INST(dadd, 0),			// 0x63
+	INIT_INST(isub, 0),			// 0x64
+	INIT_INST(lsub, 0),			// 0x65
+	INIT_INST(fsub, 0),			// 0x66
+	INIT_INST(dsub, 0),			// 0x67
+	INIT_INST(imul, 0),			// 0x68
+	INIT_INST(lmul, 0),			// 0x69
+	INIT_INST(fmul, 0),			// 0x6a
+	INIT_INST(dmul, 0),			// 0x6b
+	INIT_INST(idiv, 0),			// 0x6c
+	INIT_INST(ldiv, 0),			// 0x6d
+	INIT_INST(fdiv, 0),			// 0x6e
+	INIT_INST(ddiv, 0),			// 0x6f
+	INIT_INST(irem,	0), 		// 0x70
+	INIT_INST(lrem, 0),			// 0x71
+	INIT_INST(frem, 0),			// 0x72
+	INIT_INST(drem, 0),			// 0x73
+	INIT_INST(ineg, 0),			// 0x74
+	INIT_INST(lneg, 0),			// 0x75
+	INIT_INST(fneg, 0),			// 0x76
+	INIT_INST(dneg, 0),			// 0x77
+	INIT_INST(ishl, 0),			// 0x78
+	INIT_INST(lshl, 0),			// 0x79
+	INIT_INST(ishr, 0),			// 0x7a
+	INIT_INST(lshr, 0),			// 0x7b
+	INIT_INST(iushr, 0),		// 0x7c
+	INIT_INST(lushr, 0),		// 0x7d
+	INIT_INST(iand, 0),			// 0x7e
+	INIT_INST(land, 0),			// 0x7f
+	INIT_INST(ior, 0),			// 0x80
+	INIT_INST(lor, 0),			// 0x81
+	INIT_INST(ixor, 0),			// 0x82
+	INIT_INST(lxor, 0),			// 0x83
+	INIT_INST(iinc, 2),			// 0x84
+	INIT_INST(i2l, 0),			// 0x85
+	INIT_INST(i2f, 0),			// 0x86
+	INIT_INST(i2d, 0),			// 0x87
+	INIT_INST(l2i, 0),			// 0x88
+	INIT_INST(l2f, 0),			// 0x89
+	INIT_INST(l2d, 0),			// 0x8a
+	INIT_INST(f2i, 0),			// 0x8b
+	INIT_INST(f2l, 0),			// 0x8c
+	INIT_INST(f2d, 0),			// 0x8d
+	INIT_INST(d2i, 0),			// 0x8e
+	INIT_INST(d2l, 0),			// 0x8f
+	INIT_INST(d2f, 0),			// 0x90
+	INIT_INST(i2b, 0),			// 0x91
+	INIT_INST(i2c, 0),			// 0x92
+	INIT_INST(i2s, 0),			// 0x93
+	INIT_INST(lcmp, 0),			// 0x94
+	INIT_INST(fcmpl, 0),		// 0x95
+	INIT_INST(fcmpg, 0),		// 0x96
+	INIT_INST(dcmpl, 0),		// 0x97
+	INIT_INST(dcmpg, 0),		// 0x98
+	INIT_INST(ifeq, 2),			// 0x99
+	INIT_INST(ifne, 2),			// 0x9a
+	INIT_INST(iflt, 2),			// 0x9b
+	INIT_INST(ifge, 2),			// 0x9c
+	INIT_INST(ifgt, 2),			// 0x9d
+	INIT_INST(ifle, 2),			// 0x9e
+	INIT_INST(if_icmpeq, 2),	// 0x9f
+	INIT_INST(if_icmpne, 2),	// 0xa0
+	INIT_INST(if_icmplt, 2),	// 0xa1
+	INIT_INST(if_icmpge, 2),	// 0xa2
+	INIT_INST(if_icmpgt, 2),	// 0xa3
+	INIT_INST(if_icmple, 2),	// 0xa4
+	INIT_INST(if_acmpeq, 2),	// 0xa5
+	INIT_INST(if_acmpne, 2),	// 0xa6
+	INIT_INST(_goto, 2),		// 0xa7
+	INIT_INST(jsr, 2),			// 0xa8
+	INIT_INST(ret, 1),			// 0xa9
+	INIT_INST(tableswitch, -1),	// 0xaa
+	INIT_INST(lookupswitch,-1),	// 0xab
+	INIT_INST(ireturn, 0),		// 0xac
+	INIT_INST(lreturn, 0),		// 0xad
+	INIT_INST(freturn, 0),		// 0xae
+	INIT_INST(dreturn, 0),		// 0xaf
+	INIT_INST(areturn, 0),		// 0xb0
+	INIT_INST(_return, 0),		// 0xb1
+	INIT_INST(getstatic, 2),	// 0xb2
+	INIT_INST(putstatic, 2),	// 0xb3
+	INIT_INST(getfield, 2),		// 0xb4
+	INIT_INST(putfield, 2),		// 0xb5
+	INIT_INST(invokevirtual, 2),// 0xb6
+	INIT_INST(invokespecial, 2),// 0xb7
+	INIT_INST(invokestatic, 2),	// 0xb8
+	INIT_INST(invokeinterface,2),// 0xb9
+	INIT_INST(invokedynamic, 2),// 0xba
+	INIT_INST(_new, 2),			// 0xbb
+	INIT_INST(newarray, 1),		// 0xbc
+	INIT_INST(anewarray, 2),	// 0xbd
+	INIT_INST(arraylength, 0),	// 0xbe
+	INIT_INST(athrow, 0),		// 0xbf
+	INIT_INST(checkcast, 2),	// 0xc0
+	INIT_INST(instanceof, 2),	// 0xc1
+	INIT_INST(monitorenter, 0),	// 0xc2
+	INIT_INST(monitorexit, 0),	// 0xc3
+	INIT_INST(wide, -1),		// 0xc4
+	INIT_INST(multianewarray,3),// 0xc5
+	INIT_INST(ifnull, 2),		// 0xc6
+	INIT_INST(ifnonnull, 2),	// 0xc7
+	INIT_INST(goto_w, 4),		// 0xc8
+	INIT_INST(jsr_w, 4),		// 0xc9
 };
 
 static void* sFunctionTable[] = {
@@ -249,63 +636,1019 @@ static void* sFunctionTable[] = {
 };
 
 bool validate_opcode(int opcode) {
-	return FALSE;
+	return FALSE;;
 }
 
 const char* stropcode(int opcode) {
 	return NULL;
 }
 
-DECL_FUNC(nop) 
+DECL_FUNC(nop)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(aconst_null)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_m1)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_0)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_1)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_2)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_3)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_4)
 {
-
-    return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(iconst_5)
 {
-    return TRUE;
+	return FALSE;
 }
 
+DECL_FUNC(lconst_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lconst_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fconst_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fconst_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fconst_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dconst_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dconst_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(bipush)
+{
+	return FALSE;
+}
+
+DECL_FUNC(sipush)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ldc)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ldc_w)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ldc2_w)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iload_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iload_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iload_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iload_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lload_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lload_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lload_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lload_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fload_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fload_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fload_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fload_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dload_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dload_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dload_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dload_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aload_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aload_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aload_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aload_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iaload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(laload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(faload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(daload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aaload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(baload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(caload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(saload)
+{
+	return FALSE;
+}
+
+DECL_FUNC(istore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lstore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fstore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dstore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(astore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(istore_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(istore_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(istore_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(istore_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lstore_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lstore_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lstore_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lstore_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fstore_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fstore_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fstore_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fstore_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dstore_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dstore_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dstore_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dstore_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(astore_0)
+{
+	return FALSE;
+}
+
+DECL_FUNC(astore_1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(astore_2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(astore_3)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(aastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(bastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(castore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(sastore)
+{
+	return FALSE;
+}
+
+DECL_FUNC(pop)
+{
+	return FALSE;
+}
+
+DECL_FUNC(pop2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup_x1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup_x2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup2_x1)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dup2_x2)
+{
+	return FALSE;
+}
+
+DECL_FUNC(swap)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iadd)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ladd)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fadd)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dadd)
+{
+	return FALSE;
+}
+
+DECL_FUNC(isub)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lsub)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fsub)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dsub)
+{
+	return FALSE;
+}
+
+DECL_FUNC(imul)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lmul)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fmul)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dmul)
+{
+	return FALSE;
+}
+
+DECL_FUNC(idiv)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ldiv)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fdiv)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ddiv)
+{
+	return FALSE;
+}
+
+DECL_FUNC(irem)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lrem)
+{
+	return FALSE;
+}
+
+DECL_FUNC(frem)
+{
+	return FALSE;
+}
+
+DECL_FUNC(drem)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ineg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lneg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fneg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dneg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ishl)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lshl)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ishr)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lshr)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iushr)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lushr)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iand)
+{
+	return FALSE;
+}
+
+DECL_FUNC(land)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ior)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lor)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ixor)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lxor)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iinc)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2l)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2f)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2d)
+{
+	return FALSE;
+}
+
+DECL_FUNC(l2i)
+{
+	return FALSE;
+}
+
+DECL_FUNC(l2f)
+{
+	return FALSE;
+}
+
+DECL_FUNC(l2d)
+{
+	return FALSE;
+}
+
+DECL_FUNC(f2i)
+{
+	return FALSE;
+}
+
+DECL_FUNC(f2l)
+{
+	return FALSE;
+}
+
+DECL_FUNC(f2d)
+{
+	return FALSE;
+}
+
+DECL_FUNC(d2i)
+{
+	return FALSE;
+}
+
+DECL_FUNC(d2l)
+{
+	return FALSE;
+}
+
+DECL_FUNC(d2f)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2b)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2c)
+{
+	return FALSE;
+}
+
+DECL_FUNC(i2s)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lcmp)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fcmpl)
+{
+	return FALSE;
+}
+
+DECL_FUNC(fcmpg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dcmpl)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dcmpg)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifeq)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifne)
+{
+	return FALSE;
+}
+
+DECL_FUNC(iflt)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifge)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifgt)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifle)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmpeq)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmpne)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmplt)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmpge)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmpgt)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_icmple)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_acmpeq)
+{
+	return FALSE;
+}
+
+DECL_FUNC(if_acmpne)
+{
+	return FALSE;
+}
+
+DECL_FUNC(_goto)
+{
+	return FALSE;
+}
+
+DECL_FUNC(jsr)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ret)
+{
+	return FALSE;
+}
+
+DECL_FUNC(tableswitch)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lookupswitch)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ireturn)
+{
+	return FALSE;
+}
+
+DECL_FUNC(lreturn)
+{
+	return FALSE;
+}
+
+DECL_FUNC(freturn)
+{
+	return FALSE;
+}
+
+DECL_FUNC(dreturn)
+{
+	return FALSE;
+}
+
+DECL_FUNC(areturn)
+{
+	return FALSE;
+}
+
+DECL_FUNC(_return)
+{
+	return FALSE;
+}
+
+DECL_FUNC(getstatic)
+{
+	return FALSE;
+}
+
+DECL_FUNC(putstatic)
+{
+	return FALSE;
+}
+
+DECL_FUNC(getfield)
+{
+	return FALSE;
+}
+
+DECL_FUNC(putfield)
+{
+	return FALSE;
+}
+
+DECL_FUNC(invokevirtual)
+{
+	return FALSE;
+}
+
+DECL_FUNC(invokespecial)
+{
+	return FALSE;
+}
+
+DECL_FUNC(invokestatic)
+{
+	return FALSE;
+}
+
+DECL_FUNC(invokeinterface)
+{
+	return FALSE;
+}
+
+DECL_FUNC(invokedynamic)
+{
+	return FALSE;
+}
+
+DECL_FUNC(_new)
+{
+	return FALSE;
+}
+
+DECL_FUNC(newarray)
+{
+	return FALSE;
+}
+
+DECL_FUNC(anewarray)
+{
+	return FALSE;
+}
+
+DECL_FUNC(arraylength)
+{
+	return FALSE;
+}
+
+DECL_FUNC(athrow)
+{
+	return FALSE;
+}
+
+DECL_FUNC(checkcast)
+{
+	return FALSE;
+}
+
+DECL_FUNC(instanceof)
+{
+	return FALSE;
+}
+
+DECL_FUNC(monitorenter)
+{
+	return FALSE;
+}
+
+DECL_FUNC(monitorexit)
+{
+	return FALSE;
+}
+
+DECL_FUNC(wide)
+{
+	return FALSE;
+}
+
+DECL_FUNC(multianewarray)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifnull)
+{
+	return FALSE;
+}
+
+DECL_FUNC(ifnonnull)
+{
+	return FALSE;
+}
+
+DECL_FUNC(goto_w)
+{
+	return FALSE;
+}
+
+DECL_FUNC(jsr_w)
+{
+	return FALSE;
+}
