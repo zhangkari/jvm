@@ -630,17 +630,97 @@ static Instruction sInstructionTable[] = {
 	INIT_INST(jsr_w, 4),		// 0xc9
 };
 
-static void* sFunctionTable[] = {
-	NULL,
-	NULL,
-};
-
 bool validate_opcode(int opcode) {
-	return FALSE;;
+	if (opcode <= opcode_min || opcode >= opcode_max) {
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 const char* stropcode(int opcode) {
-	return NULL;
+	if (!validate_opcode(opcode)) {
+		return "Invalid opcode";
+	}
+
+	return sInstructionTable[opcode].name;
+}
+
+/**
+  * Get a instruction in the buffer
+  * Param:
+		code:		the byte code stream 
+		codelen:	code's length
+ * Return:
+		A pointer of the instruction if valid opcode
+		NULL if invalid opcode
+ * Notice:
+		do not free me
+ */
+const Instruction* getCachedInstruction(U1 *code, int codelen)
+{
+	if (NULL == code || codelen < 0) {
+		return NULL;
+	}
+
+	U1 *buff = code;
+	U1 opcode = *buff++;
+	if (!validate_opcode(opcode)) {
+		return NULL;
+	}
+
+	U1 tag = sInstructionTable[opcode].tag;
+	if (1 == tag) {
+		if (codelen < 1) {
+			return NULL;
+		}
+		sInstructionTable[opcode].operand.u1 = *buff;
+	} else if (2 == tag) {
+		if (codelen < 2) {
+			return NULL;
+		}
+		sInstructionTable[opcode].operand.u1 = *((U2 *)buff);
+	} else if (4 == tag) {
+		if (codelen < 4) {
+			return NULL;
+		}
+		sInstructionTable[opcode].operand.u1 = *((U4 *)buff);
+	} else if (8 == tag) {
+		if (codelen < 8) {
+			return NULL;
+		}
+		sInstructionTable[opcode].operand.u1 = *((U8 *)buff);
+	}
+
+	return sInstructionTable + opcode;
+}
+
+void logInstruction(const Instruction* inst) {
+	if (0 == inst->tag) {
+		printf("%s\n", inst->name);
+		return;
+	}
+
+	int operand = 0;
+	switch (inst->tag) {
+		case 1:
+			operand = inst->operand.u1;
+			break;
+
+		case 2:
+			operand = inst->operand.u2;
+			break;
+
+		case 4:
+			operand = inst->operand.u4;
+			break;
+
+		case 8:
+			operand = inst->operand.u8;
+			break;
+	}
+
+	printf("%s\t%d\n", inst->name, operand);
 }
 
 DECL_FUNC(nop)

@@ -630,6 +630,10 @@ void logClassEntry(ClassEntry *clsEntry)
     int type_idx;
     int index;
 
+	U4 u4high;
+	U4 u4low;
+	U8 u8;
+
     for (i = 1; i < clsEntry->constPool->length; ++i) {
         printf("const #%d = ", i);
         switch (clsEntry->constPool->entries[i].tag) {
@@ -642,12 +646,25 @@ void logClassEntry(ClassEntry *clsEntry)
                 break;
 
             case CONST_Float:
+				printf("float\t%d\n", clsEntry->constPool->entries[i].info.float_info.bytes);
                 break;
 
             case CONST_Long:
+				u4high = clsEntry->constPool->entries[i].info.long_info.high_bytes;
+				u4low = clsEntry->constPool->entries[i].info.long_info.low_bytes;
+				u8 = u4high;
+				u8<<=32;
+				u8 += u4low;
+				++i;
+				printf("long\t%ld\n", u8);
                 break;
 
             case CONST_Double:
+				u4high = clsEntry->constPool->entries[i].info.double_info.high_bytes;
+				u4low = clsEntry->constPool->entries[i].info.double_info.low_bytes;
+				u8 = u4high<<32 + u4low;
+				++i;
+				printf("double\t%ld\n", u8);
                 break;
 
             case CONST_Class:
@@ -757,17 +774,14 @@ void logClassEntry(ClassEntry *clsEntry)
                     clsEntry->methods[i].max_locals,
                     clsEntry->methods[i].args_count);
 
-
-
-		// printf instruction info
-		/*
         int j;
         for (j = 0; j < clsEntry->methods[i].code_length; ++j) {
-            U1 code = *((U1 *)clsEntry->methods[i].code + j);
-            printf("   %d:\t %s\n", j, stropcode(code));
-            j += operand_len[code];
+            U1 *code = (U1 *)clsEntry->methods[i].code + j;
+			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j);
+			printf("   %d ", j);
+			logInstruction(inst);
+            j += inst->tag; 
         }
-		*/
 
         printf("  LineNumberTable:\n");
         printf("   line %d: %d\n\n", 0, 0);
