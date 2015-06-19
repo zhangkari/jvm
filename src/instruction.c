@@ -6,6 +6,18 @@
 
 #include <instruction.h>
 
+#define READ_U1(u1, data) do {                          \
+    u1 = *((U1 *)data);                                 \
+} while (0);
+
+#define READ_U2(u2, data) do {                          \
+    U1 u1 = *((U1 *)data++);                            \
+    u2 = u1;                                            \
+    u2<<=8;                                             \
+    u1 = *((U1 *)data);                                 \
+    u2 += u1;                                           \
+} while (0);
+
 enum {
 	opcode_min = -1,
 	nop,			// 0x00
@@ -664,38 +676,38 @@ const Instruction* getCachedInstruction(U1 *code, int codelen)
 	}
 
 	U1 *buff = code;
-	U1 opcode = *buff++;
+	U1 opcode = *buff;
 	if (!validate_opcode(opcode)) {
 		return NULL;
 	}
+
+    buff++;
 
 	U1 tag = sInstructionTable[opcode].tag;
 	if (1 == tag) {
 		if (codelen < 1) {
 			return NULL;
 		}
+        U1 u1;
+        READ_U1(u1, buff);
 		sInstructionTable[opcode].operand.u1 = *buff;
 	} else if (2 == tag) {
 		if (codelen < 2) {
 			return NULL;
 		}
-		sInstructionTable[opcode].operand.u1 = *((U2 *)buff);
-	} else if (4 == tag) {
-		if (codelen < 4) {
-			return NULL;
-		}
-		sInstructionTable[opcode].operand.u1 = *((U4 *)buff);
-	} else if (8 == tag) {
-		if (codelen < 8) {
-			return NULL;
-		}
-		sInstructionTable[opcode].operand.u1 = *((U8 *)buff);
+        U2 u2;
+        READ_U2(u2, buff);
+		sInstructionTable[opcode].operand.u2 = u2;
 	}
 
-	return sInstructionTable + opcode;
+	return &sInstructionTable[opcode];
 }
 
 void logInstruction(const Instruction* inst) {
+    if (NULL == inst) {
+        return;
+    }
+
 	if (0 == inst->tag) {
 		printf("%s\n", inst->name);
 		return;
@@ -711,13 +723,8 @@ void logInstruction(const Instruction* inst) {
 			operand = inst->operand.u2;
 			break;
 
-		case 4:
-			operand = inst->operand.u4;
-			break;
-
-		case 8:
-			operand = inst->operand.u8;
-			break;
+        default:
+            fprintf(stderr, "Invalid tag in instruction\n");
 	}
 
 	printf("%s\t%d\n", inst->name, operand);
