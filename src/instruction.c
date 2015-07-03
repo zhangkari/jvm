@@ -698,6 +698,12 @@ const Instruction* getCachedInstruction(U1 *code, int codelen)
         U2 u2;
         READ_U2(u2, buff);
 		sInstructionTable[opcode].operand.u2 = u2;
+	} else if (-1 == tag){
+		printf("tag = -1\n");
+	} else if (3 == tag) {
+		printf("tag = 3\n");
+	} else if (4 == tag) {
+		printf("tag = 4\n");
 	}
 
 	return &sInstructionTable[opcode];

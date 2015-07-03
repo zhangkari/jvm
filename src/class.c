@@ -409,6 +409,39 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 						}
 					} else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
 						base += attr_length;
+					} else if(!strcmp(name, "StackMapTable")) {
+						U2 entry_num;
+						READ_U2(entry_num, base);
+						int k;
+						for (k = 0; k < entry_num; ++k) {
+							U1 type;
+							READ_U1(type, base);
+							printf("type:%d\n", type);
+							if (type >= 0 && type <= 63) {
+								printf("same_frame\n");
+							} else if (type >= 64 && type <= 127) {
+								printf("same_locals_1_stack_item_frame\n");
+							} else if (247 == type){
+								printf("same_locals_1_stack_item_frame_extended\n");
+								U2 offset_delta;
+								READ_U2(offset_delta, base);
+
+							} else if (type >= 248 && type <= 250) {
+								printf("chop_frame\n");
+								U2 offset_delta;
+								READ_U2(offset_delta, base);
+							} else if (251 == type) {
+								printf("same_frame_extended\n");
+								U2 offset_delta;
+								READ_U2(offset_delta, base);
+							} else if (type >= 252 && type <= 254) {
+								printf("append_frame\n");
+								U2 offset_delta;
+								READ_U2(offset_delta, base);
+							} else if (type == 255) {
+								printf("full_frame\n");
+							}
+						}
 					} else {
 						printf("Unknown Code attr:%s\n", name);
 						base += attr_length;
