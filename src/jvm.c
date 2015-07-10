@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "class.h"
 #include "instruction.h"
@@ -85,6 +86,13 @@ int setInitArgs(Property *props, int nprop, InitArgs *args) {
 }
 
 int parseCmdLine(int argc, char **argv, Property *props) {
+	if (argc == 1) {
+		printf("Invalid parameter\n");
+		printf("Usage\n");
+		printf("  jvm CLASS\n");
+		exit(0);
+	}
+
 	return 0;
 }
 
