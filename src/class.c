@@ -146,7 +146,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 				READ_U2(length, base);
 				constPool->entries[i].info.utf8_info.bytes = sysAlloc(length + 1);
 				assert(NULL != constPool->entries[i].info.utf8_info.bytes);
-				strncpy(constPool->entries[i].info.utf8_info.bytes, base, length);
+				memcpy(constPool->entries[i].info.utf8_info.bytes, base, length);
 				constPool->entries[i].info.utf8_info.length = length;
 				base += length;
 				break;
@@ -715,6 +715,19 @@ void logClassEntry(ClassEntry *clsEntry)
                 break;
 
             case CONST_Fieldref:
+				cls_idx = clsEntry->constPool->entries[i].info.fieldref_info.class_index;
+				nametype_idx = clsEntry->constPool->entries[i].info.fieldref_info.name_type_index;
+				name_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.name_index;
+                index = clsEntry->constPool->entries[cls_idx].info.class_info.name_index;
+				type_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.type_index;
+
+				printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
+						cls_idx, 
+						nametype_idx,
+                        clsEntry->constPool->entries[index].info.utf8_info.bytes,
+						clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
+						clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
+
                 break;
 
             case CONST_Methodref:
@@ -723,7 +736,7 @@ void logClassEntry(ClassEntry *clsEntry)
                 nametype_idx = clsEntry->constPool->entries[i].info.methodref_info.name_type_index,
                 name_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.name_index;
                 type_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.type_index;
-                printf("Method\t#%d.#%d; // %s.\"%s\":%s\n",
+                printf("Method\t#%d.#%d; // %s.%s:%s\n",
                         cls_idx, 
                         nametype_idx, 
                         clsEntry->constPool->entries[index].info.utf8_info.bytes,
