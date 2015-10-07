@@ -112,5 +112,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     ClassEntry *clsEntry = CLASS_CE(mainClass);
-    logClassEntry(clsEntry);
+//    logClassEntry(clsEntry);
+
 }
