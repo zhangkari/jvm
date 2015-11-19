@@ -4,6 +4,7 @@
  *
  ************************************/
 
+#include <assert.h>
 #include <instruction.h>
 
 #define READ_U1(u1, data) do {                          \
@@ -671,30 +672,44 @@ const char* stropcode(int opcode) {
  */
 const Instruction* getCachedInstruction(U1 *code, int codelen)
 {
+    /*
 	if (NULL == code || codelen < 0) {
 		return NULL;
 	}
+    */
+    assert (NULL != code && codelen > 0);
 
 	U1 *buff = code;
 	U1 opcode = *buff;
+    /*
 	if (!validate_opcode(opcode)) {
 		return NULL;
 	}
+    */
+    assert( validate_opcode(opcode) );
 
     buff++;
 
 	U1 tag = sInstructionTable[opcode].tag;
 	if (1 == tag) {
+        /*
 		if (codelen < 1) {
 			return NULL;
 		}
+        */
+        assert (codelen >= 1);
+
         U1 u1;
         READ_U1(u1, buff);
 		sInstructionTable[opcode].operand.u1 = *buff;
 	} else if (2 == tag) {
+        /*
 		if (codelen < 2) {
 			return NULL;
 		}
+        */
+        assert (codelen >= 2);
+
         U2 u2;
         READ_U2(u2, buff);
 		sInstructionTable[opcode].operand.u2 = u2;

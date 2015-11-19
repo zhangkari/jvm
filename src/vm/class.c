@@ -410,6 +410,7 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 					} else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
 						base += attr_length;
 					} else if(!strcmp(name, "StackMapTable")) {
+                        printf ("StackMapTable\n");
 						U2 entry_num;
 						READ_U2(entry_num, base);
 						int k;
