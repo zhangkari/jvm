@@ -18,12 +18,9 @@
 #include "instruction.h"
 #include "jvm.h"
 
-struct JavaStack {
-	int top;
-	int size;
-	StackFrame **base;
-};
-
+/*
+ * Push stack frame into stack
+ */
 bool pushStack(JavaStack *stack, StackFrame *frame) {
 	if (NULL == stack || NULL == frame) {
 		return FALSE;
@@ -74,7 +71,24 @@ bool exitVM(VM *vm) {
 
 void setDefaultInitArgs(InitArgs *args)
 {
+    assert (NULL != args);
 
+#define BOOT_PATH "./bootstrap.zip"
+    args->bootpath = BOOT_PATH;
+
+#define DEFAULT_STACK_SIZE (64 * KB)
+    args->java_stack = DEFAULT_STACK_SIZE;
+
+#define MIN_HEAP_SIZE (4 * MB)
+    args->min_heap = MIN_HEAP_SIZE;
+
+#define MAX_HEAP_SIZE (16 * MB)
+    args->max_heap = MAX_HEAP_SIZE;
+
+    args->vfprintf = vfprintf;
+    args->vfscanf = vfscanf;
+    args->exit = exit;
+    args->abort = abort;
 }
 
 int readSysConfig(char *path, Property *props) {
