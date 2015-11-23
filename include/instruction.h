@@ -53,7 +53,7 @@ const char* stropcode(int opcode);
  * Notice:
 		do not free me
  */
-const Instruction* getCachedInstruction(U1 *code, int codelen);
+const Instruction* getCachedInstruction(U1 *code, int codelen, int offset);
 
 /**
  * Log the instruction info

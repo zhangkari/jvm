@@ -824,7 +824,7 @@ void logClassEntry(ClassEntry *clsEntry)
         int j;
         for (j = 0; j < clsEntry->methods[i].code_length; ++j) {
             U1 *code = (U1 *)clsEntry->methods[i].code + j;
-			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j);
+			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j, j);
 			printf("   %d ", j);
 			logInstruction(inst);
             j += inst->tag; 

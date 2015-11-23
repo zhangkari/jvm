@@ -434,6 +434,58 @@ DECL_FUNC(ifnonnull);
 DECL_FUNC(goto_w);
 DECL_FUNC(jsr_w);
 
+/**
+ * Most instructions have 0 or 1 operand. 
+ * The table define these instructions which have 2 operands
+ */
+static U1 sTwoOperandsTable[] = {
+    iinc    
+};
+
+/*
+ * If the opcode has 2 operands
+ * 
+ */
+inline bool hasTwoOperands (U1 opcode)
+{
+    int size = sizeof (sTwoOperandsTable) / sizeof (sTwoOperandsTable[0]);
+    int i;
+    for (i = 0; i < size; ++i) {
+        if (sTwoOperandsTable[i] == opcode) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*
+ * These instructions has 1 operand, but the operand need add the offset
+ */
+static U1 sOffsetTable[] = {
+    if_icmpge,
+    ifne,
+    _goto,
+};
+
+/*
+ * If the operand need add offset
+ * 
+ */
+inline bool needAddOffset (U1 opcode)
+{
+    int size = sizeof (sOffsetTable) / sizeof (sOffsetTable[0]);
+    int i;
+    for (i = 0; i < size; ++i) {
+        if (sOffsetTable[i] == opcode) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
 
 #define INST_FUNC(X) func_inst_##X
 #define _T(X) #X
@@ -670,7 +722,7 @@ const char* stropcode(int opcode) {
  * Notice:
 		do not free me
  */
-const Instruction* getCachedInstruction(U1 *code, int codelen)
+const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
 {
     /*
 	if (NULL == code || codelen < 0) {
@@ -712,6 +764,9 @@ const Instruction* getCachedInstruction(U1 *code, int codelen)
 
         U2 u2;
         READ_U2(u2, buff);
+        if (needAddOffset (opcode)) {
+            u2 += offset;
+        }
 		sInstructionTable[opcode].operand.u2 = u2;
 	} else if (-1 == tag){
 		printf("tag = -1\n");
@@ -748,7 +803,14 @@ void logInstruction(const Instruction* inst) {
             fprintf(stderr, "Invalid tag in instruction\n");
 	}
 
-	printf("%s\t%d\n", inst->name, operand);
+    if (!hasTwoOperands (inst->opcode)) {
+        printf("%s\t%d\n", inst->name, operand);
+    }
+    else {
+        U1 b1 = operand >> 8 ;
+        U2 b2 = operand & 0x00ff;
+        printf ("%s\t%d, %d\n", inst->name, b1, b2);
+    }
 }
 
 DECL_FUNC(nop)
