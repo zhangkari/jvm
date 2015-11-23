@@ -349,9 +349,9 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 				READ_U4(code_length, base);
 				class->methods[i].code_length = code_length;
 
-				class->methods[i].code = sysAlloc(length);
+				class->methods[i].code = sysAlloc(code_length);
 				assert(NULL != class->methods[i].code);
-				memcpy(class->methods[i].code, base, length);
+				memcpy(class->methods[i].code, base, code_length);
 				base += code_length;
 
 				U2 excep_tbl_len;
