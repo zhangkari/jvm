@@ -6,3 +6,4 @@
 jvm
 jvmp
 target
+*.class
