@@ -1,9 +1,21 @@
+# object files
 *.o
 *.so
 *.a
 *.lo
 *.exe
+
+# Build tool
 jvm
 jvmp
+minizip
+miniunz
+reader
+writer
+libjar.so
+
+# object directory
 target
+
+# java object
 *.class
