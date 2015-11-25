@@ -1,11 +1,19 @@
+############################
+# file name:	Makefile
+# author:		kari.zhang
+#
+############################
+
 OBJDIR = target
 JVM = jvm
 JVMP = jvmp
-BOOTSTRAP = classes.zip
-PROJ = $(JVM) $(JVMP) $(BOOTSTRAP)
+JAR = jar
+BOOTSTRAP = rt.jar
+PROJ = $(JVM) $(JVMP) $(JAR) $(BOOTSTRAP)
 CC = gcc
 CFLAGS =  -Iinclude \
           -Ilibs \
+		  -L./libs \
 		  -g \
 	      -DDEBUG #-m32
 
@@ -23,8 +31,7 @@ MAIN_OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(MAIN_SRC))
 
 VPATH = src:include
 
-all : $(OBJDIR) $(DEP) ziplib $(OBJ) $(MAIN_OBJ) \
-			$(CLASSES) $(BOOTSTRAP) $(PROJ)
+all : $(OBJDIR) $(DEP) ziplib $(OBJ) $(MAIN_OBJ) $(PROJ) $(CLASSES)
 	@echo "Build OK"
 
 # Build libz for jar
@@ -41,9 +48,14 @@ $(JVMP) : $(OBJ) $(OBJDIR)/src/jvmp.o
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "Compile $(JVMP) OK"
 
-# Build bootstrap.zip
+# Build jar
+$(JAR) : $(OBJDIR)/src/jar.o libs/libjar.a
+	@$(CC) $(CFLAGS) $^ -o $@
+	@echo "Compile $(JAR) OK"
+
+# Build rt.jar
 $(BOOTSTRAP) : $(CLASSES)
-	@echo $^
+	@./jar -c $(CLASSES) $(BOOTSTRAP)
 	@echo "Build rt.jar OK"
 
 # Make sure target/src exist

@@ -1,3 +1,13 @@
+/********************************************
+ * file name:	reader.c
+ * author:		kari.zhang
+ * date:		
+ *
+ * modifications:
+ *	1. Review code @ 2015-11-25 by kari.zhang
+ *
+ *******************************************/
+
 #include <stdio.h>
 #include "unzip.h"
 
@@ -7,7 +17,6 @@ int main(int argc, char** argv)
 		printf("Usage:  %s path\n", argv[0]);
 		return -1;
 	}
-
 	
 	unzFile uzf = unzOpen(argv[1]);
 	if (NULL == uzf) {

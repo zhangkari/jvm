@@ -9,17 +9,17 @@ UNZ_OBJS = miniunz.o unzip.o ioapi.o	../../libz.so
 ZIP_OBJS = minizip.o zip.o   ioapi.o	../../libz.so
 RDR_OBJS = reader.o unzip.o ioapi.o		../../libz.so
 WTR_OBJS = writer.o zip.o ioapi.o		../../libz.so
-SHRD_OBJ = jar.o zip.o unzip.o ioapi.o	../../libz.so 
+SHRD_OBJ = libjar.o zip.o unzip.o ioapi.o	../../libz.so 
 
 .c.o:
 	$(CC) -c $(CFLAGS) $*.c
 
-all: miniunz minizip reader writer libjar.so
+all: miniunz miniz reader writer libjar.a
 
 miniunz:  $(UNZ_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(UNZ_OBJS)
 
-minizip:  $(ZIP_OBJS)
+miniz:  $(ZIP_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(ZIP_OBJS)
 
 test:	miniunz minizip
@@ -34,8 +34,8 @@ reader: $(RDR_OBJS)
 writer: $(WTR_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ 
 
-libjar.so : $(SHRD_OBJ)
-	$(CC) $(CFLAGS) --shared $^ -o $@ 
+libjar.a : $(SHRD_OBJ)
+	@ar -r $@ $^
 
 clean:
-	/bin/rm -f *.o *~ minizip miniunz reader writer libjar.so
+	/bin/rm -f *.o *~ miniz miniunz reader writer libjar.a

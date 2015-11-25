@@ -8,14 +8,16 @@
 # Build tool
 jvm
 jvmp
-minizip
+miniz
 miniunz
 reader
 writer
 libjar.so
+jar
 
 # object directory
 target
 
 # java object
 *.class
+*.jar
