@@ -8,7 +8,7 @@
 
 #include "comm.h"
 
-enum tag_value {
+typedef enum tag_value {
     CONST_Utf8			= 1,
     CONST_Integer		= 3,
     CONST_Float			= 4,
@@ -23,9 +23,9 @@ enum tag_value {
     CONST_MethodHandle	= 15,
     CONST_MethodType	= 16,
     CONST_InvokeDynamic	= 18,
-};
+} TypeTag;
 
-enum access_flags {
+typedef enum access_flags {
     ACC_PUBLIC      = 0x0001,
     ACC_PRIVATE     = 0x0002,
     ACC_PROTECTED   = 0x0004,
@@ -44,7 +44,7 @@ enum access_flags {
     ACC_SYNTHETIC   = 0x1000,
     ACC_ANNOTATION  = 0x2000,
     ACC_ENUM        = 0x4000,
-};
+} AccTag;
 
 enum Class_State {
 	CLASS_LOADED	= 0x01,
@@ -168,18 +168,38 @@ typedef struct FieldEntry {
 	U2	constant;
 } FieldEntry;
 
+
+// Slot store type and value
+typedef struct Slot {
+    TypeTag     tag;
+    uintptr_t   value;
+} Slot;
+
+/*
+ * Local variable table
+ */
+typedef struct LocalVarTable {
+    Slot *slotTbl;
+    U4    slotCnt;
+} LocalVarTable;
+
+/**
+ * StackFrame has the same structure with LocalVarTable
+ */
+typedef LocalVarTable StackFrame;
+
 typedef struct MethodEntry {
-	Class *class;
-	char *name;
-	char *type;
-	char *signature; 
-	U2	acc_flags;
-	U2	max_stack;
-	U2	max_locals;
-	U2	args_count;
-	U4	code_length;
-	void *code;
-	ExceptionTable excep_tbl;
+	Class           *class;
+	char            *name;
+	char            *type;
+	char            *signature; 
+	U2	            acc_flags;
+    StackFrame      stack_frame;
+    LocalVarTable   local_tbl;
+	U2	            args_count;
+	U4	            code_length;
+	void            *code;
+	ExceptionTable  excep_tbl;
 } MethodEntry;
 
 #define RESERVE_SIZE 4

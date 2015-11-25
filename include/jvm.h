@@ -55,13 +55,6 @@ typedef struct InitArgs {
 	void (*abort)(void);        // System.abort()
 } InitArgs;
 
-/*
- * Stack frame
- */
-typedef struct StackFrame {
-
-} StackFrame;
-
 /**
  * Java stack
  */
@@ -70,13 +63,6 @@ typedef struct JavaStack {
 	int size;
 	StackFrame **base;
 } JavaStack;
-
-/*
- * Local variable table
- */
-typedef struct LocalTable {
-
-} LocalTable;
 
 typedef struct ExecEnv {
     U1 *cur_heap;				// current heap address

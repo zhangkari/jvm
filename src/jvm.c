@@ -70,6 +70,40 @@ bool exitVM(VM *vm) {
 
 }
 
+/* 
+ * This function smell bad !!!
+ *
+ *     //FIXME
+ *
+ * Check if rt.jar in the path 
+ * Parameters:
+ *      path:   [IN, OUT] such as /usr/lib or /usr/lib/
+ *              after return, path will be altered, 
+ *              file postfix will be added, /user/lib/rt.jar
+ * Return:
+ *      1  OK   
+ *      0  ERROR
+ */
+static int existRtJar(char *path) {
+    if (NULL == path) {
+        return FALSE;
+    }
+
+    if ( *(path + strlen(path) - 1) == '/') {
+        strcat(path, "rt.jar");
+    } else {
+        strcat(path, "/rt.jar");
+    }
+
+    FILE *fp = fopen (path, "r");
+    if (NULL != fp) {
+        fclose (fp);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /**
  * Find rt.jar in CLASSPATH
  * Parameters:
@@ -88,6 +122,11 @@ static int findRtJar (char **path) {
 
 	char rtpath[MAX_PATH];
 	char *clspath = getenv(CLASSPATH);
+    if (NULL == clspath) {
+        printf ("Fatal error: CLASSPATH not set\n");
+        return -1;
+    }
+
 	char *start = clspath;
 	char *cursor = clspath;
 
@@ -101,26 +140,30 @@ static int findRtJar (char **path) {
 		if (*cursor == ':') {
 			memset (rtpath, 0, MAX_PATH);
 			strncpy (rtpath, start, cursor - start);
-			if ( *(cursor - 1) == '/') {
-				strcat(rtpath, "rt.jar");
-			} else {
-				strcat(rtpath, "/rt.jar");
-			}
-
-			FILE *fp = fopen (rtpath, "r");
-			if (NULL != fp) {
-				*path = (char *)sysAlloc(strlen(rtpath) + 1);
+            if (existRtJar(rtpath)) {
+            	*path = (char *)sysAlloc(strlen(rtpath) + 1);
 				strcpy(*path, rtpath);
-				return 0;
-			}
+                return 0;
+            }
 
 			start = cursor + 1;
 
-		} // if (*cursor == NULL)
+		} // if (*cursor == ':')
 
 		++cursor;
 
 	} // while	
+
+    // No ":" separator
+    if (start == clspath) {
+        memset (rtpath, 0, MAX_PATH);
+        strncpy (rtpath, start, cursor - start);
+        if (existRtJar(rtpath)) {
+            *path = (char *)sysAlloc(strlen(rtpath) + 1);
+            strcpy(*path, rtpath);
+            return 0;
+        }
+    }
 
 	return -1;
 }
@@ -131,7 +174,7 @@ void setDefaultInitArgs(InitArgs *args)
 
 	char* rtpath = NULL;
 	if (findRtJar(&rtpath) < 0) {
-		printf ("Falal error:rt.jar not found\n");
+		printf ("Falal error: rt.jar not found\n");
 		exit (1);
 	}
 	args->bootpath = rtpath;
@@ -155,10 +198,16 @@ int readSysConfig(char *path, Property *props) {
 	return 0;
 }
 
+/*
+ * Set properties to InitArgs
+ */
 int setInitArgs(Property *props, int nprop, InitArgs *args) {
 	return 0;
 }
 
+/*
+ * Parse command line user input
+ */
 int parseCmdLine(int argc, char **argv, Property **props) {
 	if (argc == 1) {
 		printf("Usage\n");

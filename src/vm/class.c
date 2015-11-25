@@ -339,13 +339,18 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 			name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
 
 			if (!strcmp(name, "Code")) {
-				U2 max_stack;
-				READ_U2(max_stack, base);
-				class->methods[i].max_stack = max_stack;
+				U2 max_slot;
+				READ_U2(max_slot, base);
+                class->methods[i].stack_frame.slotCnt = max_slot;
+                Slot *slots = (Slot *)sysAlloc(max_slot * sizeof (Slot));
+                assert (NULL != slots);
+				class->methods[i].stack_frame.slotTbl = slots;
 
-				U2 max_locals;
-				READ_U2(max_locals, base);
-				class->methods[i].max_locals = max_locals;
+				READ_U2(max_slot, base);
+				(class->methods + i)->local_tbl.slotCnt = max_slot;
+                slots = (Slot *)sysAlloc (max_slot * sizeof(Slot));
+                assert (NULL != slots);
+                (class->methods + i)->local_tbl.slotTbl = slots;
 
 				U4 code_length;
 				READ_U4(code_length, base);
@@ -692,7 +697,7 @@ void logClassEntry(ClassEntry *clsEntry)
 				u8<<=32;
 				u8 += u4low;
 				++i;
-				printf("long\t%ld\n", u8);
+				printf("long\t%lld\n", u8);
                 break;
 
             case CONST_Double:
@@ -700,7 +705,7 @@ void logClassEntry(ClassEntry *clsEntry)
 				u4low = clsEntry->constPool->entries[i].info.double_info.low_bytes;
 				u8 = u4high<<32 + u4low;
 				++i;
-				printf("double\t%ld\n", u8);
+				printf("double\t%lld\n", u8);
                 break;
 
             case CONST_Class:
@@ -819,8 +824,8 @@ void logClassEntry(ClassEntry *clsEntry)
 
         printf("  Code:\n");
         printf("   Stack=%d, Locals=%d, Args_size=%d\n",
-                    clsEntry->methods[i].max_stack,
-                    clsEntry->methods[i].max_locals,
+                    clsEntry->methods[i].stack_frame.slotCnt,
+                    clsEntry->methods[i].local_tbl.slotCnt,
                     clsEntry->methods[i].args_count);
 
         int j;
