@@ -11,21 +11,8 @@
 #ifndef __JVM__H__
 #define __JVM__H__
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#define TRUE  1
-#define FALSE 0
-#define bool char
-
-typedef uint8_t  U1;
-typedef uint16_t U2;
-typedef uint32_t U4;
-typedef uint64_t U8;
-
-#define KB 1024
-#define MB (KB*KB)
+#include "class.h"
+#include "comm.h"
 
 #define MIN_HEAP 4*KB
 #define MIN_STACK 1*KB
@@ -92,22 +79,27 @@ typedef struct LocalTable {
 } LocalTable;
 
 typedef struct ExecEnv {
-    U1 *cur_heap;
-    U1 *cur_stack;
-    JavaStack *stack;
+    U1 *cur_heap;				// current heap address
+    U1 *cur_stack;				// current stack address
+    JavaStack *stack;			// java stack
+	U2 userClsCnt;				// user class count
+	ClassEntry **userClsArea;	// user class address list
+	U2 rtClsCnt;				// runtime class count
+	ClassEntry *rtClsArea;		// runtime class address list
+	MethodEntry *mainMethod;	// user class main()
 } ExecEnv;
 
 typedef struct VM {
-    U1 *heap_base;
-    U4 heap_size;
-    U1 *stack_base;
-    U4 stack_size;
-	InitArgs *initArgs;
-    ExecEnv *execEnv;
+    U1 *heap_base;				// heap base address
+    U4 heap_size;				// heap size
+    U1 *stack_base;				// stack base address
+    U4 stack_size;				// stack size
+	InitArgs *initArgs;			// initialization arguments
+    ExecEnv *execEnv;			// executing environment
 } VM;
 
 extern void setDefaultInitArgs(InitArgs *args);
-extern int parseCmdLine(int argc, char **argv, Property *props);
+extern int parseCmdLine(int argc, char **argv, Property **props);
 extern int readSysConfig(char *path, Property *props);
 extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 

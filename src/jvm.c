@@ -17,6 +17,7 @@
 #include "class.h"
 #include "instruction.h"
 #include "jvm.h"
+#include "mem.h"
 
 /*
  * Push stack frame into stack
@@ -69,12 +70,71 @@ bool exitVM(VM *vm) {
 
 }
 
+/**
+ * Find rt.jar in CLASSPATH
+ * Parameters:
+ *		[OUT] path
+ * Return:
+ *		 0 OK
+ *		-1 ERROR
+ */
+static int findRtJar (char **path) {
+	if (NULL == path) {
+		return -1;
+	}
+
+#define MAX_PATH 256
+#define CLASSPATH "CLASSPATH"
+
+	char rtpath[MAX_PATH];
+	char *clspath = getenv(CLASSPATH);
+	char *start = clspath;
+	char *cursor = clspath;
+
+	// skip if start with :
+	while (*cursor == ':') {
+		++start;
+		++cursor;
+	}
+
+	while (*cursor != '\0') {
+		if (*cursor == ':') {
+			memset (rtpath, 0, MAX_PATH);
+			strncpy (rtpath, start, cursor - start);
+			if ( *(cursor - 1) == '/') {
+				strcat(rtpath, "rt.jar");
+			} else {
+				strcat(rtpath, "/rt.jar");
+			}
+
+			FILE *fp = fopen (rtpath, "r");
+			if (NULL != fp) {
+				*path = (char *)sysAlloc(strlen(rtpath) + 1);
+				strcpy(*path, rtpath);
+				return 0;
+			}
+
+			start = cursor + 1;
+
+		} // if (*cursor == NULL)
+
+		++cursor;
+
+	} // while	
+
+	return -1;
+}
+
 void setDefaultInitArgs(InitArgs *args)
 {
     assert (NULL != args);
 
-#define BOOT_PATH "./bootstrap.zip"
-    args->bootpath = BOOT_PATH;
+	char* rtpath = NULL;
+	if (findRtJar(&rtpath) < 0) {
+		printf ("Falal error:rt.jar not found\n");
+		exit (1);
+	}
+	args->bootpath = rtpath;
 
 #define DEFAULT_STACK_SIZE (64 * KB)
     args->java_stack = DEFAULT_STACK_SIZE;
@@ -99,9 +159,8 @@ int setInitArgs(Property *props, int nprop, InitArgs *args) {
 	return 0;
 }
 
-int parseCmdLine(int argc, char **argv, Property *props) {
+int parseCmdLine(int argc, char **argv, Property **props) {
 	if (argc == 1) {
-		printf("Invalid parameter\n");
 		printf("Usage\n");
 		printf("  jvm CLASS\n");
 		exit(0);
@@ -110,13 +169,43 @@ int parseCmdLine(int argc, char **argv, Property *props) {
 	return 0;
 }
 
+/**
+ * Find static void main (String []args)
+ * Return:
+ *		ERROR:	-1
+ *		OK:		index in method area
+ */
+static int findEntryMain(const ClassEntry *clsEntry) {
+	if (NULL == clsEntry) {
+		return -1;
+	}
+
+#define MAIN_METHOD "([Ljava/lang/String;)V"
+
+	int retCode = -1;
+	int i;
+	for (i = 0; i < clsEntry->methods_count; ++i) {
+		MethodEntry *method = clsEntry->methods + i;
+		if (strcmp(method->name, "main") == 0 &&
+				strcmp(method->type, MAIN_METHOD) == 0 &&
+				(method->acc_flags & ACC_PUBLIC) &&
+				(method->acc_flags & ACC_STATIC)) {
+			retCode = i;
+			break;
+		}
+	}
+	
+	return retCode;
+}
+
 int main(int argc, char *argv[]) {
 	InitArgs initArgs;	
 	setDefaultInitArgs(&initArgs);
-	Property props[argc - 1];
-	int len = parseCmdLine(argc, argv, props);
-	setInitArgs(props, len, &initArgs);
 
+	Property *props = NULL;
+	int len = parseCmdLine(argc, argv, &props);
+	setInitArgs(props, len, &initArgs);
+	
     char path[256];
     strcpy(path, argv[1]);
     strcat(path, ".class");
@@ -125,7 +214,15 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed loadClass from file\n");
         return -1;
     }
+
     ClassEntry *clsEntry = CLASS_CE(mainClass);
-//    logClassEntry(clsEntry);
+	int mainIdx = findEntryMain(clsEntry);
+	if (mainIdx < 0) {
+		printf("Error: Not found main() in %s, please define as:\n", path); 
+		printf("  public static void main(String[] args)\n");
+		return -1;
+	}
+
+	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
 
 }

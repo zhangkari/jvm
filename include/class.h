@@ -6,7 +6,7 @@
 #ifndef __CLASS__H__
 #define __CLASS__H__
 
-#include "jvm.h"
+#include "comm.h"
 
 enum tag_value {
     CONST_Utf8			= 1,
@@ -203,7 +203,8 @@ typedef struct ClassEntry {
 	Object *class_loader;
 } ClassEntry;
 
-#define CLASS_CE(cls) ((ClassEntry *)(cls + 1))
+#define CLASS_CE(cls) ( (ClassEntry *) (cls + 1) )
+#define CE_CLASS(clsEntry) ( (Class *) clsEntry )
 
 extern ConstPool* newConstPool(int length);
 extern Class* defineClass(char *classname, char *data, int offset, int len,							Object *class_laoder);
@@ -214,7 +215,6 @@ extern Class* findSystemClass(char *classname);
 extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);
 extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
-extern void executeMethod(VM *vm, MethodEntry *method);
 
 extern Class* loadClassFromFile(char *path, char *classname);
 extern Class* loadClassFromJar(char *path, char *classname);

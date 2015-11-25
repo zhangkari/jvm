@@ -15,10 +15,13 @@
 #include <string.h>
 #include "class.h"
 
-int parseCmdLine(int argc, char **argv, Property *props);
+static void usage();
 
 int main(int argc, char *argv[]) {
-    parseCmdLine(argc, argv, NULL);
+	if (2 != argc) {
+		usage();
+		return -1;
+	}
     char path[256];
     strcpy(path, argv[1]);
     strcat(path, ".class");
@@ -34,13 +37,7 @@ int main(int argc, char *argv[]) {
     // freeClass();
 }
 
-int parseCmdLine(int argc, char **argv, Property *props) {
-	if (argc == 1) {
-		printf("Invalid parameter\n");
-		printf("Usage\n");
-		printf("  jvmp CLASS\n");
-		exit(0);
-	}
-
-	return 0;
+static void usage() {
+	printf("Usage\n");
+	printf("  jvmp CLASS\n");
 }

@@ -314,6 +314,8 @@ Class* defineClass(char *classname, char *data, int offset, int len, Object *cla
 	assert(NULL != class->methods);
 
 	for (i = 0; i < methods_count; ++i) {
+		class->methods[i].class = CE_CLASS(class);
+
 		READ_U2(acc_flags, base);
 		class->methods[i].acc_flags = acc_flags;
 
