@@ -9,4 +9,5 @@ all:
 
 clean:
 	@make -C zlib-1.2.8 clean
-	@rm -rvf libjar.so
+	@make -C zlib-1.2.8/contrib/minizip clean
+	@rm -rvf libjar.so libjar.a

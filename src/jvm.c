@@ -59,14 +59,63 @@ void initGC(InitArgs *args) {
 }
 
 void initVM(InitArgs *args, VM *vm) {
+	assert(NULL != args || NULL != vm);
+	vm->initArgs = args;
 
+	// heap size statk size
+
+	// int execEnv
+
+	// load rt class to rtClsArea
+
+	// load user class to userClsaREA;
 }
 
-bool startVM(VM *vm) {
+/**
+ * Find static void main (String []args)
+ * Return:
+ *		ERROR:	-1
+ *		OK:		index in method area
+ */
+static int findEntryMain(const ClassEntry *clsEntry) {
+	if (NULL == clsEntry) {
+		return -1;
+	}
 
+#define MAIN_METHOD "([Ljava/lang/String;)V"
+
+	int retCode = -1;
+	int i;
+	for (i = 0; i < clsEntry->methods_count; ++i) {
+		MethodEntry *method = clsEntry->methods + i;
+		if (strcmp(method->name, "main") == 0 &&
+				strcmp(method->type, MAIN_METHOD) == 0 &&
+				(method->acc_flags & ACC_PUBLIC) &&
+				(method->acc_flags & ACC_STATIC)) {
+			retCode = i;
+			break;
+		}
+	}
+	
+	return retCode;
 }
 
-bool exitVM(VM *vm) {
+void startVM(VM *vm) {
+	Class *mainClass = vm->initArgs->mainClass;
+    ClassEntry *clsEntry = CLASS_CE(mainClass);
+	int mainIdx = findEntryMain(clsEntry);
+	if (mainIdx < 0) {
+		printf("Error: Not found main() in %s, please define as:\n", 
+				clsEntry->name); 
+		printf("  public static void main(String[] args)\n");
+		return;
+	}
+
+	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
+	executeMethod(vm, mainMethod);
+}
+
+void destroyVM(VM *vm) {
 
 }
 
@@ -205,47 +254,40 @@ int setInitArgs(Property *props, int nprop, InitArgs *args) {
 	return 0;
 }
 
+static void usage() {
+	printf("Usage: jvm [-potions] class [args...]\n");
+	printf("Options include:\n");
+	printf("	 -v			print version\n");
+	printf("	 -h			print this\n");
+}
+
 /*
  * Parse command line user input
  */
 int parseCmdLine(int argc, char **argv, Property **props) {
 	if (argc == 1) {
-		printf("Usage\n");
-		printf("  jvm CLASS\n");
+		usage();
 		exit(0);
+	} 
+	else if (argc == 2) {
+		if (strcmp(argv[1], "-v") == 0) {
+			printf("jvm %s copyright@kari.zhang\n", JAVA_VERSION);
+			exit(0);
+		}
+		else if (strcmp(argv[1], "-h") == 0) {
+			usage();
+			exit(0);
+		}
+		else if (argv[1][0] == '-') {
+			printf ("Invalid options\n");
+			usage();
+			exit(0);
+		}
 	}
 
 	return 0;
 }
 
-/**
- * Find static void main (String []args)
- * Return:
- *		ERROR:	-1
- *		OK:		index in method area
- */
-static int findEntryMain(const ClassEntry *clsEntry) {
-	if (NULL == clsEntry) {
-		return -1;
-	}
-
-#define MAIN_METHOD "([Ljava/lang/String;)V"
-
-	int retCode = -1;
-	int i;
-	for (i = 0; i < clsEntry->methods_count; ++i) {
-		MethodEntry *method = clsEntry->methods + i;
-		if (strcmp(method->name, "main") == 0 &&
-				strcmp(method->type, MAIN_METHOD) == 0 &&
-				(method->acc_flags & ACC_PUBLIC) &&
-				(method->acc_flags & ACC_STATIC)) {
-			retCode = i;
-			break;
-		}
-	}
-	
-	return retCode;
-}
 
 int main(int argc, char *argv[]) {
 	InitArgs initArgs;	
@@ -263,15 +305,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed loadClass from file\n");
         return -1;
     }
+	initArgs.mainClass = mainClass;
 
-    ClassEntry *clsEntry = CLASS_CE(mainClass);
-	int mainIdx = findEntryMain(clsEntry);
-	if (mainIdx < 0) {
-		printf("Error: Not found main() in %s, please define as:\n", path); 
-		printf("  public static void main(String[] args)\n");
-		return -1;
-	}
-
-	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
-
+	VM vm;
+	memset(&vm, 0, sizeof(vm));
+	initVM(&initArgs, &vm);
+	startVM(&vm);
+	destroyVM(&vm);
 }

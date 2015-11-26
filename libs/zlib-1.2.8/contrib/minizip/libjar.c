@@ -23,11 +23,12 @@ void executeUnpackJar (
 		cb_unzip_start cb_start, 
 		cb_unzip_progress cb_progress, 
 		cb_unzip_error cb_error,
-		cb_unzip_finish cb_finish)
+		cb_unzip_finish cb_finish,
+		void* param)
 {
 	if (NULL == cb_progress) {
 		if (NULL != cb_error) {
-			cb_error (E_NULL_POINTER, 0);
+			cb_error (E_NULL_POINTER, 0, param);
 		}
 
 		return;
@@ -36,7 +37,7 @@ void executeUnpackJar (
 	unzFile uzf = unzOpen(path);
 	if (NULL == uzf) {
 		if (NULL != cb_error) {
-			cb_error (E_FILE_NOT_EXIST, 0);
+			cb_error (E_FILE_NOT_EXIST, 0, param);
 		}
 
 		return;
@@ -51,7 +52,7 @@ void executeUnpackJar (
 
 		uLong num = info.number_entry;
 		if (NULL != cb_start) {
-			cb_start (num);
+			cb_start (num, param);
 		}
 		unzGoToFirstFile(uzf);
 
@@ -70,14 +71,14 @@ void executeUnpackJar (
 			}
 
 			unzReadCurrentFile (uzf, mem, finfo.uncompressed_size);
-			cb_progress (i, filename, mem, finfo.uncompressed_size);
+			cb_progress (i, filename, mem, finfo.uncompressed_size, param);
 			unzCloseCurrentFile(uzf);
 			unzGoToNextFile(uzf);
 		}
 
 		unzClose (uzf);
 		if (NULL != cb_finish) {
-			cb_finish();
+			cb_finish(param);
 		}
 
 		return;
@@ -86,7 +87,7 @@ void executeUnpackJar (
 
 	unzClose(uzf);
 	if (NULL != cb_error) {
-		cb_error (E_INTERNAL, 0);
+		cb_error (E_INTERNAL, 0, param);
 	}
 }
 

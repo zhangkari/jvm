@@ -20,14 +20,21 @@ static void usage() {
 	printf("       -d: decompress files from a jar\n");
 }
 
-static void on_start (int total) {
+/*
+ * Unpack jar start
+ */
+static void on_start (int total, void* param) {
 	printf("total %d files\n", total);
 }
 
+/*
+ * Unpack jar progress
+ */
 static void on_progress (int index, 
 		const char* name,
 		const char* mem,
-		int size) {
+		int size,
+		void* param) {
 
 	if (NULL == name || mem == NULL) {
 		printf ("name or mem is NULL\n");
@@ -48,7 +55,10 @@ static void on_progress (int index,
 	printf ("extract %s complete\n", name);
 }
 
-static void on_finish() {
+/*
+ * Unpack jar finish
+ */
+static void on_finish(void *param) {
 	printf ("extract complete.\n");
 }
 
@@ -64,7 +74,7 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		executeUnpackJar (argv[2], on_start, on_progress, NULL, on_finish);
+		executeUnpackJar (argv[2], on_start, on_progress, NULL, on_finish, NULL);
 	}
 	else if (strcmp(argv[1], "-c") == 0) {
 		if (argc <= 3) {

@@ -15,7 +15,7 @@ CFLAGS =  -Iinclude \
           -Ilibs \
 		  -L./libs \
 		  -g \
-	      -DDEBUG #-m32
+	      -DDEBUG # -m32
 
 LDFLAGS = -pthread
                      
@@ -31,7 +31,7 @@ MAIN_OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(MAIN_SRC))
 
 VPATH = src:include
 
-all : $(OBJDIR) $(DEP) ziplib $(OBJ) $(MAIN_OBJ) $(PROJ) $(CLASSES)
+all : ziplib $(OBJDIR) $(DEP) $(OBJ) $(MAIN_OBJ) $(PROJ) $(CLASSES)
 	@echo "Build OK"
 
 # Build libz for jar
@@ -39,7 +39,7 @@ ziplib:
 	@make -s -C libs
 
 # Build jvm
-$(JVM) : $(OBJ) $(OBJDIR)/src/jvm.o
+$(JVM) : $(OBJ) $(OBJDIR)/src/jvm.o libs/libjar.a
 	@$(CC) $(CFLAGS) $^ -o $@
 	@echo "Compile $(JVM) OK"
 

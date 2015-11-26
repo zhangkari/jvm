@@ -17,7 +17,7 @@
 /**
  * will be invoked when start unzip
  */
-typedef void (* cb_unzip_start) (int total);
+typedef void (* cb_unzip_start) (int total, void* param);
 
 /*
  * will be invoked when unzip in progress
@@ -26,7 +26,8 @@ typedef void (* cb_unzip_progress) (
 		int index, 
 		const char* name,
 		const char* mem,
-		int size);
+		int size,
+		void* param);
 
 /*
  * will be invoked when unzip error occurs
@@ -34,12 +35,12 @@ typedef void (* cb_unzip_progress) (
  *		0  continue to unzip
  *		1  stop unzip
  */
-typedef int (* cb_unzip_error) (int errcode, int index);
+typedef int (* cb_unzip_error) (int errcode, int index, void* param);
 
 /*
  * will be invoked when unzip finish
  */
-typedef void (* cb_unzip_finish) ();
+typedef void (* cb_unzip_finish) (void *param);
 
 /*
  * Execute unpack jar file
@@ -51,7 +52,8 @@ void executeUnpackJar (
 		cb_unzip_start		cb_start, 
 		cb_unzip_progress	cb_progress, 
 		cb_unzip_error		cb_error,
-		cb_unzip_finish		cb_finish);
+		cb_unzip_finish		cb_finish,
+		void				*param);
 
 /*
  * Execute pack files into a jar file

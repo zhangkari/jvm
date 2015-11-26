@@ -4,9 +4,11 @@
  ***************************/
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "class.h"
 #include "instruction.h"
+#include "libjar.h"
 #include "mem.h"
 
 #define MAGIC_NUMBER 0XCAFEBABE
@@ -88,7 +90,7 @@
 
 #define DEPRECATED_ATTR_LEN_VALUE 0
 
-Class* defineClass(char *classname, char *data, int offset, int len, Object *class_loader) {
+Class* defineClass(const char *classname, const char *data, int offset, int len, Object *class_loader) {
 	if (NULL == classname || NULL == data || len <= 0) {
 		return NULL;
 	}
@@ -576,10 +578,98 @@ Class* loadClassFromFile(char *path, char *classname) {
 	return class;
 }
 
-Class* loadClassFromJar(char *path, char *classname) {
-	return NULL;
+/*
+ * Unpack jar arguments
+ */
+typedef struct UnpackJarArg {
+	Class   **classes;
+	U4		clsCnt;
+} UnpackJarArg;
+
+/*
+ * Unpack jar start
+ */
+static void on_start (int total, void* param) {
+	printf("total %d files\n", total);
+
+	if (NULL != param) {
+		UnpackJarArg* arg = (UnpackJarArg*) param;
+		arg->clsCnt = total;
+		arg->classes = (Class**)sysAlloc(total * sizeof(Class *));
+		if (NULL == arg->classes) {
+			printf("Failed alloc mem for loading class.\n");
+			exit (1);
+		}
+	}
 }
 
+/*
+ * Unpack jar progress
+ */
+static void on_progress (int index, 
+		const char* name,
+		const char* mem,
+		int size,
+		void* param) {
+
+	if (NULL == name || mem == NULL) {
+		printf ("name or mem is NULL\n");
+		return;
+	}
+
+	printf("Loading %s\n", name);
+
+	if (NULL != param) {
+		UnpackJarArg* arg = (UnpackJarArg*) param;
+		Class** cls = arg->classes;
+		cls[index] = defineClass(name, mem, 0, size, NULL);
+	}
+}
+
+/*
+ * Unpack error
+ */
+static int on_error(int errcode, int index, void* param) {
+	exit(1);
+	return 1;
+}
+
+/*
+ * Unpack finish
+ */
+static void on_finish(void* param) {
+
+}
+
+
+/*
+ * Load all the class from the specified jar
+ * Parameters:
+ *			path:		input jar
+ *			classes:	[OUT] classes output
+ * Return:
+ *			count of classes 
+ *			it means error when return value <= 0
+ */
+U4 loadClassFromJar(char *path, Class ***classes) {
+	if (NULL == path || NULL == classes) {
+		return -1;
+	}
+	
+	UnpackJarArg arg;
+	memset(&arg, 0, sizeof(arg));
+
+	// TODO
+	assert (0);
+//	executeUnpackJar(path, on_start, on_progress, on_error, on_finish, &arg);
+	*classes = arg.classes;
+
+	return arg.clsCnt;
+}
+
+/*
+ * Create a constant pool by the specified length 
+ */
 ConstPool* newConstPool(int length) {
 	if (length <= 0) {
 		return NULL;
@@ -601,6 +691,9 @@ ConstPool* newConstPool(int length) {
 	return pool;
 }
 
+/*
+ * Log information of .class file
+ */
 void logClassEntry(ClassEntry *clsEntry)
 {
     if (NULL == clsEntry) {

@@ -27,7 +27,7 @@
  */
 #define STACK_RED_ZONE_SIZE 1*KB
 
-#define JAVA_COMPAT_VERSION "0.0.1" 
+#define JAVA_VERSION "0.0.1" 
 
 /*
  * Store system property
@@ -41,7 +41,9 @@ typedef struct Property {
  * Initialization arguments
  */
 typedef struct InitArgs {
-	char *classpath;            // class has static void main(String[])
+	// ExecEnv not include me any more
+	// GC mark me as the root node in the future
+	Class *mainClass;           // class has static void main(String[])
 	char *bootpath;             // java.lang.*
 	U4 java_stack;              // java stack size that user specified
 	U4 min_heap;                // min heap size
@@ -49,8 +51,13 @@ typedef struct InitArgs {
 	Property *cmdline_props;    // system properties
 	int props_count;            // properties count
 	void *main_stack_base;      // void static main (String[]) stack
-	int (*vfprintf)(FILE *stream, const char *fmt, va_list va); // System.out
-	int (*vfscanf)(FILE *stream, const char *fmt, va_list va); // System.in
+
+	// System.out
+	int (*vfprintf)(FILE *stream, const char *fmt, va_list va);
+
+	// System.in
+	int (*vfscanf)(FILE *stream, const char *fmt, va_list va);
+
 	void (*exit)(int status);   // System.exit()
 	void (*abort)(void);        // System.abort()
 } InitArgs;
@@ -64,12 +71,15 @@ typedef struct JavaStack {
 	StackFrame **base;
 } JavaStack;
 
+/*
+ * Java virtual machine executing environment in runtime
+ */
 typedef struct ExecEnv {
     U1 *cur_heap;				// current heap address
     U1 *cur_stack;				// current stack address
     JavaStack *stack;			// java stack
 	U2 userClsCnt;				// user class count
-	ClassEntry **userClsArea;	// user class address list
+	ClassEntry **userClsArea;	// user class list exclude entry main()
 	U2 rtClsCnt;				// runtime class count
 	ClassEntry *rtClsArea;		// runtime class address list
 	MethodEntry *mainMethod;	// user class main()
@@ -92,7 +102,7 @@ extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 extern void initMem(InitArgs *args);
 extern void initGC(InitArgs *args);
 extern void initVM(InitArgs *args, VM *vm);
-extern bool startVM(VM *vm);
-extern bool exitVM(VM *vm);
+extern void startVM(VM *vm);
+extern void destroyVM(VM *vm);
 
 #endif

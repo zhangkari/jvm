@@ -153,11 +153,12 @@ typedef struct ExceptionTable {
 	struct ExceptionEntry* entries;
 } ExceptionTable;
 
-typedef struct object Class;
-typedef struct object {
-	uintptr_t lock;
-	Class *class;
-} Object; 
+typedef struct Object Object;
+typedef struct Object Class;
+struct Object {
+	Class *super;
+	Class *this;
+}; 
 
 typedef struct FieldEntry {
 	Class *class;
@@ -187,6 +188,18 @@ typedef struct LocalVarTable {
  * StackFrame has the same structure with LocalVarTable
  */
 typedef LocalVarTable StackFrame;
+
+/*
+ * //OPTIMIZE
+ * Stack frame pool for reUse Stack frame.
+ * using item is in front & free item is in back.
+ * Not really free item to avoid memory avoid
+ */
+typedef struct StackFramePool {
+	U4			poolSize;
+	U4			activeCnt;
+	StackFrame	*elements;
+} StackFramePool;
 
 typedef struct MethodEntry {
 	Class           *class;
@@ -227,7 +240,7 @@ typedef struct ClassEntry {
 #define CE_CLASS(clsEntry) ( (Class *) clsEntry )
 
 extern ConstPool* newConstPool(int length);
-extern Class* defineClass(char *classname, char *data, int offset, int len,							Object *class_laoder);
+extern Class* defineClass(const char *classname, const char *data, int offset, int len,							Object *class_laoder);
 extern void linkClass(Class *class);
 extern Class* initClass(Class *class);
 extern Class* findSystemClass(char *classname);
@@ -237,7 +250,7 @@ extern MethodEntry* findMethod(Class *class, char *name, char *type);
 extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
 
 extern Class* loadClassFromFile(char *path, char *classname);
-extern Class* loadClassFromJar(char *path, char *classname);
+extern U4 loadClassFromJar(char *path, Class ***classes);
 
 extern void logClassEntry(ClassEntry* clsEntry);
 
