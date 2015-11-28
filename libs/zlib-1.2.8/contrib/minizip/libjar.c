@@ -30,7 +30,7 @@ void executeUnpackJar (
 		if (NULL != cb_error) {
 			cb_error (E_NULL_POINTER, 0, param);
 		}
-
+        printf ("cb_unzip_progress must not be NULL\n");
 		return;
 	}
 
@@ -65,17 +65,42 @@ void executeUnpackJar (
 			unzGetCurrentFileInfo(uzf, &finfo, filename, MAX_PATH, NULL, 0, NULL, 0);
 			unzOpenCurrentFile(uzf);
 
-			char *mem = (char *)calloc (1, finfo.uncompressed_size);
-			if (NULL == mem) {
-				break;
-			}
+            printf ("++++ %d ++++\n", i);
 
-			unzReadCurrentFile (uzf, mem, finfo.uncompressed_size);
-			cb_progress (i, filename, mem, finfo.uncompressed_size, param);
+            // Ignore direcotry
+            if (finfo.uncompressed_size > 0) {
+
+                printf ("before calloc\n");
+                char *mem = (char *)calloc (1, finfo.uncompressed_size);
+                if (NULL == mem) {
+                    printf("calloc memory failed.\n");
+                    break;
+                }
+
+                printf ("after calloc\n");
+                
+                int nread = unzReadCurrentFile (uzf, mem, finfo.uncompressed_size);
+                if (nread != finfo.uncompressed_size) {
+                    printf("Unzip not read complete. FIXME!\n");
+                }
+                cb_progress (i, filename, mem, finfo.uncompressed_size, param);
+                free (mem);
+
+            } // if
+
+            printf ("---- %d ----\n", i);
+
 			unzCloseCurrentFile(uzf);
 			unzGoToNextFile(uzf);
-		}
 
+		} // for
+
+        // malloc memory error
+        if (i < num) {
+            break;
+        }
+
+		unzCloseCurrentFile(uzf);
 		unzClose (uzf);
 		if (NULL != cb_finish) {
 			cb_finish(param);
@@ -85,6 +110,7 @@ void executeUnpackJar (
 
 	} while (0);
 
+	unzCloseCurrentFile(uzf);
 	unzClose(uzf);
 	if (NULL != cb_error) {
 		cb_error (E_INTERNAL, 0, param);

@@ -46,11 +46,10 @@ typedef struct InitArgs {
 	Class *mainClass;           // class has static void main(String[])
 	char *bootpath;             // java.lang.*
 	U4 java_stack;              // java stack size that user specified
-	U4 min_heap;                // min heap size
-	U4 max_heap;                // max heap size
+	U4 min_heap;                // min heap size, generation area size 
+	U4 max_heap;                // max heap size, total starage size
 	Property *cmdline_props;    // system properties
 	int props_count;            // properties count
-	void *main_stack_base;      // void static main (String[]) stack
 
 	// System.out
 	int (*vfprintf)(FILE *stream, const char *fmt, va_list va);
@@ -75,22 +74,24 @@ typedef struct JavaStack {
  * Java virtual machine executing environment in runtime
  */
 typedef struct ExecEnv {
+    U1 *heap_base;				// heap base address
     U1 *cur_heap;				// current heap address
+    U4 heap_size;				// heap size (Store Java object)
+                                
+    U1 *stack_base;				// stack base address
     U1 *cur_stack;				// current stack address
-    JavaStack *stack;			// java stack
+    U4 stack_size;				// stack size (Store StackFrame & LocalVarTable)
+
+    JavaStack *frame_stack;		// JavaStack to indicate stack frame
 	U2 userClsCnt;				// user class count
-	ClassEntry **userClsArea;	// user class list exclude entry main()
+	Class **userClsArea;	    // user class list exclude entry main()
 	U2 rtClsCnt;				// runtime class count
-	ClassEntry *rtClsArea;		// runtime class address list
+	Class **rtClsArea;		    // runtime class address list
 	MethodEntry *mainMethod;	// user class main()
 } ExecEnv;
 
 typedef struct VM {
-    U1 *heap_base;				// heap base address
-    U4 heap_size;				// heap size
-    U1 *stack_base;				// stack base address
-    U4 stack_size;				// stack size
-	InitArgs *initArgs;			// initialization arguments
+   	InitArgs *initArgs;			// initialization arguments
     ExecEnv *execEnv;			// executing environment
 } VM;
 

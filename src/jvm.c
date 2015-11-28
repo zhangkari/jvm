@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "class.h"
+#include "engine.h"
 #include "instruction.h"
 #include "jvm.h"
 #include "mem.h"
@@ -62,13 +63,26 @@ void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != args || NULL != vm);
 	vm->initArgs = args;
 
-	// heap size statk size
+    ExecEnv *env = (ExecEnv *)sysAlloc(sizeof(ExecEnv));
+    assert (NULL != env);
 
-	// int execEnv
+    env->heap_size = args->max_heap;
+    env->heap_base = (U1 *)sysAlloc(env->heap_size);
+    assert (NULL != env->heap_base);
 
-	// load rt class to rtClsArea
+    env->stack_size = args->java_stack;
+    env->stack_base = (U1 *)sysAlloc(env->stack_size);
+    assert (NULL != env->stack_base);
 
-	// load user class to userClsaREA;
+    env->frame_stack = (JavaStack *)sysAlloc(sizeof(JavaStack));
+    assert(NULL != env->frame_stack);
+    env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
+    if (env->rtClsCnt < 1) {
+        printf("Error: Failed load run time class.\n");
+        exit(1);
+    }
+
+    vm->execEnv = env;
 }
 
 /**

@@ -590,6 +590,7 @@ typedef struct UnpackJarArg {
  * Unpack jar start
  */
 static void on_start (int total, void* param) {
+
 	printf("total %d files\n", total);
 
 	if (NULL != param) {
@@ -617,9 +618,12 @@ static void on_progress (int index,
 		return;
 	}
 
-	printf("Loading %s\n", name);
+    if (index == 22) {
+        return;
+    }
 
-	if (NULL != param) {
+    printf ("%-4d name:%s\n", index, name);
+	if (NULL != param && size > 0) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
 		cls[index] = defineClass(name, mem, 0, size, NULL);
@@ -630,6 +634,7 @@ static void on_progress (int index,
  * Unpack error
  */
 static int on_error(int errcode, int index, void* param) {
+    printf("unzip jar failed at %d, error code:%d\n", index, errcode);
 	exit(1);
 	return 1;
 }
@@ -657,11 +662,9 @@ U4 loadClassFromJar(char *path, Class ***classes) {
 	}
 	
 	UnpackJarArg arg;
-	memset(&arg, 0, sizeof(arg));
+	memset(&arg, 0, sizeof(arg) );
 
-	// TODO
-	assert (0);
-//	executeUnpackJar(path, on_start, on_progress, on_error, on_finish, &arg);
+	executeUnpackJar(path, on_start, on_progress, on_error, on_finish, &arg);
 	*classes = arg.classes;
 
 	return arg.clsCnt;

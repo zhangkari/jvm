@@ -5,6 +5,12 @@
 *.lo
 *.exe
 
+# dependent files
+*.d
+
+# dump crash
+core
+
 # Build tool
 jvm
 jvmp
