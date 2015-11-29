@@ -8,7 +8,7 @@ JVM = jvm
 JVMP = jvmp
 JAR = jar
 BOOTSTRAP = rt.jar
-PROJ = $(JVM) $(JVMP) $(JAR) $(BOOTSTRAP)
+PROJ = $(JVM) $(JVMP) $(JAR) # $(BOOTSTRAP)
 CC = gcc
 CFLAGS +=  -Iinclude \
           -Ilibs \

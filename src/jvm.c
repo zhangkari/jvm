@@ -236,10 +236,22 @@ void setDefaultInitArgs(InitArgs *args)
     assert (NULL != args);
 
 	char* rtpath = NULL;
+
+/*
+ * do not search rt.jar in CLASSPATH
+ * We just support jdk1.5 util now
+ * We enable it in some day
+ */
+#if 0
 	if (findRtJar(&rtpath) < 0) {
 		printf ("Falal error: rt.jar not found\n");
 		exit (1);
 	}
+#else
+    #define RT_JAR "./rt.jar"
+    rtpath = strdup(RT_JAR);
+#endif
+
 	args->bootpath = rtpath;
 
 #define DEFAULT_STACK_SIZE (64 * KB)

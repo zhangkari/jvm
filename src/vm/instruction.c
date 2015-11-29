@@ -229,7 +229,7 @@ enum {
 	impdep2 = 0xff,
 }; 
 
-#define DECL_FUNC(X) inline bool func_inst_##X(void *param)
+#define DECL_FUNC(X) bool func_inst_##X(void *param)
 
 DECL_FUNC(nop);
 DECL_FUNC(aconst_null);
@@ -446,7 +446,7 @@ static U1 sTwoOperandsTable[] = {
  * If the opcode has 2 operands
  * 
  */
-inline bool hasTwoOperands (U1 opcode)
+bool hasTwoOperands (U1 opcode)
 {
     int size = sizeof (sTwoOperandsTable) / sizeof (sTwoOperandsTable[0]);
     int i;
@@ -472,7 +472,7 @@ static U1 sOffsetTable[] = {
  * If the operand need add offset
  * 
  */
-inline bool needAddOffset (U1 opcode)
+bool needAddOffset (U1 opcode)
 {
     int size = sizeof (sOffsetTable) / sizeof (sOffsetTable[0]);
     int i;

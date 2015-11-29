@@ -304,7 +304,7 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 			} else if (!strcmp(name, "Signature")) {
 				U2 signature_idx;
 				READ_U2(signature_idx, base);
-				printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
+				//printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
 			}
 		}
 	}
@@ -408,7 +408,8 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 							U2 line_no;
 							READ_U2(line_no, base);
 						}
-					} else if(!strcmp(name, "Exceptions")){
+					} 
+                    else if(!strcmp(name, "Exceptions")){
 						U2 excep_num;
 						READ_U2(excep_num, base);
 						int k;
@@ -416,9 +417,13 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 						for (k = 0; k < excep_num; ++k) {
 							READ_U2(excep_idx, base);
 						}
-					} else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
+					}
+                    else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
 						base += attr_length;
-					} else if(!strcmp(name, "StackMapTable")) {
+					}
+
+#if 0
+                    else if(!strcmp(name, "StackMapTable")) {
                         printf ("StackMapTable\n");
 						U2 entry_num;
 						READ_U2(entry_num, base);
@@ -452,7 +457,9 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 								printf("full_frame\n");
 							}
 						}
-					} else {
+					}
+#endif
+                    else {
 						printf("Unknown Code attr:%s\n", name);
 						base += attr_length;
 					}
@@ -486,12 +493,13 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 		READ_U4(attr_length, base);
 		char *name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
 
-		if (!strcmp(name, "SourceFile")) {
+		if (strcmp(name, "SourceFile") == 0) {
 			U2 fname_idx;
 			READ_U2(fname_idx, base);
 			class->source_file = sysAlloc(attr_length);
 			strcpy(class->source_file, constPool->entries[fname_idx].info.utf8_info.bytes);
-		} else if (!strcmp(name, "InnerClasses")) {
+		} 
+        else if (strcmp(name, "InnerClasses") == 0) {
 			U2 classes_num;
 			READ_U2(classes_num, base);
 			for (j = 0; j < classes_num; ++j) {
@@ -507,7 +515,19 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 				U2 inner_cls_acc_flags;
 				READ_U2(inner_cls_acc_flags, base);
 			}
-		}
+        }
+        else if (strcmp(name, "Signature") == 0) {
+            U2 signature_idx;
+            READ_U2(signature_idx, base);
+        }
+        else if (strcmp(name, "EnclosingMethod") == 0) {
+            U2 cls_idx, method_idx;
+            READ_U2(cls_idx, base);
+            READ_U2(method_idx, base);
+        }
+        else {
+            printf ("Unknown attribute:%s\n", name);
+        }
 	}
 
 	/** check memory buffer overflow */
@@ -793,7 +813,7 @@ void logClassEntry(ClassEntry *clsEntry)
 				u8<<=32;
 				u8 += u4low;
 				++i;
-				printf("long\t%lld\n", u8);
+				//printf("long\t%lld\n", u8);
                 break;
 
             case CONST_Double:
@@ -801,7 +821,7 @@ void logClassEntry(ClassEntry *clsEntry)
 				u4low = clsEntry->constPool->entries[i].info.double_info.low_bytes;
 				u8 = u4high<<32 + u4low;
 				++i;
-				printf("double\t%lld\n", u8);
+				//printf("double\t%lld\n", u8);
                 break;
 
             case CONST_Class:
