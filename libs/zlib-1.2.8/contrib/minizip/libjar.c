@@ -63,7 +63,9 @@ void executeUnpackJar (
 		for (i = 0; i < num; ++i) {
 			memset (filename, 0, MAX_PATH);
 			unzGetCurrentFileInfo(uzf, &finfo, filename, MAX_PATH, NULL, 0, NULL, 0);
-			unzOpenCurrentFile(uzf);
+			if (unzOpenCurrentFile(uzf) != UNZ_OK) {
+				printf("Failed unzOpenCurrentFile.\n");
+			}
 
             // Ignore direcotry
             if (finfo.uncompressed_size > 0) {

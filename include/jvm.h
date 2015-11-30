@@ -13,6 +13,7 @@
 
 #include "class.h"
 #include "comm.h"
+#include "mem.h"
 
 #define MIN_HEAP 4*KB
 #define MIN_STACK 1*KB
@@ -74,15 +75,9 @@ typedef struct JavaStack {
  * Java virtual machine executing environment in runtime
  */
 typedef struct ExecEnv {
-    U1 *heap_base;				// heap base address
-    U1 *cur_heap;				// current heap address
-    U4 heap_size;				// heap size (Store Java object)
-                                
-    U1 *stack_base;				// stack base address
-    U1 *cur_stack;				// current stack address
-    U4 stack_size;				// stack size (Store StackFrame & LocalVarTable)
-
-    JavaStack *frame_stack;		// JavaStack to indicate stack frame
+	MemoryArea *heapArea;		// java heap memory area
+	MemoryArea *stackArea;		// java stack memory area
+    JavaStack  *frame_stack;	// JavaStack to indicate stack frame
 	U2 userClsCnt;				// user class count
 	Class **userClsArea;	    // user class list exclude entry main()
 	U2 rtClsCnt;				// runtime class count

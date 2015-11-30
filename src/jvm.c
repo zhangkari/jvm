@@ -63,18 +63,16 @@ void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != args || NULL != vm);
 	vm->initArgs = args;
 
-    ExecEnv *env = (ExecEnv *)sysAlloc(sizeof(ExecEnv));
+    ExecEnv *env = (ExecEnv *)calloc(1, sizeof(ExecEnv));
     assert (NULL != env);
 
-    env->heap_size = args->max_heap;
-    env->heap_base = (U1 *)sysAlloc(env->heap_size);
-    assert (NULL != env->heap_base);
+	env->heapArea = createMemoryArea(args->max_heap);
+	assert(NULL != env->heapArea);
 
-    env->stack_size = args->java_stack;
-    env->stack_base = (U1 *)sysAlloc(env->stack_size);
-    assert (NULL != env->stack_base);
+	env->stackArea = createMemoryArea(args->java_stack);
+	assert(NULL != env->stackArea);
 
-    env->frame_stack = (JavaStack *)sysAlloc(sizeof(JavaStack));
+    env->frame_stack = (JavaStack *)sysAlloc(env->stackArea, sizeof(JavaStack));
     assert(NULL != env->frame_stack);
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
@@ -204,7 +202,7 @@ static int findRtJar (char **path) {
 			memset (rtpath, 0, MAX_PATH);
 			strncpy (rtpath, start, cursor - start);
             if (existRtJar(rtpath)) {
-            	*path = (char *)sysAlloc(strlen(rtpath) + 1);
+            	*path = (char *)calloc(1, strlen(rtpath) + 1);
 				strcpy(*path, rtpath);
                 return 0;
             }
@@ -222,7 +220,7 @@ static int findRtJar (char **path) {
         memset (rtpath, 0, MAX_PATH);
         strncpy (rtpath, start, cursor - start);
         if (existRtJar(rtpath)) {
-            *path = (char *)sysAlloc(strlen(rtpath) + 1);
+            *path = (char *)calloc(1, strlen(rtpath) + 1);
             strcpy(*path, rtpath);
             return 0;
         }

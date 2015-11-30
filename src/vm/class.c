@@ -1,7 +1,12 @@
-/****************************
+/********************************************************
  * file name:   class.c
+ * author:		kari.zhang
  *
- ***************************/
+ * Modifications:
+ *	1. Created by kari.zhang
+ *  2. Redesign defineClass() by kari.zhang @ 2015-11-30
+ *******************************************************/
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +14,6 @@
 #include "class.h"
 #include "instruction.h"
 #include "libjar.h"
-#include "mem.h"
 
 #define MAGIC_NUMBER 0XCAFEBABE
 
@@ -88,41 +92,12 @@
 } while (0);
 
 
-#define DEPRECATED_ATTR_LEN_VALUE 0
+/*
+ * Read Constant Value Pool
+ */
+static U1* readConstPool(ClassEntry* class, U2 cp_count, U1* base) {
 
-Class* defineClass(const char *classname, const char *data, int offset, int len, Object *class_loader) {
-	if (NULL == classname || NULL == data || len <= 0) {
-		return NULL;
-	}
-
-	/* change to unsigned char*
-	 * for READ_U2, READ_U4, READ_U8
-	 */
-	unsigned char *base = (unsigned char *)data + offset;
-
-	U4 magic;
-	READ_U4(magic, base);
-	if (magic != MAGIC_NUMBER) {
-		fprintf(stderr, "Unrecognized class format\n");
-		return NULL;
-	}
-
-    Class* cls = allocClass();
-    assert(NULL != cls);
-
-	ClassEntry *class = CLASS_CE(cls);
-	assert(NULL != class);
-	class->state = CLASS_BAD;
-
-	U2 minor_version;
-	U2 major_version;
-	READ_U2(minor_version, base);
-	READ_U2(major_version, base);
-	class->reserve[0] = minor_version;
-	class->reserve[1] = major_version;
-
-	U2 cp_count;
-	READ_U2(cp_count, base);
+	assert(NULL != class && cp_count > 0 && NULL != base);
 
 	U1 tag;
 	U2 clsidx;
@@ -137,7 +112,6 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 
 	ConstPool *constPool = newConstPool(cp_count);
 	assert(NULL != constPool);
-
 	int i;
 	int j;
 	for (i = 1; i < cp_count; ++i) {
@@ -146,7 +120,7 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 		switch (tag) {
 			case CONST_Utf8:
 				READ_U2(length, base);
-				constPool->entries[i].info.utf8_info.bytes = sysAlloc(length + 1);
+				constPool->entries[i].info.utf8_info.bytes = calloc(1, length + 1);
 				assert(NULL != constPool->entries[i].info.utf8_info.bytes);
 				memcpy(constPool->entries[i].info.utf8_info.bytes, base, length);
 				constPool->entries[i].info.utf8_info.length = length;
@@ -236,58 +210,34 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 
 	class->constPool = constPool;
 
-	U2 acc_flags;
-	READ_U2(acc_flags, base);
-	class->acc_flags = acc_flags;
+	return base;
+}
+
+static U1* readClassField(ClassEntry *class, U2 field_count, U1* base) {
+
+	assert (NULL != class && base != NULL && field_count >= 0);
 
 	char *name = NULL;
-	U2 this_class;
-	READ_U2(this_class, base);
-	name = constPool->entries[constPool->entries[this_class].info.class_info.name_index].info.utf8_info.bytes;
-	class->name = sysAlloc(strlen(name));
-	strcpy(class->name, name);
-
-	U2 super_class;
-	READ_U2(super_class, base);
-	if (0 == super_class) {
-	} else if(super_class > 0 && super_class < constPool->length) {
-		name = constPool->entries[constPool->entries[super_class].info.class_info.name_index].info.utf8_info.bytes;
-		class->super_name = strdup(name);
-	} else {
-		printf("Invalid super class index\n");
-	}
-
-	U2 ifcount;
-	READ_U2(ifcount, base);
-	class->interfaces_count = ifcount;
-	class->interfaces_index = sysAlloc(sizeof(U2) * ifcount);
-
-	U2 ifidx;
-	for (i = 0; i < ifcount; ++i) {
-		READ_U2(ifidx, base);
-		class->interfaces_index[i] = ifidx;
-		name = constPool->entries[constPool->entries[ifidx].info.class_info.name_index].info.utf8_info.bytes;	
-	}
-
-	U2 field_count;
-	READ_U2(field_count, base);
-    class->fields_count = field_count;
-	class->fields = (FieldEntry *)sysAlloc(field_count * sizeof(FieldEntry));
-	assert(NULL != class->fields);
-
+	U2 acc_flags;
 	U2 attr_count;
+	U2 clsidx;
+	U2 nameidx;
+	U2 typeidx;
+
+	ConstPool *constPool = class->constPool;
+	int i, j;
 	for (i = 0; i < field_count; ++i) {
 		READ_U2(acc_flags, base);
 		class->fields[i].acc_flags = acc_flags;
 
 		READ_U2(nameidx, base);
 		name = constPool->entries[nameidx].info.utf8_info.bytes;
-		class->fields[i].name = sysAlloc(strlen(name));
+		class->fields[i].name = calloc(1, strlen(name) + 1);
 		strcpy(class->fields[i].name, name);
 
 		READ_U2(typeidx, base);
 		name = constPool->entries[typeidx].info.utf8_info.bytes;
-		class->fields[i].type = sysAlloc(strlen(name));
+		class->fields[i].type = calloc(1, strlen(name) + 1);
 		strcpy(class->fields[i].type, name);
 
 		U2 const_value_idx;
@@ -306,15 +256,199 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 				READ_U2(signature_idx, base);
 				//printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
 			}
+		} // for (j = 0;
+	} // for (i = 0;
+
+	return base;
+}
+
+
+#define DEPRECATED_ATTR_LEN_VALUE 0
+
+
+/**
+ * Read class methods' contributes
+ */
+static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_attr_count, U1* base) {
+
+	assert(NULL != class && method != NULL && method_attr_count >= 0 && base != NULL);
+
+	U2 nameidx;
+	U2 attr_name_idx;
+	U4 attr_length;
+	char *name = NULL;
+
+	ConstPool *constPool = class->constPool;
+	int j;
+
+	for (j = 0; j < method_attr_count; ++j) {
+		READ_U2(attr_name_idx, base);
+		READ_U4(attr_length, base);
+		name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
+
+		if (!strcmp(name, "Code")) {
+			U2 max_slot;
+			READ_U2(max_slot, base);
+			method->stack_frame.slotCnt = max_slot;
+			Slot *slots = (Slot *)calloc(max_slot, sizeof (Slot));
+			assert (NULL != slots);
+			method->stack_frame.slotTbl = slots;
+
+			READ_U2(max_slot, base);
+			method->local_tbl.slotCnt = max_slot;
+			slots = (Slot *)calloc(max_slot, sizeof(Slot));
+			assert (NULL != slots);
+			method->local_tbl.slotTbl = slots;
+
+			U4 code_length;
+			READ_U4(code_length, base);
+			method->code_length = code_length;
+
+			method->code = calloc(1, code_length);
+			assert(NULL != method->code);
+			memcpy(method->code, base, code_length);
+			base += code_length;
+
+			U2 excep_tbl_len;
+			READ_U2(excep_tbl_len, base);
+			method->excep_tbl.length = excep_tbl_len;
+			if (excep_tbl_len > 0) {
+				method->excep_tbl.entries = calloc(excep_tbl_len, sizeof(ExceptionEntry));
+				assert(NULL != method->excep_tbl.entries);
+				int k;
+				U2 start_pc;
+				U2 end_pc;
+				U2 handler_pc;
+				U2 catch_type;
+				for (k = 0; k < excep_tbl_len; ++k) {
+					READ_U2(start_pc, base);
+					method->excep_tbl.entries[k].start_pc = start_pc;	
+
+					READ_U2(end_pc, base);
+					method->excep_tbl.entries[k].end_pc = end_pc;
+
+					READ_U2(handler_pc, base);
+					method->excep_tbl.entries[k].handler_pc = handler_pc;
+
+					READ_U2(catch_type, base);
+					method->excep_tbl.entries[k].catch_type = catch_type;
+				}
+			}
+
+			U2 code_attr_count;
+			READ_U2(code_attr_count, base);
+
+			int m;
+			for (m = 0; m < code_attr_count; ++m) {
+				READ_U2(nameidx, base);
+				READ_U4(attr_length, base);
+				name = constPool->entries[nameidx].info.utf8_info.bytes;
+
+				if (!strcmp(name, "LineNumberTable")) {
+					U2 line_tbl_len;
+					READ_U2(line_tbl_len, base);
+					int k;
+					for (k = 0; k < line_tbl_len; ++k) {
+						U2 start_pc;
+						READ_U2(start_pc, base);
+						U2 line_no;
+						READ_U2(line_no, base);
+					}
+				} 
+				else if(!strcmp(name, "Exceptions")){
+					U2 excep_num;
+					READ_U2(excep_num, base);
+					int k;
+					U2 excep_idx;
+					for (k = 0; k < excep_num; ++k) {
+						READ_U2(excep_idx, base);
+					}
+				}
+				else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
+					base += attr_length;
+				}
+
+#if 0
+				else if(!strcmp(name, "StackMapTable")) {
+					printf ("StackMapTable\n");
+					U2 entry_num;
+					READ_U2(entry_num, base);
+					int k;
+					for (k = 0; k < entry_num; ++k) {
+						U1 type;
+						READ_U1(type, base);
+						printf("type:%d\n", type);
+						if (type >= 0 && type <= 63) {
+							printf("same_frame\n");
+						} else if (type >= 64 && type <= 127) {
+							printf("same_locals_1_stack_item_frame\n");
+						} else if (247 == type){
+							printf("same_locals_1_stack_item_frame_extended\n");
+							U2 offset_delta;
+							READ_U2(offset_delta, base);
+
+						} else if (type >= 248 && type <= 250) {
+							printf("chop_frame\n");
+							U2 offset_delta;
+							READ_U2(offset_delta, base);
+						} else if (251 == type) {
+							printf("same_frame_extended\n");
+							U2 offset_delta;
+							READ_U2(offset_delta, base);
+						} else if (type >= 252 && type <= 254) {
+							printf("append_frame\n");
+							U2 offset_delta;
+							READ_U2(offset_delta, base);
+						} else if (type == 255) {
+							printf("full_frame\n");
+						}
+					}
+				}
+#endif
+				else {
+					printf("Unknown Code attr:%s\n", name);
+					base += attr_length;
+				}
+			}	// end for (Code attr's attr count)
+		} // Code end
+		else if (!strcmp(name, "Deprecated")) {
+			if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
+				fprintf(stderr, "Deprecated attribute is Invalid\n");
+			}
+
+		} else if(!strcmp(name, "Exceptions")){
+			U2 excep_num;
+			READ_U2(excep_num, base);
+			int k;
+			U2 excep_idx;
+			for (k = 0; k < excep_num; ++k) {
+				READ_U2(excep_idx, base);
+			}
+		} else {
+			base += attr_length;
+			printf("Unknown method attr:%s\n", name);
 		}
-	}
+	}	// for (method attr count)
 
-	U2 methods_count;
-	READ_U2(methods_count, base);
-	class->methods_count = methods_count;
-	class->methods = sysAlloc(methods_count * sizeof(MethodEntry));
-	assert(NULL != class->methods);
+	return base;
+}
 
+/**
+ * Read class methods
+ */
+static U1* readClassMethod(ClassEntry* class, U2 methods_count, U1* base) {
+
+	assert (NULL != class && base != NULL && methods_count >= 0);
+
+	char *name = NULL;
+	U2 acc_flags;
+	U2 attr_count;
+	U2 clsidx;
+	U2 nameidx;
+	U2 typeidx;
+
+	ConstPool* constPool = class->constPool;
+	int i;
 	for (i = 0; i < methods_count; ++i) {
 		class->methods[i].class = CE_CLASS(class);
 
@@ -323,171 +457,39 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 
 		READ_U2(nameidx, base);
 		name = constPool->entries[nameidx].info.utf8_info.bytes;
-		class->methods[i].name = sysAlloc(strlen(name));
-		strcpy(class->methods[i].name, name);
+//		if (NULL != name) {
+			class->methods[i].name = calloc(1, strlen(name) + 1);
+			strcpy(class->methods[i].name, name);
+//		}
 
 		READ_U2(typeidx, base);
 		name = constPool->entries[typeidx].info.utf8_info.bytes;
-		class->methods[i].type = sysAlloc(strlen(name));
+		class->methods[i].type = calloc(1, strlen(name) + 1);
 		strcpy(class->methods[i].type, name);
 
 		U2 attr_name_idx;
 		U4 attr_length;
 		U2 method_attr_count;
+
 		READ_U2(method_attr_count, base);
-		for (j = 0; j < method_attr_count; ++j) {
-			READ_U2(attr_name_idx, base);
-			READ_U4(attr_length, base);
-			name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
+		base = readMethodAttrib(class, class->methods + i, method_attr_count, base);
+	}
 
-			if (!strcmp(name, "Code")) {
-				U2 max_slot;
-				READ_U2(max_slot, base);
-                class->methods[i].stack_frame.slotCnt = max_slot;
-                Slot *slots = (Slot *)sysAlloc(max_slot * sizeof (Slot));
-                assert (NULL != slots);
-				class->methods[i].stack_frame.slotTbl = slots;
+	return base;
+}
 
-				READ_U2(max_slot, base);
-				(class->methods + i)->local_tbl.slotCnt = max_slot;
-                slots = (Slot *)sysAlloc (max_slot * sizeof(Slot));
-                assert (NULL != slots);
-                (class->methods + i)->local_tbl.slotTbl = slots;
 
-				U4 code_length;
-				READ_U4(code_length, base);
-				class->methods[i].code_length = code_length;
+/*
+ * Read class attributes
+ */
+static U1* readClassAttrib(ClassEntry* class, U2 attr_count, U1* base) {
 
-				class->methods[i].code = sysAlloc(code_length);
-				assert(NULL != class->methods[i].code);
-				memcpy(class->methods[i].code, base, code_length);
-				base += code_length;
-
-				U2 excep_tbl_len;
-				READ_U2(excep_tbl_len, base);
-				class->methods[i].excep_tbl.length = excep_tbl_len;
-				if (excep_tbl_len > 0) {
-					class->methods[i].excep_tbl.entries = sysAlloc(excep_tbl_len * sizeof(ExceptionEntry));
-					assert(NULL != class->methods[i].excep_tbl.entries);
-					int k;
-					U2 start_pc;
-					U2 end_pc;
-					U2 handler_pc;
-					U2 catch_type;
-					for (k = 0; k < excep_tbl_len; ++k) {
-						READ_U2(start_pc, base);
-						class->methods[i].excep_tbl.entries[k].start_pc = start_pc;	
-
-						READ_U2(end_pc, base);
-						class->methods[i].excep_tbl.entries[k].end_pc = end_pc;
-
-						READ_U2(handler_pc, base);
-						class->methods[i].excep_tbl.entries[k].handler_pc = handler_pc;
-
-						READ_U2(catch_type, base);
-						class->methods[i].excep_tbl.entries[k].catch_type = catch_type;
-					}
-				}
-
-				U2 code_attr_count;
-				READ_U2(code_attr_count, base);
-
-				int m;
-				for (m = 0; m < code_attr_count; ++m) {
-					READ_U2(nameidx, base);
-					READ_U4(attr_length, base);
-					name = constPool->entries[nameidx].info.utf8_info.bytes;
-
-					if (!strcmp(name, "LineNumberTable")) {
-						U2 line_tbl_len;
-						READ_U2(line_tbl_len, base);
-						int k;
-						for (k = 0; k < line_tbl_len; ++k) {
-							U2 start_pc;
-							READ_U2(start_pc, base);
-							U2 line_no;
-							READ_U2(line_no, base);
-						}
-					} 
-                    else if(!strcmp(name, "Exceptions")){
-						U2 excep_num;
-						READ_U2(excep_num, base);
-						int k;
-						U2 excep_idx;
-						for (k = 0; k < excep_num; ++k) {
-							READ_U2(excep_idx, base);
-						}
-					}
-                    else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
-						base += attr_length;
-					}
-
-#if 0
-                    else if(!strcmp(name, "StackMapTable")) {
-                        printf ("StackMapTable\n");
-						U2 entry_num;
-						READ_U2(entry_num, base);
-						int k;
-						for (k = 0; k < entry_num; ++k) {
-							U1 type;
-							READ_U1(type, base);
-							printf("type:%d\n", type);
-							if (type >= 0 && type <= 63) {
-								printf("same_frame\n");
-							} else if (type >= 64 && type <= 127) {
-								printf("same_locals_1_stack_item_frame\n");
-							} else if (247 == type){
-								printf("same_locals_1_stack_item_frame_extended\n");
-								U2 offset_delta;
-								READ_U2(offset_delta, base);
-
-							} else if (type >= 248 && type <= 250) {
-								printf("chop_frame\n");
-								U2 offset_delta;
-								READ_U2(offset_delta, base);
-							} else if (251 == type) {
-								printf("same_frame_extended\n");
-								U2 offset_delta;
-								READ_U2(offset_delta, base);
-							} else if (type >= 252 && type <= 254) {
-								printf("append_frame\n");
-								U2 offset_delta;
-								READ_U2(offset_delta, base);
-							} else if (type == 255) {
-								printf("full_frame\n");
-							}
-						}
-					}
-#endif
-                    else {
-						printf("Unknown Code attr:%s\n", name);
-						base += attr_length;
-					}
-				}	// end for (Code attr's attr count)
-			} else if (!strcmp(name, "Deprecated")) {
-				if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
-					fprintf(stderr, "Deprecated attribute is Invalid\n");
-				}
-
-			} else if(!strcmp(name, "Exceptions")){
-				U2 excep_num;
-				READ_U2(excep_num, base);
-				int k;
-				U2 excep_idx;
-				for (k = 0; k < excep_num; ++k) {
-					READ_U2(excep_idx, base);
-				}
-			} else {
-				base += attr_length;
-				printf("Unknown method attr:%s\n", name);
-			}
-		}	// end for (method attr count)
-	}	// end for (method count)
-
+	assert(NULL != class && attr_count >= 0 && base != NULL);
+	
 	U2 attr_name_idx;
 	U2 attr_length;
-	READ_U2(attr_count, base);
-
+	ConstPool* constPool = class->constPool;
+	int i, j;
 	for (i = 0; i < attr_count; ++i) {
 		READ_U2(attr_name_idx, base);
 		READ_U4(attr_length, base);
@@ -496,10 +498,11 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 		if (strcmp(name, "SourceFile") == 0) {
 			U2 fname_idx;
 			READ_U2(fname_idx, base);
-			class->source_file = sysAlloc(attr_length);
-			strcpy(class->source_file, constPool->entries[fname_idx].info.utf8_info.bytes);
+			char* str = constPool->entries[fname_idx].info.utf8_info.bytes;
+			class->source_file = calloc(1, strlen(str) + 1);
+			strcpy(class->source_file, str);
 		} 
-        else if (strcmp(name, "InnerClasses") == 0) {
+		else if (strcmp(name, "InnerClasses") == 0) {
 			U2 classes_num;
 			READ_U2(classes_num, base);
 			for (j = 0; j < classes_num; ++j) {
@@ -515,23 +518,138 @@ Class* defineClass(const char *classname, const char *data, int offset, int len,
 				U2 inner_cls_acc_flags;
 				READ_U2(inner_cls_acc_flags, base);
 			}
-        }
-        else if (strcmp(name, "Signature") == 0) {
-            U2 signature_idx;
-            READ_U2(signature_idx, base);
-        }
-        else if (strcmp(name, "EnclosingMethod") == 0) {
-            U2 cls_idx, method_idx;
-            READ_U2(cls_idx, base);
-            READ_U2(method_idx, base);
-        }
-        else {
-            printf ("Unknown attribute:%s\n", name);
-        }
+		}
+		else if (strcmp(name, "Signature") == 0) {
+			U2 signature_idx;
+			READ_U2(signature_idx, base);
+		}
+		else if (strcmp(name, "EnclosingMethod") == 0) {
+			U2 cls_idx, method_idx;
+			READ_U2(cls_idx, base);
+			READ_U2(method_idx, base);
+		}
+		else {
+			printf ("Unknown attribute:%s\n", name);
+		}
 	}
 
+	return base;
+}
+
+
+/*
+ * Load a class from in memory 
+ * Parameters:
+ *		classname:		name of the class
+ *		data:			data of the class
+ *		len:			length of the data
+ * Return:
+ *		if Error,	return NULL
+ *		if OK,		return an valid class
+ */
+Class* defineClass(const char *classname, const char *data, int len) {
+
+	if (NULL == classname || NULL == data || len <= 0) {
+		return NULL;
+	}
+
+	/* change to unsigned char*
+	 * for READ_U2, READ_U4, READ_U8
+	 */
+	unsigned char *base = (unsigned char *)data;
+
+	U4 magic;
+	READ_U4(magic, base);
+	if (magic != MAGIC_NUMBER) {
+		fprintf(stderr, "Unrecognized class format\n");
+		return NULL;
+	}
+
+    Class* cls = allocClass();
+    assert(NULL != cls);
+
+	ClassEntry *class = CLASS_CE(cls);
+	assert(NULL != class);
+	class->state = CLASS_BAD;
+
+	U2 minor_version;
+	U2 major_version;
+	READ_U2(minor_version, base);
+	READ_U2(major_version, base);
+	class->reserve[0] = minor_version;
+	class->reserve[1] = major_version;
+
+	// read constant value pool
+	U2 cp_count;
+	READ_U2(cp_count, base);
+	base = readConstPool(class, cp_count, base);
+
+	// read class access falgs
+	U2 acc_flags;
+	READ_U2(acc_flags, base);
+	class->acc_flags = acc_flags;
+
+	// read class name
+	ConstPool *constPool = class->constPool;
+	char *name = NULL;
+	U2 this_class;
+	READ_U2(this_class, base);
+	name = constPool->entries[constPool->entries[this_class].info.class_info.name_index].info.utf8_info.bytes;
+	class->name = calloc(1, strlen(name) + 1);
+	strcpy(class->name, name);
+
+	// read super class
+	U2 super_class;
+	READ_U2(super_class, base);
+	if (0 == super_class) {
+		printf ("super class index = 0\n");
+	}
+	else if(super_class > 0 && super_class < constPool->length) {
+		name = constPool->entries[constPool->entries[super_class].info.class_info.name_index].info.utf8_info.bytes;
+		class->super_name = calloc(1, strlen(name) + 1);
+		strcpy(class->super_name, name);
+	}
+	else {
+		printf("Invalid super class index\n");
+	}
+
+	// read interfaces
+	U2 ifcount;
+	READ_U2(ifcount, base);
+	class->interfaces_count = ifcount;
+	class->interfaces_index = calloc(ifcount, sizeof(U2));
+	int i;
+	U2 ifidx;
+	for (i = 0; i < ifcount; ++i) {
+		READ_U2(ifidx, base);
+		class->interfaces_index[i] = ifidx;
+		name = constPool->entries[constPool->entries[ifidx].info.class_info.name_index].info.utf8_info.bytes;	
+	}
+
+	// read class fields
+	U2 field_count;
+	READ_U2(field_count, base);
+    class->fields_count = field_count;
+	class->fields = (FieldEntry *)calloc(field_count, sizeof(FieldEntry));
+	assert(NULL != class->fields);
+	base = readClassField(class, field_count, base);
+
+	// read class methods
+	U2 methods_count;
+	READ_U2(methods_count, base);
+	class->methods_count = methods_count;
+	class->methods = calloc(methods_count, sizeof(MethodEntry));
+	assert(NULL != class->methods);
+	base = readClassMethod(class, methods_count, base);
+
+	// read class attributes
+	U2 attr_count;
+	READ_U2(attr_count, base);
+	base = readClassAttrib(class, attr_count, base);
+
+	
 	/** check memory buffer overflow */
-	if ((char *)base > data + offset + len) {
+	if ((char *)base > data + len) {
 		fprintf(stderr, "buffer overflow in defineClass\n");
 		return NULL;
 	}
@@ -580,7 +698,7 @@ Class* loadClassFromFile(char *path, char *classname) {
 	U4 size = ftell(fp);
 	fseek(fp, 0L, SEEK_SET);
 
-	U1 *buff = (U1 *)sysAlloc(size);
+	U1 *buff = (U1 *)calloc(1, size);
 	if (NULL == buff) {
 		fprintf(stderr, "Failed malloc mem for class file\n");
 		fclose(fp);
@@ -588,12 +706,12 @@ Class* loadClassFromFile(char *path, char *classname) {
 	}
 	if (size != fread(buff, 1, size, fp)) {
 		fprintf(stderr, "Failed read class file\n");
-		sysFree(buff);
+		free(buff);
 		fclose(fp);
 		return NULL;
 	}
-	Class *class = defineClass(classname, buff, 0, size, NULL);
-	sysFree(buff);
+	Class *class = defineClass(classname, buff, size);
+	free(buff);
 	fclose(fp);
 	return class;
 }
@@ -602,8 +720,8 @@ Class* loadClassFromFile(char *path, char *classname) {
  * Unpack jar arguments
  */
 typedef struct UnpackJarArg {
-	Class   **classes;
-	U4		clsCnt;
+	Class **classes;
+	U4 clsCnt;
 } UnpackJarArg;
 
 /*
@@ -616,7 +734,7 @@ static void on_start (int total, void* param) {
 	if (NULL != param) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		arg->clsCnt = total;
-		arg->classes = (Class**)sysAlloc(total * sizeof(Class *));
+		arg->classes = (Class**)calloc(total, sizeof(Class *));
 		if (NULL == arg->classes) {
 			printf("Failed alloc mem for loading class.\n");
 			exit (1);
@@ -638,15 +756,11 @@ static void on_progress (int index,
 		return;
 	}
 
-    if (index == 22) {
-        return;
-    }
-
     printf ("%-4d name:%s\n", index, name);
 	if (NULL != param && size > 0) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
-		cls[index] = defineClass(name, mem, 0, size, NULL);
+		cls[index] = defineClass(name, mem, size);
 	}
 }
 
@@ -698,16 +812,16 @@ ConstPool* newConstPool(int length) {
 		return NULL;
 	}
 
-	ConstPool *pool = (ConstPool *)sysAlloc(sizeof (ConstPool));
+	ConstPool *pool = (ConstPool *)calloc(1, sizeof (ConstPool));
 	if (NULL == pool) {
 		fprintf(stderr, "Failed alloc mem for ConstPool\n");
 		return NULL;
 	}
 
 	pool->length = length;
-	pool->entries = (ConstPoolEntry *)sysAlloc(sizeof (ConstPoolEntry) * length);
+	pool->entries = (ConstPoolEntry *)calloc(length, sizeof(ConstPoolEntry));
 	if (NULL == pool->entries) {
-		sysFree (pool);
+		free (pool);
 		return NULL;
 	}
 
@@ -956,4 +1070,11 @@ void logClassEntry(ClassEntry *clsEntry)
         printf("  LineNumberTable:\n");
         printf("   line %d: %d\n\n", 0, 0);
     }
+}
+
+Class* allocClass(MemoryArea* area)
+{
+	int size = sizeof(Class) + sizeof(ClassEntry);
+	Class* class = calloc(1, size);
+	return class;
 }

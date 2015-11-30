@@ -156,8 +156,8 @@ typedef struct ExceptionTable {
 typedef struct Object Object;
 typedef struct Object Class;
 struct Object {
-	Class *super;
-	Class *this;
+	uintptr_t lock;
+	Class *cls;
 }; 
 
 typedef struct FieldEntry {
@@ -168,7 +168,6 @@ typedef struct FieldEntry {
 	U2	acc_flags;
 	U2	constant;
 } FieldEntry;
-
 
 // Slot store type and value
 typedef struct Slot {
@@ -239,8 +238,9 @@ typedef struct ClassEntry {
 #define CLASS_CE(cls) ( (ClassEntry *) (cls + 1) )
 #define CE_CLASS(clsEntry) ( (Class *) clsEntry )
 
+extern Class* allocClass();
 extern ConstPool* newConstPool(int length);
-extern Class* defineClass(const char *classname, const char *data, int offset, int len,							Object *class_laoder);
+extern Class* defineClass(const char *clsname, const char *data, int len);
 extern void linkClass(Class *class);
 extern Class* initClass(Class *class);
 extern Class* findSystemClass(char *classname);
@@ -249,9 +249,31 @@ extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);
 extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
 
+/*
+ * Load a Class from a .class file
+ * Parameters:
+ *		path:		path of *.class
+ *		classname:	such as System (may represent java.lang.System)
+ * Return:
+ *		if Error: NULL
+ *		if OK	: base address of Class
+ */
 extern Class* loadClassFromFile(char *path, char *classname);
+
+/*
+ * Load a Class from a .jar file
+ * Parameters:
+ *		path:		path of *.jar (such as /jdk/jre/lib/rt.jar)
+ * Return:
+ *		if Error: NULL
+ *		if OK	: base address of Class
+ */
+
 extern U4 loadClassFromJar(char *path, Class ***classes);
 
+/**
+ * Log the information of ClassEntry
+ */
 extern void logClassEntry(ClassEntry* clsEntry);
 
 #endif

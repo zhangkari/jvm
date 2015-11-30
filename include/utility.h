@@ -12,7 +12,7 @@
 #define __UTILITY__H__
 
 #ifdef DEBUG
-#define LogD(...) printf(__VA_ARGS__)
+#define LogD(format, ...) printf(format " %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__)
 #else
 #define LogD(...)
 #endif
