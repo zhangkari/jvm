@@ -269,7 +269,7 @@ extern Class* loadClassFromFile(char *path, char *classname);
  *		if OK	: base address of Class
  */
 
-extern U4 loadClassFromJar(char *path, Class ***classes);
+extern int loadClassFromJar(char *path, Class ***classes);
 
 /**
  * Log the information of ClassEntry

@@ -4,10 +4,16 @@
  *
  * Modifications:
  *	1. Created by kari.zhang
- *  2. Redesign defineClass() by kari.zhang @ 2015-11-30
+ *
+ *  2. Redesign defineClass() 
+ *           by kari.zhang @ 2015-11-30
+ *
+ *  3. Update READ_U1, READ_U2 and READ_U4 
+ *           by kari.zhang @ 2015-12-16 
  *******************************************************/
 
 #include <assert.h>
+#include <byteswap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,84 +24,26 @@
 #define MAGIC_NUMBER 0XCAFEBABE
 
 #define READ_U1(u1, data) do {										\
-	u1 = *((U1*)data);											    \
-	data++;                                                         \
+	u1 = *((U1*)(data));											    \
+	(data)++;                                                         \
 } while (0);
 
 #define READ_U2(u2, data) do {										\
-	U1 v1 = *((U1*)data);							    			\
-	data++;                                                         \
-	u2 = v1;                                                        \
-	u2<<=8;                                                         \
-	U1 v2 = *((U1*)data);							    			\
-	data++;                                                         \
-	u2 += v2;												        \
+    u2 = *((U2*)(data));                                            \
+    u2 = bswap_16(u2);                                              \
+    (data) += 2;                                                   \
 } while (0);
 
 #define READ_U4(u4, data) do {										\
-	U1 v1 = *((U1*)data);							    			\
-	data++;                                                         \
-	u4 = v1;                                                        \
-	u4<<=8;                                                         \
-	U1 v2 = *((U1*)data);							    			\
-	data++;                                                         \
-	u4 += v2;                                                       \
-	u4<<=8;                                                         \
-	U1 v3 = *((U1*)data);							    			\
-	u4 += v3;                                                       \
-	u4<<=8;                                                         \
-	data++;                                                         \
-	U1 v4 = *((U1*)data);							    			\
-	u4 += v4;                                                       \
-	data++;                                                         \
+    u4 = *((U4*)(data));                                            \
+    u4 = bswap_32(u4);                                              \
+	(data) += 4;                                                    \
 } while (0);
-
-#define READ_U8(u8, data) do {										\
-	U1 v1 = *((U1*)data);							    			\
-	data++;                                                         \
-	u8 = v1;                                                        \
-	u8<<=8;                                                         \
-	\
-	U1 v2 = *((U1*)data);							    			\
-	data++;                                                         \
-	u8 += v2;                                                       \
-	u8<<=8;                                                         \
-	\
-	U1 v3 = *((U1*)data);							    			\
-	u8 += v3;                                                       \
-	u8<<=8;                                                         \
-	data++;                                                         \
-	\
-	U1 v4 = *((U1*)data);							    			\
-	u8 += v4;                                                       \
-	u8<<=8;															\
-	data++;                                                         \
-	\
-	U1 v5 = *((U1*)data);											\
-	u8 += v5;														\
-	u8<<=8;															\
-	data++;															\
-	\
-	U1 v6 = *((U1*)data);											\
-	u8 += v6;														\
-	u8<<=8;															\
-	data++;															\
-	\
-	U1 v7 = *((U1*)data);											\
-	u8 += v7;														\
-	u8<<=8;															\
-	data++;															\
-	\
-	U1 v8 = *((U1*)data);											\
-	u8 += v8;														\
-	data++;															\
-} while (0);
-
 
 /*
  * Read Constant Value Pool
  */
-static U1* readConstPool(ClassEntry* class, U2 cp_count, U1* base) {
+static void readConstPool(ClassEntry* class, U2 cp_count, U1** base) {
 
 	assert(NULL != class && cp_count > 0 && NULL != base);
 
@@ -115,78 +63,78 @@ static U1* readConstPool(ClassEntry* class, U2 cp_count, U1* base) {
 	int i;
 	int j;
 	for (i = 1; i < cp_count; ++i) {
-		READ_U1(tag, base);
+		READ_U1(tag, *base);
 		constPool->entries[i].tag = tag;
 		switch (tag) {
 			case CONST_Utf8:
-				READ_U2(length, base);
+				READ_U2(length, *base);
 				constPool->entries[i].info.utf8_info.bytes = calloc(1, length + 1);
 				assert(NULL != constPool->entries[i].info.utf8_info.bytes);
-				memcpy(constPool->entries[i].info.utf8_info.bytes, base, length);
+				memcpy(constPool->entries[i].info.utf8_info.bytes, *base, length);
 				constPool->entries[i].info.utf8_info.length = length;
-				base += length;
+				*base += length;
 				break;
 
 			case CONST_Integer:
-				READ_U4(bytes, base);
+				READ_U4(bytes, *base);
 				constPool->entries[i].info.integer_info.bytes = bytes;
 				break;
 
 			case CONST_Float:
-				READ_U4(bytes, base);
+				READ_U4(bytes, *base);
 				constPool->entries[i].info.float_info.bytes = bytes;
 				break;
 
 			case CONST_Long:
-				READ_U4(u4high, base);
-				READ_U4(u4low, base);
+				READ_U4(u4high, *base);
+				READ_U4(u4low, *base);
 				constPool->entries[i].info.long_info.high_bytes = u4high;
 				constPool->entries[i].info.long_info.low_bytes = u4low;
 				++i;
 				break;
 
 			case CONST_Double:
-				READ_U4(u4high, base);
-				READ_U4(u4low, base);
+				READ_U4(u4high, *base);
+				READ_U4(u4low, *base);
 				constPool->entries[i].info.double_info.high_bytes = u4high;
 				constPool->entries[i].info.double_info.low_bytes = u4low;
 				++i;
 				break;
 
 			case CONST_Class:
-				READ_U2(nameidx, base);
+				READ_U2(nameidx, *base);
 				constPool->entries[i].info.class_info.name_index = nameidx;
 				break;
 
 			case CONST_String:
-				READ_U2(stridx, base);
+				READ_U2(stridx, *base);
 				constPool->entries[i].info.string_info.string_index = stridx;
 				break;
 
 			case CONST_Fieldref:
-				READ_U2(clsidx, base);
-				READ_U2(nametypeidx, base);
+				READ_U2(clsidx, *base);
+				READ_U2(nametypeidx, *base);
 				constPool->entries[i].info.fieldref_info.class_index = clsidx;
 				constPool->entries[i].info.fieldref_info.name_type_index = nametypeidx;
 				break;
 
 			case CONST_Methodref:
-				READ_U2(clsidx, base);
-				READ_U2(nametypeidx, base);
+				READ_U2(clsidx, *base);
+				READ_U2(nametypeidx, *base);
 				constPool->entries[i].info.methodref_info.class_index = clsidx;
 				constPool->entries[i].info.methodref_info.name_type_index = nametypeidx;
 				break;
 
 			case CONST_IfMethodref:
-				READ_U2(clsidx, base);
-				READ_U2(nametypeidx, base);
+				READ_U2(clsidx, *base);
+				READ_U2(nametypeidx, *base);
 				constPool->entries[i].info.ifmethodref_info.class_index = clsidx;
 				constPool->entries[i].info.ifmethodref_info.name_type_index = nametypeidx;
 				break;
 
 			case CONST_NameAndType:
-				READ_U2(nameidx, base);
-				READ_U2(typeidx, base);
+				READ_U2(nameidx, *base);
+				READ_U2(typeidx, *base);
 				constPool->entries[i].info.nametype_info.name_index = nameidx;
 				constPool->entries[i].info.nametype_info.type_index = typeidx;
 				break;
@@ -209,11 +157,9 @@ static U1* readConstPool(ClassEntry* class, U2 cp_count, U1* base) {
 	}
 
 	class->constPool = constPool;
-
-	return base;
 }
 
-static U1* readClassField(ClassEntry *class, U2 field_count, U1* base) {
+static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
 
 	assert (NULL != class && base != NULL && field_count >= 0);
 
@@ -227,39 +173,38 @@ static U1* readClassField(ClassEntry *class, U2 field_count, U1* base) {
 	ConstPool *constPool = class->constPool;
 	int i, j;
 	for (i = 0; i < field_count; ++i) {
-		READ_U2(acc_flags, base);
+		READ_U2(acc_flags, *base);
 		class->fields[i].acc_flags = acc_flags;
 
-		READ_U2(nameidx, base);
+		READ_U2(nameidx, *base);
 		name = constPool->entries[nameidx].info.utf8_info.bytes;
 		class->fields[i].name = calloc(1, strlen(name) + 1);
 		strcpy(class->fields[i].name, name);
 
-		READ_U2(typeidx, base);
+		READ_U2(typeidx, *base);
 		name = constPool->entries[typeidx].info.utf8_info.bytes;
 		class->fields[i].type = calloc(1, strlen(name) + 1);
 		strcpy(class->fields[i].type, name);
 
 		U2 const_value_idx;
 		U4 attr_length;
-		READ_U2(attr_count, base);
+		READ_U2(attr_count, *base);
 		for (j = 0; j < attr_count; ++j) {
-			READ_U2(nameidx, base);
-			READ_U4(attr_length, base);
+			READ_U2(nameidx, *base);
+			READ_U4(attr_length, *base);
 			name = constPool->entries[nameidx].info.utf8_info.bytes;
 
 			if (!strcmp(name, "ConstantValue")) {
-				READ_U2(const_value_idx, base);	
+				READ_U2(const_value_idx, *base);	
 				class->fields[i].constant = constPool->entries[const_value_idx].tag;
 			} else if (!strcmp(name, "Signature")) {
 				U2 signature_idx;
-				READ_U2(signature_idx, base);
+				READ_U2(signature_idx, *base);
 				//printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
 			}
 		} // for (j = 0;
 	} // for (i = 0;
 
-	return base;
 }
 
 
@@ -269,7 +214,7 @@ static U1* readClassField(ClassEntry *class, U2 field_count, U1* base) {
 /**
  * Read class methods' contributes
  */
-static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_attr_count, U1* base) {
+static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_attr_count, U1** base) {
 
 	assert(NULL != class && method != NULL && method_attr_count >= 0 && base != NULL);
 
@@ -282,35 +227,35 @@ static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_at
 	int j;
 
 	for (j = 0; j < method_attr_count; ++j) {
-		READ_U2(attr_name_idx, base);
-		READ_U4(attr_length, base);
+		READ_U2(attr_name_idx, *base);
+		READ_U4(attr_length, *base);
 		name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
 
 		if (!strcmp(name, "Code")) {
 			U2 max_slot;
-			READ_U2(max_slot, base);
+			READ_U2(max_slot, *base);
 			method->stack_frame.slotCnt = max_slot;
 			Slot *slots = (Slot *)calloc(max_slot, sizeof (Slot));
 			assert (NULL != slots);
 			method->stack_frame.slotTbl = slots;
 
-			READ_U2(max_slot, base);
+			READ_U2(max_slot, *base);
 			method->local_tbl.slotCnt = max_slot;
 			slots = (Slot *)calloc(max_slot, sizeof(Slot));
 			assert (NULL != slots);
 			method->local_tbl.slotTbl = slots;
 
 			U4 code_length;
-			READ_U4(code_length, base);
+			READ_U4(code_length, *base);
 			method->code_length = code_length;
 
 			method->code = calloc(1, code_length);
 			assert(NULL != method->code);
-			memcpy(method->code, base, code_length);
-			base += code_length;
+			memcpy(method->code, *base, code_length);
+			*base += code_length;
 
 			U2 excep_tbl_len;
-			READ_U2(excep_tbl_len, base);
+			READ_U2(excep_tbl_len, *base);
 			method->excep_tbl.length = excep_tbl_len;
 			if (excep_tbl_len > 0) {
 				method->excep_tbl.entries = calloc(excep_tbl_len, sizeof(ExceptionEntry));
@@ -321,62 +266,49 @@ static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_at
 				U2 handler_pc;
 				U2 catch_type;
 				for (k = 0; k < excep_tbl_len; ++k) {
-					READ_U2(start_pc, base);
+					READ_U2(start_pc, *base);
 					method->excep_tbl.entries[k].start_pc = start_pc;	
 
-					READ_U2(end_pc, base);
+					READ_U2(end_pc, *base);
 					method->excep_tbl.entries[k].end_pc = end_pc;
 
-					READ_U2(handler_pc, base);
+					READ_U2(handler_pc, *base);
 					method->excep_tbl.entries[k].handler_pc = handler_pc;
 
-					READ_U2(catch_type, base);
+					READ_U2(catch_type, *base);
 					method->excep_tbl.entries[k].catch_type = catch_type;
 				}
 			}
 
 			U2 code_attr_count;
-			READ_U2(code_attr_count, base);
+			READ_U2(code_attr_count, *base);
 
 			int m;
 			for (m = 0; m < code_attr_count; ++m) {
-				READ_U2(nameidx, base);
-				READ_U4(attr_length, base);
+				READ_U2(nameidx, *base);
+				READ_U4(attr_length, *base);
 				name = constPool->entries[nameidx].info.utf8_info.bytes;
 
 				if (!strcmp(name, "LineNumberTable")) {
 					U2 line_tbl_len;
-					READ_U2(line_tbl_len, base);
+					READ_U2(line_tbl_len, *base);
 					int k;
 					for (k = 0; k < line_tbl_len; ++k) {
 						U2 start_pc;
-						READ_U2(start_pc, base);
+						READ_U2(start_pc, *base);
 						U2 line_no;
-						READ_U2(line_no, base);
+						READ_U2(line_no, *base);
 					}
 				} 
-				else if(!strcmp(name, "Exceptions")){
-					U2 excep_num;
-					READ_U2(excep_num, base);
-					int k;
-					U2 excep_idx;
-					for (k = 0; k < excep_num; ++k) {
-						READ_U2(excep_idx, base);
-					}
-				}
-				else if(!strcmp(name, "RuntimeVisibleAnnotations")) {
-					base += attr_length;
-				}
-
 #if 0
 				else if(!strcmp(name, "StackMapTable")) {
 					printf ("StackMapTable\n");
 					U2 entry_num;
-					READ_U2(entry_num, base);
+					READ_U2(entry_num, *base);
 					int k;
 					for (k = 0; k < entry_num; ++k) {
 						U1 type;
-						READ_U1(type, base);
+						READ_U1(type, *base);
 						printf("type:%d\n", type);
 						if (type >= 0 && type <= 63) {
 							printf("same_frame\n");
@@ -385,20 +317,20 @@ static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_at
 						} else if (247 == type){
 							printf("same_locals_1_stack_item_frame_extended\n");
 							U2 offset_delta;
-							READ_U2(offset_delta, base);
+							READ_U2(offset_delta, *base);
 
 						} else if (type >= 248 && type <= 250) {
 							printf("chop_frame\n");
 							U2 offset_delta;
-							READ_U2(offset_delta, base);
+							READ_U2(offset_delta, *base);
 						} else if (251 == type) {
 							printf("same_frame_extended\n");
 							U2 offset_delta;
-							READ_U2(offset_delta, base);
+							READ_U2(offset_delta, *base);
 						} else if (type >= 252 && type <= 254) {
 							printf("append_frame\n");
 							U2 offset_delta;
-							READ_U2(offset_delta, base);
+							READ_U2(offset_delta, *base);
 						} else if (type == 255) {
 							printf("full_frame\n");
 						}
@@ -407,7 +339,7 @@ static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_at
 #endif
 				else {
 					printf("Unknown Code attr:%s\n", name);
-					base += attr_length;
+					*base += attr_length;
 				}
 			}	// end for (Code attr's attr count)
 		} // Code end
@@ -418,71 +350,62 @@ static U1* readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_at
 
 		} else if(!strcmp(name, "Exceptions")){
 			U2 excep_num;
-			READ_U2(excep_num, base);
+			READ_U2(excep_num, *base);
 			int k;
 			U2 excep_idx;
 			for (k = 0; k < excep_num; ++k) {
-				READ_U2(excep_idx, base);
+				READ_U2(excep_idx, *base);
 			}
 		} else {
-			base += attr_length;
+			*base += attr_length;
 			printf("Unknown method attr:%s\n", name);
 		}
 	}	// for (method attr count)
-
-	return base;
 }
 
 /**
  * Read class methods
  */
-static U1* readClassMethod(ClassEntry* class, U2 methods_count, U1* base) {
+static void readClassMethod(ClassEntry* class, U2 methods_count, U1** base) {
 
 	assert (NULL != class && base != NULL && methods_count >= 0);
 
 	char *name = NULL;
 	U2 acc_flags;
-	U2 attr_count;
-	U2 clsidx;
 	U2 nameidx;
 	U2 typeidx;
+	U2 attr_count;
 
 	ConstPool* constPool = class->constPool;
 	int i;
 	for (i = 0; i < methods_count; ++i) {
 		class->methods[i].class = CE_CLASS(class);
 
-		READ_U2(acc_flags, base);
+		READ_U2(acc_flags, *base);
 		class->methods[i].acc_flags = acc_flags;
 
-		READ_U2(nameidx, base);
+		READ_U2(nameidx, *base);
 		name = constPool->entries[nameidx].info.utf8_info.bytes;
 //		if (NULL != name) {
 			class->methods[i].name = calloc(1, strlen(name) + 1);
 			strcpy(class->methods[i].name, name);
 //		}
 
-		READ_U2(typeidx, base);
+		READ_U2(typeidx, *base);
 		name = constPool->entries[typeidx].info.utf8_info.bytes;
 		class->methods[i].type = calloc(1, strlen(name) + 1);
 		strcpy(class->methods[i].type, name);
 
-		U2 attr_name_idx;
-		U4 attr_length;
-		U2 method_attr_count;
-
-		READ_U2(method_attr_count, base);
-		base = readMethodAttrib(class, class->methods + i, method_attr_count, base);
+		READ_U2(attr_count, *base);
+		readMethodAttrib(class, class->methods + i, attr_count, base);
 	}
-
-	return base;
 }
 
 
 /*
  * Read class attributes
  */
-static U1* readClassAttrib(ClassEntry* class, U2 attr_count, U1* base) {
+static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
 
 	assert(NULL != class && attr_count >= 0 && base != NULL);
 	
@@ -491,49 +414,47 @@ static U1* readClassAttrib(ClassEntry* class, U2 attr_count, U1* base) {
 	ConstPool* constPool = class->constPool;
 	int i, j;
 	for (i = 0; i < attr_count; ++i) {
-		READ_U2(attr_name_idx, base);
-		READ_U4(attr_length, base);
+		READ_U2(attr_name_idx, *base);
+		READ_U4(attr_length, *base);
 		char *name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
 
 		if (strcmp(name, "SourceFile") == 0) {
 			U2 fname_idx;
-			READ_U2(fname_idx, base);
+			READ_U2(fname_idx, *base);
 			char* str = constPool->entries[fname_idx].info.utf8_info.bytes;
 			class->source_file = calloc(1, strlen(str) + 1);
 			strcpy(class->source_file, str);
 		} 
 		else if (strcmp(name, "InnerClasses") == 0) {
 			U2 classes_num;
-			READ_U2(classes_num, base);
+			READ_U2(classes_num, *base);
 			for (j = 0; j < classes_num; ++j) {
 				U2 inner_cls_idx;
-				READ_U2(inner_cls_idx, base);
+				READ_U2(inner_cls_idx, *base);
 
 				U2 outer_cls_idx;
-				READ_U2(outer_cls_idx, base);
+				READ_U2(outer_cls_idx, *base);
 
 				U2 inner_name_idx;
-				READ_U2(inner_name_idx, base);
+				READ_U2(inner_name_idx, *base);
 
 				U2 inner_cls_acc_flags;
-				READ_U2(inner_cls_acc_flags, base);
+				READ_U2(inner_cls_acc_flags, *base);
 			}
 		}
 		else if (strcmp(name, "Signature") == 0) {
 			U2 signature_idx;
-			READ_U2(signature_idx, base);
+			READ_U2(signature_idx, *base);
 		}
 		else if (strcmp(name, "EnclosingMethod") == 0) {
 			U2 cls_idx, method_idx;
-			READ_U2(cls_idx, base);
-			READ_U2(method_idx, base);
+			READ_U2(cls_idx, *base);
+			READ_U2(method_idx, *base);
 		}
 		else {
 			printf ("Unknown attribute:%s\n", name);
 		}
 	}
-
-	return base;
 }
 
 
@@ -554,7 +475,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	}
 
 	/* change to unsigned char*
-	 * for READ_U2, READ_U4, READ_U8
+	 * for READ_U1, READ_U2, READ_U4
 	 */
 	unsigned char *base = (unsigned char *)data;
 
@@ -582,7 +503,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	// read constant value pool
 	U2 cp_count;
 	READ_U2(cp_count, base);
-	base = readConstPool(class, cp_count, base);
+	readConstPool(class, cp_count, &base);
 
 	// read class access falgs
 	U2 acc_flags;
@@ -632,7 +553,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
     class->fields_count = field_count;
 	class->fields = (FieldEntry *)calloc(field_count, sizeof(FieldEntry));
 	assert(NULL != class->fields);
-	base = readClassField(class, field_count, base);
+	readClassField(class, field_count, &base);
 
 	// read class methods
 	U2 methods_count;
@@ -640,13 +561,12 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	class->methods_count = methods_count;
 	class->methods = calloc(methods_count, sizeof(MethodEntry));
 	assert(NULL != class->methods);
-	base = readClassMethod(class, methods_count, base);
+	readClassMethod(class, methods_count, &base);
 
 	// read class attributes
 	U2 attr_count;
 	READ_U2(attr_count, base);
-	base = readClassAttrib(class, attr_count, base);
-
+	readClassAttrib(class, attr_count, &base);
 	
 	/** check memory buffer overflow */
 	if ((char *)base > data + len) {
@@ -790,7 +710,7 @@ static void on_finish(void* param) {
  *			count of classes 
  *			it means error when return value <= 0
  */
-U4 loadClassFromJar(char *path, Class ***classes) {
+int loadClassFromJar(char *path, Class ***classes) {
 	if (NULL == path || NULL == classes) {
 		return -1;
 	}
