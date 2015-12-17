@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
     char path[256];
+    memset(path, 0, 256);
     strcpy(path, argv[1]);
-    strcat(path, ".class");
     Class *mainClass = loadClassFromFile(path, argv[1]);
     if (NULL == mainClass) {
         fprintf(stderr, "Failed loadClass from file\n");
