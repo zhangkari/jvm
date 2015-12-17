@@ -40,6 +40,14 @@
 	(data) += 4;                                                    \
 } while (0);
 
+
+// Declare static functions
+ static void readAnnotations(ClassEntry*, U2, U1**);
+
+
+// Deprecated attribute length must be 0
+#define DEPRECATED_ATTR_LEN_VALUE 0
+
 /*
  * Read Constant Value Pool
  */
@@ -198,23 +206,29 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
 				READ_U2(const_value_idx, *base);	
 				class->fields[i].constant = constPool->entries[const_value_idx].tag;
 
-			} else if (!strcmp(name, "Signature")) {
+			}
+            else if (!strcmp(name, "Signature")) {
 				U2 signature_idx;
 				READ_U2(signature_idx, *base);
-				//printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
-
-			} else {
+			} 
+            else if (!strcmp(name, "Deprecated")) {
+                if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
+                    fprintf(stderr, "Deprecated attribute is Invalid\n");
+                    exit(-1);
+                }
+            }
+            else if (strcmp(name, "RuntimeVisibleAnnotations") == 0) {
+                U2 anno_num;
+                READ_U2(anno_num, *base);
+                readAnnotations(class, anno_num, base);
+            }
+            else {
                 printf("Unknown field attribute: %s\n", name);
                 *base += attr_length;
             }
 		} // for (j = 0;
 	} // for (i = 0;
-
 }
-
-
-#define DEPRECATED_ATTR_LEN_VALUE 0
-
 
 /**
  * Read class methods' contributes
@@ -305,6 +319,8 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 						READ_U2(line_no, *base);
 					}
 				} 
+
+                // ignore StackMapTable
 #if 0
 				else if(!strcmp(name, "StackMapTable")) {
 					printf ("StackMapTable\n");
@@ -342,6 +358,7 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 					}
 				}
 #endif
+               
 				else {
 					printf("Unknown Code attr:%s\n", name);
 					*base += attr_length;
@@ -351,9 +368,11 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 		else if (!strcmp(name, "Deprecated")) {
 			if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
 				fprintf(stderr, "Deprecated attribute is Invalid\n");
+                exit(-1);
 			}
 
-		} else if(!strcmp(name, "Exceptions")){
+		}
+        else if(!strcmp(name, "Exceptions")){
 			U2 excep_num;
 			READ_U2(excep_num, *base);
 			int k;
@@ -361,7 +380,18 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 			for (k = 0; k < excep_num; ++k) {
 				READ_U2(excep_idx, *base);
 			}
-		} else {
+		} 
+        else if (strcmp(name, "Signature") == 0) {
+            U2 signature_idx;
+            READ_U2(signature_idx, *base);
+        }
+        else if (strcmp(name, "RuntimeVisibleAnnotations") == 0) {
+            U2 anno_num;
+            READ_U2(anno_num, *base);
+            readAnnotations(class, anno_num, base);
+        }
+
+        else {
 			*base += attr_length;
 			printf("Unknown method attr:%s\n", name);
 		}
@@ -406,6 +436,107 @@ static void readClassMethod(ClassEntry* class, U2 methods_count, U1** base) {
 	}
 }
 
+
+static void readAnnotationElementValue(ClassEntry* class, U1** base) {
+
+    assert (NULL != class && base != NULL);
+
+    U1 tag;
+    U2 num_values;
+    int i;
+
+    READ_U1(tag, *base);
+    switch (tag) {
+        case 'B':
+            printf("B\n");
+            break;
+
+        case 'C':
+            printf("C\n");
+            break;
+
+        case 'D':
+            printf("D\n");
+            break;
+
+        case 'F':
+            printf("F\n");
+            break;
+
+        case 'I':
+            printf("I\n");
+            break;
+
+        case 'J':
+            printf("J\n");
+            break;
+
+        case 'S':
+            printf("S\n");
+            break;
+
+        case 'Z':
+            // TODO
+            *base += 2;
+            break;
+
+            // String
+        case 's':
+            // TODO
+            *base += 2;
+            break;
+
+            // enum constant
+        case 'e':
+            // TODO
+            *base += 4;
+            break;
+
+            // class
+        case 'c':
+            // TODO
+            *base += 2;
+            break;
+
+        case '@':
+            readAnnotations(class, 1, base);
+            break;
+
+        case '[':
+            // TODO
+            READ_U2(num_values, *base);
+            for (i = 0; i < num_values; ++i) {
+                readAnnotationElementValue(class, base);
+            }
+            break;
+
+        default:
+            printf("Invalid annotation tag.\n");
+            exit(-1);
+    }
+
+}
+
+/*
+ * Read RuntimeVisibleAnnotations attribibute
+ */
+ static void readAnnotations(ClassEntry* class, U2 anno_count, U1** base) {
+    assert(NULL != class && anno_count >= 0 && base != NULL);
+
+    U2 type_idx;
+    U2 num_pairs;
+    U2 elem_name_idx;
+    U1 tag;
+    int i, j;
+    for (i = 0; i < anno_count; ++i) {
+        READ_U2(type_idx, *base);
+        READ_U2(num_pairs, *base);
+        for (j = 0; j < num_pairs; ++j) {
+            READ_U2(elem_name_idx, *base);
+            readAnnotationElementValue(class, base);
+        }
+    }
+ }
 
 /*
  * Read class attributes
@@ -456,6 +587,18 @@ static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
 			READ_U2(cls_idx, *base);
 			READ_U2(method_idx, *base);
 		}
+        // Do not skip me, otherwise NULL pointer will kid you
+        else if (strcmp(name, "Deprecated") == 0) {
+            if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
+                fprintf(stderr, "Deprecated attribute is Invalid\n");
+                exit(-1);
+            }
+        }
+        else if (strcmp(name, "RuntimeVisibleAnnotations") == 0) {
+            U2 anno_num;
+            READ_U2(anno_num, *base);
+            readAnnotations(class, anno_num, base);
+        }
 		else {
 			printf ("Unknown class attribute:%s\n", name);
             *base += attr_length;
