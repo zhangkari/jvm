@@ -197,11 +197,16 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
 			if (!strcmp(name, "ConstantValue")) {
 				READ_U2(const_value_idx, *base);	
 				class->fields[i].constant = constPool->entries[const_value_idx].tag;
+
 			} else if (!strcmp(name, "Signature")) {
 				U2 signature_idx;
 				READ_U2(signature_idx, *base);
 				//printf("signature:%s\n", constPool->entries[signature_idx].info.utf8_info.bytes);
-			}
+
+			} else {
+                printf("Unknown field attribute: %s\n", name);
+                *base += attr_length;
+            }
 		} // for (j = 0;
 	} // for (i = 0;
 
@@ -452,7 +457,8 @@ static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
 			READ_U2(method_idx, *base);
 		}
 		else {
-			printf ("Unknown attribute:%s\n", name);
+			printf ("Unknown class attribute:%s\n", name);
+            *base += attr_length;
 		}
 	}
 }
