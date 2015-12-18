@@ -50,15 +50,6 @@ bool isEmpty(JavaStack *stack) {
 	return stack->top < 1;
 }
 
-
-void initMem(InitArgs *args) {
-
-}
-
-void initGC(InitArgs *args) {
-
-}
-
 void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != args || NULL != vm);
 	vm->initArgs = args;
@@ -73,6 +64,8 @@ void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != env->stackArea);
 
     env->frame_stack = (JavaStack *)sysAlloc(env->stackArea, sizeof(JavaStack));
+	memset(env->frame_stack, 0, sizeof(JavaStack));
+
     assert(NULL != env->frame_stack);
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
@@ -124,6 +117,8 @@ void startVM(VM *vm) {
 	}
 
 	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
+	// Used as a root node by gc to mark garbage in the future
+	vm->execEnv->mainMethod = mainMethod;
 	executeMethod(vm, mainMethod);
 }
 

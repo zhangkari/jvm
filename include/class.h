@@ -176,23 +176,36 @@ typedef struct Slot {
 } Slot;
 
 /*
- * Local variable table
+ * SlotBuffer
  */
-typedef struct LocalVarTable {
-    Slot *slotTbl;
-    U4    slotCnt;
-} LocalVarTable;
+typedef struct SlotBuffer {
+    Slot *slots;	// slot list
+    U4    validCnt;	// valid slot count
+	U4	  capacity;	// capacity of slot list
+} SlotBuffer;
+
+typedef SlotBuffer LocalVarTable;
+typedef SlotBuffer OperandStack;
 
 /**
- * StackFrame has the same structure with LocalVarTable
+ * SlotBufferPool
  */
-typedef LocalVarTable StackFrame;
+typedef struct SlotBufferPool {
+	SlotBuffer *buffers;
+	U4			count;
+} SlotBufferPool;
+
+typedef struct StackFrame {
+	LocalVarTable *localTbl;
+	OperandStack  *opdStack;
+	ConstPool	  *constPool;
+} StackFrame;
 
 /*
  * //OPTIMIZE
  * Stack frame pool for reUse Stack frame.
  * using item is in front & free item is in back.
- * Not really free item to avoid memory avoid
+ * Not really free item to avoid memory fragment
  */
 typedef struct StackFramePool {
 	U4			poolSize;
@@ -206,8 +219,8 @@ typedef struct MethodEntry {
 	char            *type;
 	char            *signature; 
 	U2	            acc_flags;
-    StackFrame      stack_frame;
-    LocalVarTable   local_tbl;
+	U2				max_stack;
+	U2				max_locals;
 	U2	            args_count;
 	U4	            code_length;
 	void            *code;
@@ -275,5 +288,31 @@ extern int loadClassFromJar(char *path, Class ***classes);
  * Log the information of ClassEntry
  */
 extern void logClassEntry(ClassEntry* clsEntry);
+
+/*
+ * Create a specified capability SlotBufferPool
+ */
+extern SlotBufferPool* createSlotBufferPool(int cap);
+
+/*
+ * Destroy SlotBufferPool
+ */
+extern void destroySlotBufferPool(SlotBufferPool* pool);
+
+/*
+ * Obtain a SlotBuffer.
+ * BE CAREFUL: call recycleSlotBuffer to release
+ */
+extern SlotBuffer* obtainSlotBuffer(SlotBufferPool* pool);
+
+/*
+ * Recyle SlotBuffer for reuse.
+ */
+extern void recycleSlotBuffer(SlotBufferPool* pool, SlotBuffer* slotbuf);
+
+/*
+ * Ensure SlotBuffer capability
+ */
+extern int ensureSlotBufferCap(SlotBuffer* buffer, int count);
 
 #endif

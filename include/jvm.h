@@ -20,7 +20,7 @@
 
 #define DEFAULT_MIN_HEAP 16*MB
 #define DEFAULT_MAX_HEAP 128*MB
-#define DEFAULT_STACK 246*KB
+#define DEFAULT_STACK 256*KB
 
 /*
  * size of emergency area - big enough to create
@@ -95,8 +95,6 @@ extern int parseCmdLine(int argc, char **argv, Property **props);
 extern int readSysConfig(char *path, Property *props);
 extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 
-extern void initMem(InitArgs *args);
-extern void initGC(InitArgs *args);
 extern void initVM(InitArgs *args, VM *vm);
 extern void startVM(VM *vm);
 extern void destroyVM(VM *vm);

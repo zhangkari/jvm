@@ -265,16 +265,10 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 		if (!strcmp(name, "Code")) {
 			U2 max_slot;
 			READ_U2(max_slot, *base);
-			method->stack_frame.slotCnt = max_slot;
-			Slot *slots = (Slot *)calloc(max_slot, sizeof (Slot));
-			assert (NULL != slots);
-			method->stack_frame.slotTbl = slots;
+			method->max_stack = max_slot;
 
 			READ_U2(max_slot, *base);
-			method->local_tbl.slotCnt = max_slot;
-			slots = (Slot *)calloc(max_slot, sizeof(Slot));
-			assert (NULL != slots);
-			method->local_tbl.slotTbl = slots;
+			method->max_locals = max_slot;
 
 			U4 code_length;
 			READ_U4(code_length, *base);
@@ -1149,8 +1143,8 @@ void logClassEntry(ClassEntry *clsEntry)
 
         printf("  Code:\n");
         printf("   Stack=%d, Locals=%d, Args_size=%d\n",
-                    clsEntry->methods[i].stack_frame.slotCnt,
-                    clsEntry->methods[i].local_tbl.slotCnt,
+                    clsEntry->methods[i].max_stack,
+                    clsEntry->methods[i].max_locals,
                     clsEntry->methods[i].args_count);
 
         int j;
@@ -1172,4 +1166,49 @@ Class* allocClass(MemoryArea* area)
 	int size = sizeof(Class) + sizeof(ClassEntry);
 	Class* class = calloc(1, size);
 	return class;
+}
+
+/*
+ * Create a specified capability SlotBufferPool
+ */
+SlotBufferPool* createSlotBufferPool(int cap) 
+{
+#define STACK_MAX_DEPTH 256
+	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
+
+	// TODO
+}
+
+/*
+ * Destroy SlotBufferPool
+ */
+void destroySlotBufferPool(SlotBufferPool* pool) 
+{
+
+	// TODO
+}
+
+/*
+ * Obtain a SlotBuffer.
+ * BE CAREFUL: call recycleSlotBuffer to release
+ */
+SlotBuffer* obtainSlotBuffer(SlotBufferPool* pool)
+{
+
+}
+
+/*
+ * Recyle SlotBuffer for reuse.
+ */
+void recycleSlotBuffer(SlotBufferPool* pool, SlotBuffer* slotbuf)
+{
+
+}
+
+/*
+ * Ensure SlotBuffer capability
+ */
+int ensureSlotBufferCap(SlotBuffer* buffer, int count)
+{
+
 }
