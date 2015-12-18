@@ -10,6 +10,10 @@
  *
  *  3. Update READ_U1, READ_U2 and READ_U4 
  *           by kari.zhang @ 2015-12-16 
+ *
+ *	4. update defineClass() & Remove debug 
+ *			log (I shoud add readAttribs() in the futrue)
+ *			by kari.zhang @ 2015-12-18
  *******************************************************/
 
 #include <assert.h>
@@ -42,8 +46,8 @@
 
 
 // Declare static functions
- static void readAnnotations(ClassEntry*, U2, U1**);
-
+static void readAnnotations(ClassEntry*, U2, U1**);
+static void readAnnotationElementValue(ClassEntry*, U1**);
 
 // Deprecated attribute length must be 0
 #define DEPRECATED_ATTR_LEN_VALUE 0
@@ -217,13 +221,21 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
                     exit(-1);
                 }
             }
+			else if (!strcmp(name, "Synthetic")) {
+                if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
+                    fprintf(stderr, "Synthetic attribute is Invalid\n");
+                    exit(-1);
+                }
+            }
             else if (strcmp(name, "RuntimeVisibleAnnotations") == 0) {
                 U2 anno_num;
                 READ_U2(anno_num, *base);
                 readAnnotations(class, anno_num, base);
             }
             else {
+				/*
                 printf("Unknown field attribute: %s\n", name);
+				*/
                 *base += attr_length;
             }
 		} // for (j = 0;
@@ -360,7 +372,9 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 #endif
                
 				else {
+					/*
 					printf("Unknown Code attr:%s\n", name);
+					*/
 					*base += attr_length;
 				}
 			}	// end for (Code attr's attr count)
@@ -390,10 +404,20 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
             READ_U2(anno_num, *base);
             readAnnotations(class, anno_num, base);
         }
-
+		else if (!strcmp(name, "Synthetic")) {
+			if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
+				fprintf(stderr, "Synthetic attribute is Invalid\n");
+				exit(-1);
+			}
+		}
+		else if (!strcmp(name, "AnnotationDefault")) {
+			readAnnotationElementValue(class, base);
+		}
         else {
 			*base += attr_length;
+			/*
 			printf("Unknown method attr:%s\n", name);
+			*/
 		}
 	}	// for (method attr count)
 }
@@ -464,11 +488,14 @@ static void readAnnotationElementValue(ClassEntry* class, U1** base) {
             break;
 
         case 'I':
-            printf("I\n");
+			// TODO
+            *base += 2;
+
             break;
 
         case 'J':
-            printf("J\n");
+			// TODO
+            *base += 2;
             break;
 
         case 'S':
@@ -587,7 +614,6 @@ static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
 			READ_U2(cls_idx, *base);
 			READ_U2(method_idx, *base);
 		}
-        // Do not skip me, otherwise NULL pointer will kid you
         else if (strcmp(name, "Deprecated") == 0) {
             if (attr_length != DEPRECATED_ATTR_LEN_VALUE) {
                 fprintf(stderr, "Deprecated attribute is Invalid\n");
@@ -631,7 +657,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	U4 magic;
 	READ_U4(magic, base);
 	if (magic != MAGIC_NUMBER) {
-		fprintf(stderr, "Unrecognized class format\n");
+		fprintf(stderr, "Failed load %s, Unrecognized class format\n", classname);
 		return NULL;
 	}
 
@@ -672,7 +698,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	U2 super_class;
 	READ_U2(super_class, base);
 	if (0 == super_class) {
-		printf ("super class index = 0\n");
+		// printf ("super class index = 0\n");
 	}
 	else if(super_class > 0 && super_class < constPool->length) {
 		name = constPool->entries[constPool->entries[super_class].info.class_info.name_index].info.utf8_info.bytes;
@@ -825,7 +851,7 @@ static void on_progress (int index,
 		return;
 	}
 
-    printf ("%-4d name:%s\n", index, name);
+   // printf ("%-4d name:%s\n", index, name);
 	if (NULL != param && size > 0) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
