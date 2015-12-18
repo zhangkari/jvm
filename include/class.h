@@ -182,6 +182,7 @@ typedef struct SlotBuffer {
     Slot *slots;	// slot list
     U4    validCnt;	// valid slot count
 	U4	  capacity;	// capacity of slot list
+	U1	  use;		// 1 means in use, 0 means free
 } SlotBuffer;
 
 typedef SlotBuffer LocalVarTable;
@@ -192,7 +193,7 @@ typedef SlotBuffer OperandStack;
  */
 typedef struct SlotBufferPool {
 	SlotBuffer *buffers;
-	U4			count;
+	U4			capacity;
 } SlotBufferPool;
 
 typedef struct StackFrame {
@@ -292,23 +293,25 @@ extern void logClassEntry(ClassEntry* clsEntry);
 /*
  * Create a specified capability SlotBufferPool
  */
-extern SlotBufferPool* createSlotBufferPool(int cap);
+extern int createSlotBufferPool(int cap);
 
 /*
  * Destroy SlotBufferPool
  */
-extern void destroySlotBufferPool(SlotBufferPool* pool);
+extern void destroySlotBufferPool();
 
 /*
  * Obtain a SlotBuffer.
  * BE CAREFUL: call recycleSlotBuffer to release
  */
-extern SlotBuffer* obtainSlotBuffer(SlotBufferPool* pool);
+extern SlotBuffer* obtainSlotBuffer();
+
+extern SlotBuffer* obtainCapSlotBuffer(int cap);
 
 /*
  * Recyle SlotBuffer for reuse.
  */
-extern void recycleSlotBuffer(SlotBufferPool* pool, SlotBuffer* slotbuf);
+extern void recycleSlotBuffer(SlotBuffer* slotbuf);
 
 /*
  * Ensure SlotBuffer capability

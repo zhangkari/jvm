@@ -52,6 +52,9 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 // Deprecated attribute length must be 0
 #define DEPRECATED_ATTR_LEN_VALUE 0
 
+// SlotBufferPool
+static SlotBufferPool *sSlotBufferPool = NULL;
+
 /*
  * Read Constant Value Pool
  */
@@ -1171,38 +1174,92 @@ Class* allocClass(MemoryArea* area)
 /*
  * Create a specified capability SlotBufferPool
  */
-SlotBufferPool* createSlotBufferPool(int cap) 
+int createSlotBufferPool(int cap) 
 {
+	if (sSlotBufferPool != NULL) {
+		assert ( 0 && "SlotBuffer Pool already exist");
+	}
+
 #define STACK_MAX_DEPTH 256
 	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
+	
+	SlotBufferPool* pool = (SlotBufferPool *)calloc(1, sizeof(*pool));
+	if (NULL == pool) {
+		return -1;
+	}
 
-	// TODO
+	pool->capacity = cap;
+	pool->buffers = (SlotBuffer *)calloc(cap, sizeof(SlotBuffer));
+	if (NULL == pool->buffers) {
+		return -1;
+	}
+
+	sSlotBufferPool = pool;
+
+	return 0;
 }
 
 /*
  * Destroy SlotBufferPool
  */
-void destroySlotBufferPool(SlotBufferPool* pool) 
+void destroySlotBufferPool() 
 {
-
-	// TODO
+	SlotBufferPool *pool = sSlotBufferPool;
+	if (NULL != pool) {
+		if (NULL != pool->buffers) {
+			free (pool->buffers);
+			pool->buffers = NULL;
+		}
+		sSlotBufferPool = NULL;
+	}
 }
 
 /*
  * Obtain a SlotBuffer.
- * BE CAREFUL: call recycleSlotBuffer to release
+ * Notice: call recycleSlotBuffer to release !
  */
-SlotBuffer* obtainSlotBuffer(SlotBufferPool* pool)
+SlotBuffer* obtainSlotBuffer()
 {
+	assert(NULL != sSlotBufferPool);
 
+	SlotBufferPool* pool = sSlotBufferPool;
+	SlotBuffer *slot = NULL;
+	int i;
+	for (i = 0; i < pool->capacity; ++i) {
+		slot = pool->buffers + i;
+		if (!slot->use) {
+			slot->use = 1;
+			return slot;
+		}
+	}
+
+	printf("Failed obtain SlotBuffer in pool.\n");
+	printf("Please check if stack overflowed.\n");
+
+	return NULL;
+}
+
+/*
+ * Obtain an SlotBuffer that match the specified capacity
+ * It takes the same effect with 
+ *  obtainSlotBuffer + ensureCapSlotBufferCap
+ */
+SlotBuffer* obtainCapSlotBuffer(int cap)
+{
+	assert (cap > 0);
+
+	assert (0 && "Not implemented yet!");
 }
 
 /*
  * Recyle SlotBuffer for reuse.
  */
-void recycleSlotBuffer(SlotBufferPool* pool, SlotBuffer* slotbuf)
+void recycleSlotBuffer(SlotBuffer* slotbuf)
 {
+	assert (NULL != slotbuf);
 
+	slotbuf->use = 0;
+	slotbuf->validCnt = 0;
 }
 
 /*
@@ -1210,5 +1267,25 @@ void recycleSlotBuffer(SlotBufferPool* pool, SlotBuffer* slotbuf)
  */
 int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 {
+	assert (NULL != buffer && count >= 1);
 
+	if (buffer->validCnt > 0) {
+		printf("Unexpected value occured. slot buffer is not empty.\n");
+		assert (0 && "slot buffer must be empty");
+	}
+
+	if (buffer->capacity >= count) {
+		return 0;
+	}
+
+	Slot *slots = NULL;
+	slots = (Slot *)realloc(buffer->slots, count * sizeof(Slot));
+	if (NULL == slots) {
+		return -1;
+	}
+
+	buffer->slots = slots;
+	buffer->capacity = count;
+
+	return 0;
 }

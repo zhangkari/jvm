@@ -74,6 +74,12 @@ void initVM(InitArgs *args, VM *vm) {
     }
 
     vm->execEnv = env;
+
+#define SLOT_BUFF_POOL_SIZE 128
+	if (createSlotBufferPool(SLOT_BUFF_POOL_SIZE) < 0) {
+		printf("Failed create slot buffer pool.\n");
+		exit (-1);
+	}
 }
 
 /**
@@ -123,7 +129,9 @@ void startVM(VM *vm) {
 }
 
 void destroyVM(VM *vm) {
+	destroySlotBufferPool();
 
+	assert (NULL != vm);
 }
 
 /* 
