@@ -8,6 +8,8 @@
 
 #include "comm.h"
 
+#define STACK_MAX_DEPTH 226
+
 typedef enum tag_value {
     CONST_Utf8			= 1,
     CONST_Integer		= 3,
@@ -192,7 +194,7 @@ typedef SlotBuffer OperandStack;
  * SlotBufferPool
  */
 typedef struct SlotBufferPool {
-	SlotBuffer *buffers;
+	SlotBuffer *slotbufs;
 	U4			capacity;
 } SlotBufferPool;
 
@@ -200,18 +202,12 @@ typedef struct StackFrame {
 	LocalVarTable *localTbl;
 	OperandStack  *opdStack;
 	ConstPool	  *constPool;
+	U1			  use;
 } StackFrame;
 
-/*
- * //OPTIMIZE
- * Stack frame pool for reUse Stack frame.
- * using item is in front & free item is in back.
- * Not really free item to avoid memory fragment
- */
 typedef struct StackFramePool {
-	U4			poolSize;
-	U4			activeCnt;
-	StackFrame	*elements;
+	StackFrame *frames;
+	U4 capacity;
 } StackFramePool;
 
 typedef struct MethodEntry {
@@ -306,6 +302,11 @@ extern void destroySlotBufferPool();
  */
 extern SlotBuffer* obtainSlotBuffer();
 
+/*
+ * Obtain an SlotBuffer that match the specified capacity
+ * It takes the same effect with 
+ *  obtainSlotBuffer + ensureCapSlotBufferCap
+ */
 extern SlotBuffer* obtainCapSlotBuffer(int cap);
 
 /*
@@ -317,5 +318,26 @@ extern void recycleSlotBuffer(SlotBuffer* slotbuf);
  * Ensure SlotBuffer capability
  */
 extern int ensureSlotBufferCap(SlotBuffer* buffer, int count);
+
+/*
+ * Create a specified capability StackFramePool
+ */
+extern int createStackFramePool(int cap); 
+
+/*
+ * Destroy StackFramePool
+ */
+extern void destroyStackFramePool(); 
+
+/*
+ * Obtain a StackFrame.
+ * Notice: call recycleStackFrame to release !
+ */
+extern StackFrame* obtainStackFrame();
+
+/*
+ * Recyle StackFrame for reuse.
+ */
+extern void recycleStackFrame(StackFrame* frame);
 
 #endif

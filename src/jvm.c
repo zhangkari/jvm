@@ -27,12 +27,12 @@ bool pushStack(JavaStack *stack, StackFrame *frame) {
 	if (NULL == stack || NULL == frame) {
 		return FALSE;
 	}
-	if (stack->top + 1 >= stack->size) {
+	if (stack->top + 1 >= STACK_MAX_DEPTH) {
 		fprintf(stderr, "Stack is overflow\n");
 		return FALSE;
 	}
 
-	stack->base[++stack->top] = frame;
+	stack->frames[++stack->top] = frame;
 	return TRUE;
 }
 
@@ -42,10 +42,10 @@ StackFrame* popStack(JavaStack *stack) {
 		return NULL;
 	}
 
-	return stack->base[--stack->top];
+	return stack->frames[--stack->top];
 }
 
-bool isEmpty(JavaStack *stack) {
+bool isStackEmpty(JavaStack *stack) {
 	assert(NULL != stack);
 	return stack->top < 1;
 }
@@ -63,10 +63,10 @@ void initVM(InitArgs *args, VM *vm) {
 	env->stackArea = createMemoryArea(args->java_stack);
 	assert(NULL != env->stackArea);
 
-    env->frame_stack = (JavaStack *)sysAlloc(env->stackArea, sizeof(JavaStack));
-	memset(env->frame_stack, 0, sizeof(JavaStack));
+    env->javaStack = (JavaStack *)sysAlloc(env->stackArea, sizeof(JavaStack));
+	memset(env->javaStack, 0, sizeof(JavaStack));
 
-    assert(NULL != env->frame_stack);
+    assert(NULL != env->javaStack);
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
         printf("Error: Failed load run time class.\n");
@@ -75,11 +75,16 @@ void initVM(InitArgs *args, VM *vm) {
 
     vm->execEnv = env;
 
-#define SLOT_BUFF_POOL_SIZE 128
-	if (createSlotBufferPool(SLOT_BUFF_POOL_SIZE) < 0) {
+	if (createSlotBufferPool(STACK_MAX_DEPTH) < 0) {
 		printf("Failed create slot buffer pool.\n");
 		exit (-1);
 	}
+
+	if (createStackFramePool(STACK_MAX_DEPTH) < 0) {
+		printf("Failed create StackFrame pool.\n");
+		exit (-1);
+	}
+
 }
 
 /**

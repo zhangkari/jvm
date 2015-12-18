@@ -52,8 +52,9 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 // Deprecated attribute length must be 0
 #define DEPRECATED_ATTR_LEN_VALUE 0
 
-// SlotBufferPool
+// static Pools
 static SlotBufferPool *sSlotBufferPool = NULL;
+static StackFramePool *sStackFramePool = NULL;
 
 /*
  * Read Constant Value Pool
@@ -1180,7 +1181,6 @@ int createSlotBufferPool(int cap)
 		assert ( 0 && "SlotBuffer Pool already exist");
 	}
 
-#define STACK_MAX_DEPTH 256
 	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
 	
 	SlotBufferPool* pool = (SlotBufferPool *)calloc(1, sizeof(*pool));
@@ -1189,8 +1189,8 @@ int createSlotBufferPool(int cap)
 	}
 
 	pool->capacity = cap;
-	pool->buffers = (SlotBuffer *)calloc(cap, sizeof(SlotBuffer));
-	if (NULL == pool->buffers) {
+	pool->slotbufs = (SlotBuffer *)calloc(cap, sizeof(SlotBuffer));
+	if (NULL == pool->slotbufs) {
 		return -1;
 	}
 
@@ -1206,9 +1206,9 @@ void destroySlotBufferPool()
 {
 	SlotBufferPool *pool = sSlotBufferPool;
 	if (NULL != pool) {
-		if (NULL != pool->buffers) {
-			free (pool->buffers);
-			pool->buffers = NULL;
+		if (NULL != pool->slotbufs) {
+			free (pool->slotbufs);
+			pool->slotbufs = NULL;
 		}
 		sSlotBufferPool = NULL;
 	}
@@ -1226,7 +1226,7 @@ SlotBuffer* obtainSlotBuffer()
 	SlotBuffer *slot = NULL;
 	int i;
 	for (i = 0; i < pool->capacity; ++i) {
-		slot = pool->buffers + i;
+		slot = pool->slotbufs + i;
 		if (!slot->use) {
 			slot->use = 1;
 			return slot;
@@ -1288,4 +1288,81 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 	buffer->capacity = count;
 
 	return 0;
+}
+
+/*
+ * Create a specified capability StackFramePool
+ */
+int createStackFramePool(int cap) 
+{
+	if (sStackFramePool != NULL) {
+		assert ( 0 && "StackFrame Pool already exist");
+	}
+
+	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
+	
+	StackFramePool* pool = (StackFramePool *)calloc(1, sizeof(*pool));
+	if (NULL == pool) {
+		return -1;
+	}
+
+	pool->capacity = cap;
+	pool->frames = (StackFrame *)calloc(cap, sizeof(StackFrame));
+	if (NULL == pool->frames) {
+		return -1;
+	}
+
+	sStackFramePool = pool;
+
+	return 0;
+}
+
+/*
+ * Destroy StackFramePool
+ */
+void destroyStackFramePool() 
+{
+	StackFramePool *pool = sStackFramePool;
+	if (NULL != pool) {
+		if (NULL != pool->frames) {
+			free (pool->frames);
+			pool->frames = NULL;
+		}
+		sStackFramePool = NULL;
+	}
+}
+
+/*
+ * Obtain a StackFrame.
+ * Notice: call recycleStackFrame to release !
+ */
+StackFrame* obtainStackFrame()
+{
+	assert(NULL != sStackFramePool);
+
+	StackFramePool* pool = sStackFramePool;
+	StackFrame *frame = NULL;
+	int i;
+	for (i = 0; i < pool->capacity; ++i) {
+		frame = pool->frames + i;
+		if (!frame->use) {
+			frame->use = 1;
+			return frame;
+		}
+	}
+
+	printf("Failed obtain StackFrame in pool.\n");
+	printf("Please check if stack overflowed.\n");
+
+	return NULL;
+}
+
+/*
+ * Recyle StackFrame for reuse.
+ */
+void recycleStackFrame(StackFrame* frame)
+{
+	assert (NULL != frame);
+
+	frame->use = 0;
 }

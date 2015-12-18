@@ -67,8 +67,7 @@ typedef struct InitArgs {
  */
 typedef struct JavaStack {
 	int top;
-	int size;
-	StackFrame **base;
+	StackFrame **frames;
 } JavaStack;
 
 /*
@@ -77,7 +76,7 @@ typedef struct JavaStack {
 typedef struct ExecEnv {
 	MemoryArea *heapArea;		// java heap memory area
 	MemoryArea *stackArea;		// java stack memory area
-    JavaStack  *frame_stack;	// JavaStack to indicate stack frame
+    JavaStack  *javaStack;		// JavaStack to store stack frames
 	U2 userClsCnt;				// user class count
 	Class **userClsArea;	    // user class list exclude entry main()
 	U2 rtClsCnt;				// runtime class count
@@ -90,13 +89,26 @@ typedef struct VM {
     ExecEnv *execEnv;			// executing environment
 } VM;
 
+/**
+ * Set the initial arguments to java virtual machine
+ */
 extern void setDefaultInitArgs(InitArgs *args);
 extern int parseCmdLine(int argc, char **argv, Property **props);
 extern int readSysConfig(char *path, Property *props);
 extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 
+/**
+ * Manage java virtual machine
+ */
 extern void initVM(InitArgs *args, VM *vm);
 extern void startVM(VM *vm);
 extern void destroyVM(VM *vm);
+
+/*
+ * Push stack frame into stack
+ */
+extern bool pushStack(JavaStack *stack, StackFrame *frame);
+extern StackFrame* popStack(JavaStack *stack);
+extern bool isStackEmpty(JavaStack *stack);
 
 #endif
