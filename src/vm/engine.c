@@ -26,26 +26,32 @@ void executeMethod(VM *vm, MethodEntry *method)
 	OperandStack *oprdStack = obtainSlotBuffer();
 	assert (NULL != oprdStack);
 	if (ensureSlotBufferCap(oprdStack, method->max_stack) < 0) {
-		assert (0 && "Failed ensure operand statck capacity");
+		printf("Failed ensure operand statck capacity");
+        exit(-1);
 	}
 
 	LocalVarTable *localTbl = obtainSlotBuffer();
 	assert (NULL != localTbl);
 	if (ensureSlotBufferCap(localTbl, method->max_stack) < 0) {
-		assert (0 && "Failed ensure local variable table capacity");
+		printf("Failed ensure local variable table capacity");
+        exit(-1);
 	}
 
 	frame->localTbl  = localTbl;
 	frame->opdStack  = oprdStack;
 	frame->constPool = CLASS_CE(method->class)->constPool;
-
-	// Resolve compile error
-#if 0
+    
 	if (!pushStack(vm->execEnv->javaStack, frame)) {
 		printf ("Failed push stack frame to java stack.\n");
 		exit (1);
 	}
-#endif
+
+    const Instruction *inst = NULL;
+    int i;
+    for (i = 0; i < method->instCnt; ++i) {
+       inst = method->instTbl[i]; 
+       inst->handler(vm->execEnv);
+    }
 
 	printf("execute %s finish.\n", method->name);
 }

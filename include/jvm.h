@@ -62,14 +62,6 @@ typedef struct InitArgs {
 	void (*abort)(void);        // System.abort()
 } InitArgs;
 
-/**
- * Java stack
- */
-typedef struct JavaStack {
-	int top;
-	StackFrame **frames;
-} JavaStack;
-
 /*
  * Java virtual machine executing environment in runtime
  */
@@ -103,12 +95,5 @@ extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 extern void initVM(InitArgs *args, VM *vm);
 extern void startVM(VM *vm);
 extern void destroyVM(VM *vm);
-
-/*
- * Push stack frame into stack
- */
-extern bool pushStack(JavaStack *stack, StackFrame *frame);
-extern StackFrame* popStack(JavaStack *stack);
-extern bool isStackEmpty(JavaStack *stack);
 
 #endif

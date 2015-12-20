@@ -7,6 +7,7 @@
 #define __CLASS__H__
 
 #include "comm.h"
+#include "instruction.h"
 
 #define STACK_MAX_DEPTH 226
 
@@ -210,6 +211,14 @@ typedef struct StackFramePool {
 	U4 capacity;
 } StackFramePool;
 
+/**
+ * Java stack
+ */
+typedef struct JavaStack {
+	int top;
+	StackFrame **frames;
+} JavaStack;
+
 typedef struct MethodEntry {
 	Class           *class;
 	char            *name;
@@ -221,6 +230,8 @@ typedef struct MethodEntry {
 	U2	            args_count;
 	U4	            code_length;
 	void            *code;
+    U4              instCnt;
+    Instruction     **instTbl;
 	ExceptionTable  excep_tbl;
 } MethodEntry;
 
@@ -339,5 +350,20 @@ extern StackFrame* obtainStackFrame();
  * Recyle StackFrame for reuse.
  */
 extern void recycleStackFrame(StackFrame* frame);
+
+/*
+ * Push stack frame into stack
+ */
+extern bool pushStack(JavaStack *stack, StackFrame *frame);
+
+/*
+ * Pop stack frame from java stack
+ */
+extern StackFrame* popStack(JavaStack *stack);
+
+/*
+ * Check whether java stack is empry
+ */
+extern bool isStackEmpty(JavaStack *stack);
 
 #endif

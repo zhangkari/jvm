@@ -17,33 +17,16 @@
  *******************************************************/
 
 #include <assert.h>
-#include <byteswap.h>
+#include <endian_swap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "class.h"
 #include "instruction.h"
 #include "libjar.h"
+#include "mem.h"
 
 #define MAGIC_NUMBER 0XCAFEBABE
-
-#define READ_U1(u1, data) do {										\
-	u1 = *((U1*)(data));											    \
-	(data)++;                                                         \
-} while (0);
-
-#define READ_U2(u2, data) do {										\
-    u2 = *((U2*)(data));                                            \
-    u2 = bswap_16(u2);                                              \
-    (data) += 2;                                                   \
-} while (0);
-
-#define READ_U4(u4, data) do {										\
-    u4 = *((U4*)(data));                                            \
-    u4 = bswap_32(u4);                                              \
-	(data) += 4;                                                    \
-} while (0);
-
 
 // Declare static functions
 static void readAnnotations(ClassEntry*, U2, U1**);
@@ -246,6 +229,48 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
 	} // for (i = 0;
 }
 
+/*
+ * Extract instructions from byte codes
+ * Parameters:
+ *		MethodEntry:	method
+ */
+static void extractInstructions(MethodEntry *method) {
+
+    assert (NULL != method);
+
+    if (0 == method->code_length) {
+        return;
+    }
+
+    U4 instCnt = 0;
+    U1* code = NULL;
+    const Instruction* inst = NULL; 
+
+    int j = 0;
+    // count instructions
+    while (j <method->code_length) {
+        code = (U1 *)method->code + j;
+        inst = getCachedInstruction(code, method->code_length - j, j);
+        j += inst->length; 
+        ++instCnt;
+
+        printf("inst name:%s\n", inst->name);
+    }
+
+    /*
+    method->instCnt = instCnt;
+    method->instTbl = (Instruction**) calloc(instCnt, sizeof(Instruction *));
+    instCnt = 0;
+    for (j = 0; j <method->code_length; ++j) {
+        code = (U1 *)method->code + j;
+        inst = getCachedInstruction(code, method->code_length - j, j);
+        j += inst->tag; 
+        method->instTbl[instCnt++] = (Instruction *)inst;
+    }
+
+    */
+}
+
 /**
  * Read class methods' contributes
  */
@@ -418,6 +443,8 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 			*/
 		}
 	}	// for (method attr count)
+
+    //extractInstructions(method);
 }
 
 /**
@@ -849,11 +876,14 @@ static void on_progress (int index,
 		return;
 	}
 
-   // printf ("%-4d name:%s\n", index, name);
+    //printf ("%-4d name:%s\n", index, name);
 	if (NULL != param && size > 0) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
 		cls[index] = defineClass(name, mem, size);
+        if (NULL != cls[index]) {
+            logClassEntry(CLASS_CE(cls[index]));
+        }
 	}
 }
 
@@ -1151,13 +1181,15 @@ void logClassEntry(ClassEntry *clsEntry)
                     clsEntry->methods[i].max_locals,
                     clsEntry->methods[i].args_count);
 
-        int j;
-        for (j = 0; j < clsEntry->methods[i].code_length; ++j) {
+        int j = 0;
+        while (j < clsEntry->methods[i].code_length) {
             U1 *code = (U1 *)clsEntry->methods[i].code + j;
+            // debug stub
+            printf("class name:%s\n", clsEntry->name);
 			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j, j);
 			printf("   %d ", j);
 			logInstruction(inst);
-            j += inst->tag; 
+            j += inst->length; 
         }
 
         printf("  LineNumberTable:\n");
@@ -1366,3 +1398,34 @@ void recycleStackFrame(StackFrame* frame)
 
 	frame->use = 0;
 }
+
+/*
+ * Push stack frame into stack
+ */
+bool pushStack(JavaStack *stack, StackFrame *frame) {
+	if (NULL == stack || NULL == frame) {
+		return FALSE;
+	}
+	if (stack->top + 1 >= STACK_MAX_DEPTH) {
+		fprintf(stderr, "Stack is overflow\n");
+		return FALSE;
+	}
+
+	stack->frames[++stack->top] = frame;
+	return TRUE;
+}
+
+StackFrame* popStack(JavaStack *stack) {
+	if (NULL == stack || stack->top < 1) {
+		fprintf(stderr, "Stack is downflow\n");
+		return NULL;
+	}
+
+	return stack->frames[--stack->top];
+}
+
+bool isStackEmpty(JavaStack *stack) {
+	assert(NULL != stack);
+	return stack->top < 1;
+}
+

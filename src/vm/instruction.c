@@ -5,19 +5,11 @@
  ************************************/
 
 #include <assert.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <comm.h>
+#include <endian_swap.h>
 #include <instruction.h>
-
-#define READ_U1(u1, data) do {                          \
-    u1 = *((U1 *)data);                                 \
-} while (0);
-
-#define READ_U2(u2, data) do {                          \
-    U1 u1 = *((U1 *)data++);                            \
-    u2 = u1;                                            \
-    u2<<=8;                                             \
-    u1 = *((U1 *)data);                                 \
-    u2 += u1;                                           \
-} while (0);
 
 enum {
 	opcode_min = -1,
@@ -434,31 +426,6 @@ DECL_FUNC(ifnonnull);
 DECL_FUNC(goto_w);
 DECL_FUNC(jsr_w);
 
-/**
- * Most instructions have 0 or 1 operand. 
- * The table define these instructions which have 2 operands
- */
-static U1 sTwoOperandsTable[] = {
-    iinc    
-};
-
-/*
- * If the opcode has 2 operands
- * 
- */
-bool hasTwoOperands (U1 opcode)
-{
-    int size = sizeof (sTwoOperandsTable) / sizeof (sTwoOperandsTable[0]);
-    int i;
-    for (i = 0; i < size; ++i) {
-        if (sTwoOperandsTable[i] == opcode) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
 /*
  * These instructions has 1 operand, but the operand need add the offset
  */
@@ -489,7 +456,7 @@ bool needAddOffset (U1 opcode)
 
 #define INST_FUNC(X) func_inst_##X
 #define _T(X) #X
-#define INIT_INST(X, Y) X, _T(X), 0, Y, INST_FUNC(X)
+#define INIT_INST(X, Y) X, _T(X), 0, Y, (Y + 1), INST_FUNC(X)
 static Instruction sInstructionTable[] = {
 	INIT_INST(nop, 0),          // 0x00
 	INIT_INST(aconst_null, 0),  // 0x01
@@ -661,8 +628,8 @@ static Instruction sInstructionTable[] = {
 	INIT_INST(_goto, 2),		// 0xa7
 	INIT_INST(jsr, 2),			// 0xa8
 	INIT_INST(ret, 1),			// 0xa9
-	INIT_INST(tableswitch, -1),	// 0xaa
-	INIT_INST(lookupswitch,-1),	// 0xab
+	INIT_INST(tableswitch, TABLE_SWITCH),	// 0xaa 
+	INIT_INST(lookupswitch, LOOKUP_SWITCH),	// 0xab
 	INIT_INST(ireturn, 0),		// 0xac
 	INIT_INST(lreturn, 0),		// 0xad
 	INIT_INST(freturn, 0),		// 0xae
@@ -724,42 +691,24 @@ const char* stropcode(int opcode) {
  */
 const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
 {
-    /*
-	if (NULL == code || codelen < 0) {
-		return NULL;
-	}
-    */
     assert (NULL != code && codelen > 0);
 
 	U1 *buff = code;
 	U1 opcode = *buff;
-    /*
-	if (!validate_opcode(opcode)) {
-		return NULL;
-	}
-    */
     assert( validate_opcode(opcode) );
 
     buff++;
-
 	U1 tag = sInstructionTable[opcode].tag;
 	if (1 == tag) {
-        /*
-		if (codelen < 1) {
-			return NULL;
-		}
-        */
+
         assert (codelen >= 1);
 
         U1 u1;
         READ_U1(u1, buff);
 		sInstructionTable[opcode].operand.u1 = *buff;
+
 	} else if (2 == tag) {
-        /*
-		if (codelen < 2) {
-			return NULL;
-		}
-        */
+
         assert (codelen >= 2);
 
         U2 u2;
@@ -768,11 +717,121 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
             u2 += offset;
         }
 		sInstructionTable[opcode].operand.u2 = u2;
-	} else if (-1 == tag){
-		printf("tag = -1\n");
-	} else if (3 == tag) {
+
+	} 
+#if 0
+    else if (TABLE_SWITCH == tag){
+
+        offset += 1;
+
+        int length = 1;
+        int padding = 0;
+
+        if (offset % 4 != 0) {
+            padding = 4 - (offset % 4);
+        }
+
+        // buff++  before
+        buff += padding;
+        length += padding;
+
+        uintptr_t ptr = (uintptr_t)buff;
+        assert (0 == ptr % 4);
+
+        Instruction *inst = sInstructionTable + opcode;
+        int default_position;
+        READ_U4(default_position, buff);
+        inst->operand.tblSw.defaultPos = default_position + offset;
+        length += 4;
+
+        int min;
+        READ_INT32(min, buff);
+        inst->operand.tblSw.caseMin = min;
+        length += 4;
+
+        int max;
+        READ_INT32(max, buff);
+        inst->operand.tblSw.caseMax = max;
+        length += 4;
+
+        U4 pairCnt;
+        pairCnt = max - min + 1;
+        inst->operand.tblSw.pairCnt = pairCnt;
+        CasePair *pairs = (CasePair *)calloc(pairCnt, sizeof(CasePair));
+
+        printf("[%d, %d],pairCnt:%d\n", min, max, pairCnt);
+        assert (NULL != pairs);
+        inst->operand.tblSw.pairs = pairs;
+
+        int i;
+        for (i = 0; i < pairCnt; ++i) {
+            int value;
+            U4 pos;
+            READ_U4(pos, buff);
+            value = i + min;
+            pos += offset;
+            (pairs + i)->value = value;
+            (pairs + i)->position = pos;
+            length += 4;
+        }
+        inst->length = length;
+
+    } else if (LOOKUP_SWITCH) {
+        offset += 1;
+
+        int length = 1;
+        int padding = 0;
+
+        if (offset % 4 != 0) {
+            padding = 4 - (offset % 4);
+        }
+
+        // buff++  before
+        buff += padding;
+        length += padding;
+
+        uintptr_t ptr = (uintptr_t)buff;
+        assert (0 == ptr % 4);
+
+        Instruction *inst = sInstructionTable + opcode;
+        int default_position;
+        READ_U4(default_position, buff);
+        inst->operand.tblSw.defaultPos = default_position + offset;
+        length += 4;
+
+        U4 pairCnt;
+        READ_U4(pairCnt, buff);
+        length += 4;
+        inst->operand.tblSw.pairCnt = pairCnt;
+        CasePair *pairs = (CasePair *)calloc(pairCnt, sizeof(CasePair));
+
+        printf("pairCnt:%d\n", pairCnt);
+        assert (NULL != pairs);
+        inst->operand.tblSw.pairs = pairs;
+
+        int i;
+        for (i = 0; i < pairCnt; ++i) {
+            int value;
+            READ_INT32(value, buff);
+
+            U4 pos;
+            READ_U4(pos, buff);
+            pos += offset;
+
+            (pairs + i)->value = value;
+            (pairs + i)->position = pos;
+            length += 8;
+        }
+        inst->length = length;
+
+
+	}
+    #endif 
+    else if (3 == tag) {
 		printf("tag = 3\n");
-	} else if (4 == tag) {
+
+	}
+    else if (4 == tag) {
 		printf("tag = 4\n");
 	}
 
@@ -789,28 +848,41 @@ void logInstruction(const Instruction* inst) {
 		return;
 	}
 
+    int i;
 	int operand = 0;
-	switch (inst->tag) {
-		case 1:
-			operand = inst->operand.u1;
-			break;
+    switch (inst->tag) {
+        case 1:
+            operand = inst->operand.u1;
+            printf("%s\t%d\n", inst->name, operand);
+            break;
 
-		case 2:
-			operand = inst->operand.u2;
-			break;
+        case 2:
+            operand = inst->operand.u2;
+            printf("%s\t%d\n", inst->name, operand);
+            break;
+
+        case TABLE_SWITCH:
+
+#if 0
+            printf("%s  // [%d, %d]\n", inst->name, 
+                    inst->operand.tblSw.caseMin, inst->operand.tblSw.caseMax);
+            for (i = 0; i < inst->operand.tblSw.pairCnt; ++i) {
+                printf("      %d: %d\n", 
+                        (inst->operand.tblSw.pairs + i)->value,
+                        (inst->operand.tblSw.pairs + i)->position); 
+            }
+            printf("      default:%d\n", (inst->operand.tblSw.defaultPos));
+#endif
+            break;
+
+
+        case LOOKUP_SWITCH:
+            break;
 
         default:
             fprintf(stderr, "Invalid tag in instruction\n");
-	}
+    }
 
-    if (!hasTwoOperands (inst->opcode)) {
-        printf("%s\t%d\n", inst->name, operand);
-    }
-    else {
-        U1 b1 = operand >> 8 ;
-        U2 b2 = operand & 0x00ff;
-        printf ("%s\t%d, %d\n", inst->name, b1, b2);
-    }
 }
 
 DECL_FUNC(nop)
@@ -905,6 +977,7 @@ DECL_FUNC(sipush)
 
 DECL_FUNC(ldc)
 {
+    printf("ldc \n");
 	return FALSE;
 }
 

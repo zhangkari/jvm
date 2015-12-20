@@ -7,9 +7,29 @@
 #ifndef __INSTRUCTION__H__
 #define __INSTRUCTION__H__
 
-#include "jvm.h"
-
 typedef bool (*HandlerFunc)(void *);
+
+#define TABLE_SWITCH  15
+#define LOOKUP_SWITCH 16
+
+typedef struct CasePair {
+    int value;
+    U4  position;
+} CasePair;
+
+typedef struct TableSwitch {
+    int caseMin;
+    int caseMax;
+    U4 defaultPos;
+    U4 pairCnt;
+    CasePair *pairs;
+} TableSwitch;
+
+typedef struct LookupSwitch {
+    U4 defaultPos;
+    U4 pairCnt;
+    CasePair *pairs;
+} LookupSwitch;
 
 typedef struct {
 	U1 opcode;		      // opcode 
@@ -19,8 +39,16 @@ typedef struct {
 		U2 u2;
 		U4 u4;
 		U8 u8;
+        TableSwitch  tblSw;
+        LookupSwitch lkpSw;
 	} operand;		      // operand
-	U1 tag;			      // indicate operand's lenght (0, 1, 2, 4 or 8)
+	U1 tag;			      // indicate the valid operand
+
+    /*
+    It usually equals tag + 1, 
+    However, tblSw & lkpSw are variable length instructions
+    */
+    U2 length;            // the length of the instruction
 	HandlerFunc handler;  // handler of opcode
 } Instruction;
 

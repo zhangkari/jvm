@@ -20,36 +20,6 @@
 #include "jvm.h"
 #include "mem.h"
 
-/*
- * Push stack frame into stack
- */
-bool pushStack(JavaStack *stack, StackFrame *frame) {
-	if (NULL == stack || NULL == frame) {
-		return FALSE;
-	}
-	if (stack->top + 1 >= STACK_MAX_DEPTH) {
-		fprintf(stderr, "Stack is overflow\n");
-		return FALSE;
-	}
-
-	stack->frames[++stack->top] = frame;
-	return TRUE;
-}
-
-StackFrame* popStack(JavaStack *stack) {
-	if (NULL == stack || stack->top < 1) {
-		fprintf(stderr, "Stack is downflow\n");
-		return NULL;
-	}
-
-	return stack->frames[--stack->top];
-}
-
-bool isStackEmpty(JavaStack *stack) {
-	assert(NULL != stack);
-	return stack->top < 1;
-}
-
 void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != args || NULL != vm);
 	vm->initArgs = args;
@@ -63,10 +33,11 @@ void initVM(InitArgs *args, VM *vm) {
 	env->stackArea = createMemoryArea(args->java_stack);
 	assert(NULL != env->stackArea);
 
-    env->javaStack = (JavaStack *)sysAlloc(env->stackArea, sizeof(JavaStack));
-	memset(env->javaStack, 0, sizeof(JavaStack));
-
+    env->javaStack = (JavaStack *)calloc(1, sizeof(JavaStack));
     assert(NULL != env->javaStack);
+    env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
+    assert(NULL != env->javaStack->frames);
+
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
         printf("Error: Failed load run time class.\n");
