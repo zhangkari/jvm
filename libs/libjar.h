@@ -1,9 +1,12 @@
-/**************************
- file nae: jar.h
- description: jar utility
- date: 2015-10-08           
- author: kari.zhang
- *************************/
+/************************************************
+ *file nae:		jar.h
+ *description:	define utilities for (un)pack jar
+ *date:			2015-10-08           
+ *author:		kari.zhang
+ *
+ *modifications:
+ *	1. Review code by kari.zhang @ 2015-12-22
+ ***********************************************/
 
 #ifndef __JAR__H__
 #define __JAR__H__

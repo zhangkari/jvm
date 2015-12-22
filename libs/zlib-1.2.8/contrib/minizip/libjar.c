@@ -2,8 +2,9 @@
  * file name:		jar.c
  * description:		implement jar utility
  * date:			2015-10-08           
- * author: kari.zhang
+ * author:			kari.zhang
  *
+ * This file's copyright Under Zlib LICENSE 
  ****************************************/
 
 #include <stdio.h>

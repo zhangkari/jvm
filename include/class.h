@@ -1,7 +1,11 @@
-/****************************
+/****************************************************************
  * file name:   class.h
+ * description:	define class structure & functions to load class 
+ * author:		kari.zhang
  *
- * *************************/
+ * modifications:
+ *	1.Review code by kari.zhang @ 2015-12-22
+ * *************************************************************/
 
 #ifndef __CLASS__H__
 #define __CLASS__H__
@@ -9,7 +13,7 @@
 #include "comm.h"
 #include "instruction.h"
 
-#define STACK_MAX_DEPTH 226
+#define STACK_MAX_DEPTH 256
 
 typedef enum tag_value {
     CONST_Utf8			= 1,

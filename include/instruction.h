@@ -1,8 +1,11 @@
-/*************************************
+/*******************************************
  *file name:	instruction.h 
  *description:	define instruction set
+ *author:		kari.zhang
  *
- ************************************/
+ *modifications:
+ *	1. Review code by kari.zhang@2015-12-22
+ ******************************************/
 
 #ifndef __INSTRUCTION__H__
 #define __INSTRUCTION__H__
