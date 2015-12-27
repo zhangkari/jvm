@@ -14,6 +14,7 @@ typedef bool (*HandlerFunc)(void *);
 
 #define TABLE_SWITCH  15
 #define LOOKUP_SWITCH 16
+#define WIDE 17
 
 typedef struct CasePair {
     int value;

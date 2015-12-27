@@ -235,7 +235,6 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
  *		MethodEntry:	method
  */
 static void extractInstructions(MethodEntry *method) {
-
     assert (NULL != method);
 
     if (0 == method->code_length) {
@@ -245,7 +244,6 @@ static void extractInstructions(MethodEntry *method) {
     U4 instCnt = 0;
     U1* code = NULL;
     const Instruction* inst = NULL; 
-
     int j = 0;
     // count instructions
     while (j <method->code_length) {
@@ -253,22 +251,18 @@ static void extractInstructions(MethodEntry *method) {
         inst = getCachedInstruction(code, method->code_length - j, j);
         j += inst->length; 
         ++instCnt;
-
-        printf("inst name:%s\n", inst->name);
     }
 
-    /*
     method->instCnt = instCnt;
     method->instTbl = (Instruction**) calloc(instCnt, sizeof(Instruction *));
     instCnt = 0;
-    for (j = 0; j <method->code_length; ++j) {
+    j = 0;
+    while (j <method->code_length) {
         code = (U1 *)method->code + j;
         inst = getCachedInstruction(code, method->code_length - j, j);
-        j += inst->tag; 
+        j += inst->length; 
         method->instTbl[instCnt++] = (Instruction *)inst;
     }
-
-    */
 }
 
 /**
@@ -444,7 +438,7 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 		}
 	}	// for (method attr count)
 
-    //extractInstructions(method);
+    extractInstructions(method);
 }
 
 /**
@@ -881,9 +875,6 @@ static void on_progress (int index,
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
 		cls[index] = defineClass(name, mem, size);
-        if (NULL != cls[index]) {
-            logClassEntry(CLASS_CE(cls[index]));
-        }
 	}
 }
 
@@ -1185,7 +1176,6 @@ void logClassEntry(ClassEntry *clsEntry)
         while (j < clsEntry->methods[i].code_length) {
             U1 *code = (U1 *)clsEntry->methods[i].code + j;
             // debug stub
-            printf("class name:%s\n", clsEntry->name);
 			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j, j);
 			printf("   %d ", j);
 			logInstruction(inst);

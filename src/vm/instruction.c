@@ -654,7 +654,7 @@ static Instruction sInstructionTable[] = {
 	INIT_INST(instanceof, 2),	// 0xc1
 	INIT_INST(monitorenter, 0),	// 0xc2
 	INIT_INST(monitorexit, 0),	// 0xc3
-	INIT_INST(wide, -1),		// 0xc4
+	INIT_INST(wide, WIDE),		// 0xc4
 	INIT_INST(multianewarray,3),// 0xc5
 	INIT_INST(ifnull, 2),		// 0xc6
 	INIT_INST(ifnonnull, 2),	// 0xc7
@@ -719,7 +719,6 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
 		sInstructionTable[opcode].operand.u2 = u2;
 
 	} 
-#if 0
     else if (TABLE_SWITCH == tag){
 
         offset += 1;
@@ -759,7 +758,7 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
         inst->operand.tblSw.pairCnt = pairCnt;
         CasePair *pairs = (CasePair *)calloc(pairCnt, sizeof(CasePair));
 
-        printf("[%d, %d],pairCnt:%d\n", min, max, pairCnt);
+        //printf("[%d, %d],pairCnt:%d\n", min, max, pairCnt);
         assert (NULL != pairs);
         inst->operand.tblSw.pairs = pairs;
 
@@ -776,7 +775,7 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
         }
         inst->length = length;
 
-    } else if (LOOKUP_SWITCH) {
+    } else if (LOOKUP_SWITCH == tag) {
         offset += 1;
 
         int length = 1;
@@ -805,7 +804,7 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
         inst->operand.tblSw.pairCnt = pairCnt;
         CasePair *pairs = (CasePair *)calloc(pairCnt, sizeof(CasePair));
 
-        printf("pairCnt:%d\n", pairCnt);
+        //printf("pairCnt:%d\n", pairCnt);
         assert (NULL != pairs);
         inst->operand.tblSw.pairs = pairs;
 
@@ -824,18 +823,84 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
         }
         inst->length = length;
 
-
 	}
-    #endif 
+    else if (WIDE == tag) {
+
+#if 0
+        U2 index2;
+        U4 index4;
+        U1 opcode = *buff;
+        Instruction* inst = sInstructionTable + opcode;
+        buff++;
+        switch (opcode) {
+
+            ///////////////
+            //
+            // wide
+            // <opcode>
+            // indexbyte1
+            // indexbyte2
+            //
+            ///////////////
+
+            // load
+            case iload:		    // 0x15
+            case lload:		    // 0x16
+            case fload:		    // 0x17
+            case dload:		    // 0x18
+            case aload:		    // 0x19
+            // store
+            case istore:		// 0x36
+            case lstore:		// 0x37
+            case fstore:		// 0x38
+            case dstore:        // 0x39
+            case astore:		// 0x3a
+            // ret
+            case ret:			// 0xa9
+                READ_U2(index2, buff);
+                buff += 2;
+                inst->length = 4;
+                break;
+
+            //////////////
+            //
+            // wide
+            // iinc
+            // indexbyte1
+            // indexbyte2
+            // constbyte1
+            // constbyte2
+            //
+            //////////////
+
+            // iinc
+            case iinc:
+                READ_U4(index4, buff);
+                buff += 4;
+                inst->length = 6;
+                break;
+
+            default:
+                assert(0 && "Invalid opcode after wide");
+        }
+
+#endif
+
+        assert(0 && "WIDE not implemented yet!\n");
+
+        Instruction* inst = sInstructionTable + opcode;
+        inst->length = 1;
+    }
     else if (3 == tag) {
-		printf("tag = 3\n");
+		// printf("tag = 3\n");
 
 	}
     else if (4 == tag) {
-		printf("tag = 4\n");
+		// printf("tag = 4\n");
+
 	}
 
-	return &sInstructionTable[opcode];
+	return sInstructionTable + opcode;
 }
 
 void logInstruction(const Instruction* inst) {
@@ -863,7 +928,6 @@ void logInstruction(const Instruction* inst) {
 
         case TABLE_SWITCH:
 
-#if 0
             printf("%s  // [%d, %d]\n", inst->name, 
                     inst->operand.tblSw.caseMin, inst->operand.tblSw.caseMax);
             for (i = 0; i < inst->operand.tblSw.pairCnt; ++i) {
@@ -872,7 +936,6 @@ void logInstruction(const Instruction* inst) {
                         (inst->operand.tblSw.pairs + i)->position); 
             }
             printf("      default:%d\n", (inst->operand.tblSw.defaultPos));
-#endif
             break;
 
 
