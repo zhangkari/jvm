@@ -10,6 +10,8 @@
 #ifndef __INSTRUCTION__H__
 #define __INSTRUCTION__H__
 
+#include <comm.h>
+
 typedef bool (*HandlerFunc)(void *);
 
 #define TABLE_SWITCH  15
@@ -54,6 +56,7 @@ typedef struct {
     */
     U2 length;            // the length of the instruction
 	HandlerFunc handler;  // handler of opcode
+    U1 reserve;           // reserve field for reuse tag
 } Instruction;
 
 /**
