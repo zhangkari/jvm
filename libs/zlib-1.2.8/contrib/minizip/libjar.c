@@ -68,21 +68,17 @@ void executeUnpackJar (
 				printf("Failed unzOpenCurrentFile.\n");
 			}
 
-            // Ignore direcotry
-            if (finfo.uncompressed_size > 0) {
-                char *mem = (char *)calloc (1, finfo.uncompressed_size);
-                if (NULL == mem) {
-                    printf("calloc memory failed.\n");
-                    break;
-                }
-                int nread = unzReadCurrentFile (uzf, mem, finfo.uncompressed_size);
-                if (nread != finfo.uncompressed_size) {
-                    printf("Unzip not read complete. FIXME!\n");
-                }
-                cb_progress (i, filename, mem, finfo.uncompressed_size, param);
-                free (mem);
-
-            } // if
+            char *mem = (char *)calloc (1, finfo.uncompressed_size);
+            if (NULL == mem) {
+                printf("calloc memory failed.\n");
+                break;
+            }
+            int nread = unzReadCurrentFile (uzf, mem, finfo.uncompressed_size);
+            if (nread != finfo.uncompressed_size) {
+                printf("Unzip not read complete. FIXME!\n");
+            }
+            cb_progress (i, filename, mem, finfo.uncompressed_size, param);
+            free (mem);
 
 			unzCloseCurrentFile(uzf);
 			unzGoToNextFile(uzf);
