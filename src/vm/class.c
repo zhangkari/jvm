@@ -1214,6 +1214,9 @@ void logClassEntry(ClassEntry *clsEntry)
 		if (clsEntry->methods[i].acc_flags & ACC_ABSTRACT) {
 			printf("abstract ");
 		}
+        if (clsEntry->methods[i].acc_flags & ACC_STATIC) {
+			printf("static ");
+		}
 
         printf("%s ", clsEntry->methods[i].type);
 
@@ -1223,6 +1226,9 @@ void logClassEntry(ClassEntry *clsEntry)
         } else {
             printf("%s;\n", clsEntry->methods[i].name);
         }
+
+        printf("  descriptor: %s\n", clsEntry->methods[i].type);
+        printf("  flags: %s\n", "flags");
 
         printf("  Code:\n");
         printf("   Stack=%d, Locals=%d, Args_size=%d\n",
