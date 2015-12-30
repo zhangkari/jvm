@@ -16,6 +16,7 @@ typedef struct InstPool {
     Instruction* base;
     U4 capacity;
     U4 validCnt;
+	U4 freeIndex;
 } InstPool;
 
 InstPool* sPool = NULL;
@@ -62,22 +63,37 @@ void destroyInstPool()
  */
 const Instruction* cloneInstruction(const Instruction* inst)
 {
-    assert (NULL != inst);
-    assert (sPool->validCnt < sPool->capacity);
+	assert (NULL != inst);
+	assert (sPool->validCnt < sPool->capacity);
 
-    int i;
-    Instruction *dest = NULL;
-    for (i = 0; i < sPool->capacity; ++i) {
-        dest = sPool->base + i;
-        if (0 == dest->reserve) {
-           memcpy(dest, inst, sizeof(Instruction)); 
-           dest->reserve = 1;
-           ++sPool->validCnt;
-           return dest;
-        }
-    }
+	Instruction *dest = NULL;
+	dest = sPool->base + sPool->freeIndex;
 
-    assert (0 && "instruction pool overflow");
+	assert (0 == dest->reserve);
+
+	memcpy(dest, inst, sizeof(Instruction)); 
+	dest->reserve = 1;
+	++sPool->validCnt;
+
+	int i = sPool->freeIndex + 1;
+	while (i < sPool->capacity) {
+		if (0 == (sPool->base + i)->reserve) {
+			sPool->freeIndex = i;
+			return dest;
+		}
+		++i;
+	}
+
+	i = sPool->freeIndex - 1;
+	while (i >= 0) {
+		if (0 == (sPool->base + i)->reserve) {
+			sPool->freeIndex = i;
+			return dest;
+		}
+		i--;
+	}
+
+	assert (0 && "No free instruction left");
 }
 
 /*
@@ -90,4 +106,5 @@ void freeInstruction(const Instruction* inst)
     Instruction *ins = (Instruction *)inst;
     ins->reserve = 0;
     sPool->validCnt--;
+	sPool->freeIndex = (inst - sPool->base);
 }
