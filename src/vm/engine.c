@@ -46,6 +46,8 @@ void executeMethod(VM *vm, MethodEntry *method)
 		exit (1);
 	}
 
+    extractInstructions(method);
+
     const Instruction *inst = NULL;
     int i;
     for (i = 0; i < method->instCnt; ++i) {

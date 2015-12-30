@@ -296,6 +296,13 @@ extern Class* loadClassFromFile(char *path, char *classname);
 
 extern int loadClassFromJar(char *path, Class ***classes);
 
+/*
+ * Extract instructions from byte codes
+ * Parameters:
+ *		MethodEntry:	method
+ */
+extern void extractInstructions(MethodEntry *method);
+
 /**
  * Log the information of ClassEntry
  */

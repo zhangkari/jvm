@@ -16,6 +16,7 @@
 #include <string.h>
 #include "class.h"
 #include "engine.h"
+#include "instpool.h"
 #include "instruction.h"
 #include "jvm.h"
 #include "mem.h"
@@ -56,6 +57,10 @@ void initVM(InitArgs *args, VM *vm) {
 		exit (-1);
 	}
 
+    if (!createInstPool()) {
+        printf("Failed create instruction pool.\n");
+        exit (-1);
+    }
 }
 
 /**
@@ -106,6 +111,8 @@ void startVM(VM *vm) {
 
 void destroyVM(VM *vm) {
 	destroySlotBufferPool();
+    destroyStackFramePool();
+    destroyInstPool();
 
 	assert (NULL != vm);
 }

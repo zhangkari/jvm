@@ -888,7 +888,7 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
 
 #endif
 
-        assert(0 && "WIDE not implemented yet!\n");
+        printf("WIDE not implemented yet!\n");
 
         Instruction* inst = sInstructionTable + opcode;
         inst->length = 1;
@@ -987,6 +987,7 @@ DECL_FUNC(iconst_3)
 
 DECL_FUNC(iconst_4)
 {
+    printf("iconst_4\n");
 	return FALSE;
 }
 
@@ -1058,6 +1059,7 @@ DECL_FUNC(ldc2_w)
 
 DECL_FUNC(iload)
 {
+    printf("iload\n");
 	return FALSE;
 }
 
@@ -1088,11 +1090,13 @@ DECL_FUNC(iload_0)
 
 DECL_FUNC(iload_1)
 {
+    printf("iload_1\n");
 	return FALSE;
 }
 
 DECL_FUNC(iload_2)
 {
+    printf("iload_2\n");
 	return FALSE;
 }
 
@@ -1178,6 +1182,7 @@ DECL_FUNC(aload_2)
 
 DECL_FUNC(aload_3)
 {
+    printf("aload_3\n");
 	return FALSE;
 }
 
@@ -1223,6 +1228,7 @@ DECL_FUNC(saload)
 
 DECL_FUNC(istore)
 {
+    printf("istore\n");
 	return FALSE;
 }
 
@@ -1253,11 +1259,13 @@ DECL_FUNC(istore_0)
 
 DECL_FUNC(istore_1)
 {
+    printf("istore_1\n");
 	return FALSE;
 }
 
 DECL_FUNC(istore_2)
 {
+    printf("istore_2\n");
 	return FALSE;
 }
 
@@ -1343,6 +1351,7 @@ DECL_FUNC(astore_2)
 
 DECL_FUNC(astore_3)
 {
+    printf("astore_3\n");
 	return FALSE;
 }
 
@@ -1398,6 +1407,7 @@ DECL_FUNC(pop2)
 
 DECL_FUNC(dup)
 {
+    printf("dup\n");
 	return FALSE;
 }
 
@@ -1838,11 +1848,13 @@ DECL_FUNC(areturn)
 
 DECL_FUNC(_return)
 {
+    printf("return\n");
 	return FALSE;
 }
 
 DECL_FUNC(getstatic)
 {
+    printf("getstatic\n");
 	return FALSE;
 }
 
@@ -1863,11 +1875,13 @@ DECL_FUNC(putfield)
 
 DECL_FUNC(invokevirtual)
 {
+    printf("invokevirtual\n");
 	return FALSE;
 }
 
 DECL_FUNC(invokespecial)
 {
+    printf("invokespecial\n");
 	return FALSE;
 }
 
@@ -1888,6 +1902,7 @@ DECL_FUNC(invokedynamic)
 
 DECL_FUNC(_new)
 {
+    printf("new\n");
 	return FALSE;
 }
 

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "class.h"
+#include "instpool.h"
 #include "instruction.h"
 #include "libjar.h"
 #include "mem.h"
@@ -234,7 +235,7 @@ static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
  * Parameters:
  *		MethodEntry:	method
  */
-static void extractInstructions(MethodEntry *method) {
+void extractInstructions(MethodEntry *method) {
     assert (NULL != method);
 
     if (0 == method->code_length) {
@@ -261,7 +262,7 @@ static void extractInstructions(MethodEntry *method) {
         code = (U1 *)method->code + j;
         inst = getCachedInstruction(code, method->code_length - j, j);
         j += inst->length; 
-        method->instTbl[instCnt++] = (Instruction *)inst;
+        method->instTbl[instCnt++] = (Instruction *)cloneInstruction(inst);
     }
 }
 
@@ -437,8 +438,6 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 			*/
 		}
 	}	// for (method attr count)
-
-    extractInstructions(method);
 }
 
 /**
@@ -463,11 +462,9 @@ static void readClassMethod(ClassEntry* class, U2 methods_count, U1** base) {
 		class->methods[i].acc_flags = acc_flags;
 
 		READ_U2(nameidx, *base);
-		name = constPool->entries[nameidx].info.utf8_info.bytes;
-//		if (NULL != name) {
-			class->methods[i].name = calloc(1, strlen(name) + 1);
-			strcpy(class->methods[i].name, name);
-//		}
+        name = constPool->entries[nameidx].info.utf8_info.bytes;
+        class->methods[i].name = calloc(1, strlen(name) + 1);
+        strcpy(class->methods[i].name, name);
 
 		READ_U2(typeidx, *base);
 		name = constPool->entries[typeidx].info.utf8_info.bytes;
@@ -593,13 +590,13 @@ static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
 	
 	U2 attr_name_idx;
 	U2 attr_length;
+    char *name = NULL;
 	ConstPool* constPool = class->constPool;
 	int i, j;
 	for (i = 0; i < attr_count; ++i) {
 		READ_U2(attr_name_idx, *base);
 		READ_U4(attr_length, *base);
-		char *name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
-
+		name = constPool->entries[attr_name_idx].info.utf8_info.bytes;
 		if (strcmp(name, "SourceFile") == 0) {
 			U2 fname_idx;
 			READ_U2(fname_idx, *base);
@@ -834,26 +831,52 @@ Class* loadClassFromFile(char *path, char *classname) {
  * Unpack jar arguments
  */
 typedef struct UnpackJarArg {
-	Class **classes;
-	U4 clsCnt;
+	Class **classes; // record all the class, include invalid (NULL) class
+    U4 totalCnt;     // record the count of all the class
+    char *jarname;   // the jar file name
+	U4 clsCnt;       // number of the valid class count
 } UnpackJarArg;
 
 /*
  * Unpack jar start
  */
 static void on_start (int total, void* param) {
+    if (NULL != param) {
+        UnpackJarArg* arg = (UnpackJarArg*) param;
+#ifdef DEBUG
+        printf("unzip %s start. (%d files)\n", arg->jarname, total);
+#endif
+        arg->totalCnt = total;
+        arg->classes = (Class**)calloc(total, sizeof(Class *));
+        if (NULL == arg->classes) {
+            printf("Failed alloc mem for loading class.\n");
+            exit (1);
+        }
+    }
+}
 
-	printf("total %d files\n", total);
+/**
+*
+*/
+bool isEndWith(const char* source, const char* postfix) {
+    if (NULL == source || NULL == postfix) {
+        printf("source and postfix must not be NULL\n");
+        return FALSE;
+    }
 
-	if (NULL != param) {
-		UnpackJarArg* arg = (UnpackJarArg*) param;
-		arg->clsCnt = total;
-		arg->classes = (Class**)calloc(total, sizeof(Class *));
-		if (NULL == arg->classes) {
-			printf("Failed alloc mem for loading class.\n");
-			exit (1);
-		}
-	}
+    int slen = strlen(source);
+    int plen = strlen(postfix);
+
+    if (slen < plen) {
+        printf("postfix length must not longer than source\n");
+        return FALSE;
+    }
+
+    if (strncmp(source + (slen - plen), postfix, plen) == 0) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }
 
 /*
@@ -870,28 +893,61 @@ static void on_progress (int index,
 		return;
 	}
 
+    UnpackJarArg* arg = (UnpackJarArg*) param;
     //printf ("%-4d name:%s\n", index, name);
 	if (NULL != param && size > 0) {
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
-		cls[index] = defineClass(name, mem, size);
-	}
+        if (isEndWith(name, ".class")) {
+            ++arg->clsCnt;
+            cls[index] = defineClass(name, mem, size);
+        }
+        // this file maybe is META-INF/MANIFEST.MF
+        else {
+#ifdef DEBUG
+            printf("Ignore %s in %s\n", name, arg->jarname);
+#endif
+            cls[index] = NULL;
+        }
+	} // if (NULL != param && size > 0)
+#ifdef DEBUG
+    // this file(directory) maybe is META-INF
+    else {
+        printf("Ignore %s in %s\n", name, arg->jarname);
+    }
+#endif
+
 }
 
 /*
  * Unpack error
  */
 static int on_error(int errcode, int index, void* param) {
+    if (NULL != param) {
+        UnpackJarArg* arg = (UnpackJarArg*) param;
+        printf("unzip %s failed at %d, error code:%d\n",
+                arg->jarname,
+                index, 
+                errcode);
+        exit(1);
+        return 1;
+    }
+
     printf("unzip jar failed at %d, error code:%d\n", index, errcode);
-	exit(1);
-	return 1;
+    exit(1);
 }
 
 /*
  * Unpack finish
  */
 static void on_finish(void* param) {
-
+    if (NULL != param) {
+        UnpackJarArg* arg = (UnpackJarArg*) param;
+#ifdef DEBUG
+        printf("unzip %s complete. (%d classes)\n",
+                arg->jarname, arg->clsCnt);
+#endif
+    } 
 }
 
 
@@ -911,11 +967,13 @@ int loadClassFromJar(char *path, Class ***classes) {
 	
 	UnpackJarArg arg;
 	memset(&arg, 0, sizeof(arg) );
+    arg.jarname = strdup(path);
 
 	executeUnpackJar(path, on_start, on_progress, on_error, on_finish, &arg);
 	*classes = arg.classes;
+    free (arg.jarname);
 
-	return arg.clsCnt;
+	return arg.totalCnt;
 }
 
 /*
