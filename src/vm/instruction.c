@@ -10,6 +10,7 @@
 #include <comm.h>
 #include <endian_swap.h>
 #include <instruction.h>
+#include <jvm.h>
 
 enum {
 	opcode_min = -1,
@@ -1043,7 +1044,12 @@ DECL_FUNC(sipush)
 
 DECL_FUNC(ldc)
 {
-    printf("ldc \n");
+    assert (NULL != param);
+    InstExecEnv* env = (InstExecEnv *)param;
+
+#ifdef DEBUG
+    printf("ldc %d\n", env->inst->operand.u1);
+#endif
 	return FALSE;
 }
 

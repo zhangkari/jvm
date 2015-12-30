@@ -59,6 +59,15 @@ typedef struct {
     U1 reserve;           // reserve field for reuse tag
 } Instruction;
 
+typedef struct ExecEnv ExecEnv;
+/**
+ * Instruction execute environment
+ */
+typedef struct InstExecEnv {
+    Instruction *inst;
+    ExecEnv     *env;
+} InstExecEnv;
+
 /**
  * Validate whether the opcode is valid
  * return: 

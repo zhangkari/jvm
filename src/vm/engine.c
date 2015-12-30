@@ -52,7 +52,10 @@ void executeMethod(VM *vm, MethodEntry *method)
     int i;
     for (i = 0; i < method->instCnt; ++i) {
        inst = method->instTbl[i]; 
-       inst->handler(vm->execEnv);
+       InstExecEnv env;
+       env.inst = (Instruction *)inst;
+       env.env = vm->execEnv;
+       inst->handler(&env);
     }
 
 	printf("execute %s finish.\n", method->name);
