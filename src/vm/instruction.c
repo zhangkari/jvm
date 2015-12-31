@@ -708,7 +708,7 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset)
 
         U1 u1;
         READ_U1(u1, buff);
-		sInstructionTable[opcode].operand.u1 = *buff;
+		sInstructionTable[opcode].operand.u1 = u1;
 
 	} else if (2 == tag) {
 
