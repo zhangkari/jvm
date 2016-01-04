@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "engine.h"
 #include "jvm.h"
 
@@ -18,7 +19,9 @@ void executeMethod(VM *vm, MethodEntry *method)
 {
 	assert(NULL != vm && NULL != method);
 
+#ifdef DEBUG
 	printf("execute %s start:\n", method->name);
+#endif
 
 	StackFrame *frame = obtainStackFrame();
 	assert (NULL != frame);
@@ -41,22 +44,26 @@ void executeMethod(VM *vm, MethodEntry *method)
 	frame->opdStack  = oprdStack;
 	frame->constPool = CLASS_CE(method->class)->constPool;
     
-	if (!pushStack(vm->execEnv->javaStack, frame)) {
+	if (!pushJavaStack(vm->execEnv->javaStack, frame)) {
 		printf ("Failed push stack frame to java stack.\n");
 		exit (1);
 	}
 
+	// extract & parse instructions from the byte code
     extractInstructions(method);
 
+    InstExecEnv instEnv;
     const Instruction *inst = NULL;
     int i;
     for (i = 0; i < method->instCnt; ++i) {
        inst = method->instTbl[i]; 
-       InstExecEnv env;
-       env.inst = (Instruction *)inst;
-       env.env = vm->execEnv;
-       inst->handler(&env);
+	   memset(&instEnv, 0, sizeof(instEnv));
+       instEnv.inst = (Instruction *)inst;
+       instEnv.env = vm->execEnv;
+       inst->handler(&instEnv);
     }
 
+#ifdef DEBUG
 	printf("execute %s finish.\n", method->name);
+#endif
 }

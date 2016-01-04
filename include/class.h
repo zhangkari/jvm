@@ -162,9 +162,20 @@ typedef struct ExceptionTable {
 
 typedef struct Object Object;
 typedef struct Object Class;
+/*******************************************
+ * model in memory (assume in 32-bits CPU)
+ *
+ * ----------------------------------
+ * | 4 bytes | 4 bytes | ClassEntry |
+ * ----------------------------------
+ * |   lock  |   cls   |  clsEntry  |
+ * ----------------------------------
+ *
+ *******************************************/
 struct Object {
-	uintptr_t lock;
-	Class *cls;
+	uintptr_t lock;			// this
+	Class *cls;				// super class
+	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 
 typedef struct FieldEntry {
@@ -241,27 +252,26 @@ typedef struct MethodEntry {
 
 #define RESERVE_SIZE 4
 typedef struct ClassEntry {
-	uintptr_t reserve[RESERVE_SIZE];
-	char *name;
-	char *signature;
-	char *super_name;
-	char *source_file;
-	Class *super;
-	U1 state;
-	U2 acc_flags;
-	U2 fields_count;
-	FieldEntry  *fields;
-	ConstPool *constPool;
-	U2 methods_count;
-	MethodEntry *methods;
-	U2 interfaces_count;
-	Class **interfaces;
-	U2 *interfaces_index;
-	Object *class_loader;
+	uintptr_t reserve[RESERVE_SIZE];	// to keep version until now
+	char *name;							// class name
+	char *signature;					// class signature
+	char *super_name;					// super class name
+	char *source_file;					// file name of this class
+	Class *super;						// ignore me, not used
+	U1 state;							// class state
+	U2 acc_flags;						// class access flag
+	U2 fields_count;					// filed count
+	FieldEntry  *fields;				// fields
+	ConstPool *constPool;				// constant pool
+	U2 methods_count;					// methods count
+	MethodEntry *methods;				// methods
+	U2 interfaces_count;				// interface count
+	Class **interfaces;					// interfaces
+	U2 *interfaces_index;				//
+	Object *class_loader;				// 
 } ClassEntry;
 
 #define CLASS_CE(cls) ( (ClassEntry *) (cls + 1) )
-#define CE_CLASS(clsEntry) ( (Class *) clsEntry )
 
 extern Class* allocClass();
 extern ConstPool* newConstPool(int length);
@@ -293,7 +303,6 @@ extern Class* loadClassFromFile(char *path, char *classname);
  *		if Error: NULL
  *		if OK	: base address of Class
  */
-
 extern int loadClassFromJar(char *path, Class ***classes);
 
 /*
@@ -302,6 +311,12 @@ extern int loadClassFromJar(char *path, Class ***classes);
  *		MethodEntry:	method
  */
 extern void extractInstructions(MethodEntry *method);
+
+/**
+ * Log the information of ConstPoolEntry
+ */
+extern void logConstPoolEntry(const ConstPool *pool, 
+		const ConstPoolEntry* constEntry);
 
 /**
  * Log the information of ClassEntry
@@ -363,18 +378,28 @@ extern StackFrame* obtainStackFrame();
 extern void recycleStackFrame(StackFrame* frame);
 
 /*
- * Push stack frame into stack
+ * Push stack frame into java stack
  */
-extern bool pushStack(JavaStack *stack, StackFrame *frame);
+extern bool pushJavaStack(JavaStack *stack, StackFrame *frame);
 
 /*
  * Pop stack frame from java stack
  */
-extern StackFrame* popStack(JavaStack *stack);
+extern StackFrame* popJavaStack(JavaStack *stack);
+
+/*
+ * Push operand into operand stack
+ */
+extern bool pushOperandStack(OperandStack *stack, const Slot *slot);
+
+/*
+ * Pop operand from operand stack
+ */
+extern Slot* popOperandStack(OperandStack *stack);
 
 /*
  * Check whether java stack is empry
  */
-extern bool isStackEmpty(JavaStack *stack);
+extern bool isJavaStackEmpty(JavaStack *stack);
 
 #endif

@@ -74,6 +74,7 @@ typedef struct ExecEnv {
 	U2 rtClsCnt;				// runtime class count
 	Class **rtClsArea;		    // runtime class address list
 	MethodEntry *mainMethod;	// user class main()
+	uintptr_t reg_pc;			// pc register
 } ExecEnv;
 
 typedef struct VM {

@@ -1044,12 +1044,41 @@ DECL_FUNC(sipush)
 
 DECL_FUNC(ldc)
 {
-    assert (NULL != param);
-    InstExecEnv* env = (InstExecEnv *)param;
+    assert(NULL != param);
+
+    InstExecEnv* instEnv = (InstExecEnv *)param;
+	Instruction *inst = instEnv->inst;
+	ExecEnv *env = instEnv->env;
+	assert(NULL != inst && NULL != env);
+
+	JavaStack *jstack = env->javaStack;
+	assert(NULL != jstack);
+
+	StackFrame *frame = popJavaStack(jstack);
+	assert(NULL != frame);
+
+	LocalVarTable *localTbl = frame->localTbl;
+	assert(NULL != localTbl);
+
+	OperandStack *opdStack = frame->opdStack;
+	assert(NULL != opdStack);
+
+	ConstPool *constPool = frame->constPool;
+	assert(NULL != constPool);
+
+	U2 use = frame->use;
+	assert(use == 1);
+
+	U1 u1 = inst->operand.u1;
+	ConstPoolEntry *constEntry = constPool->entries + u1;
+	assert(NULL != constEntry);
 
 #ifdef DEBUG
-    printf("ldc %d\n", env->inst->operand.u1);
+    printf("\tldc  %d // ", u1);
+	logConstPoolEntry(constPool, constPool->entries + u1);
+	printf("\n");
 #endif
+
 	return FALSE;
 }
 

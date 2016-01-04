@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <endian_swap.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,9 +160,12 @@ static void readConstPool(ClassEntry* class, U2 cp_count, U1** base) {
 	class->constPool = constPool;
 }
 
-static void readClassField(ClassEntry *class, U2 field_count, U1** base) {
+static void readClassField(Class *cls, U2 field_count, U1** base) {
 
-	assert (NULL != class && base != NULL && field_count >= 0);
+	assert (NULL != cls && base != NULL && field_count >= 0);
+
+	ClassEntry *class = CLASS_CE(cls);
+	assert(NULL != class);
 
 	char *name = NULL;
 	U2 acc_flags;
@@ -443,9 +447,12 @@ static void readMethodAttrib(ClassEntry *class, MethodEntry* method, U2 method_a
 /**
  * Read class methods
  */
-static void readClassMethod(ClassEntry* class, U2 methods_count, U1** base) {
+static void readClassMethod(Class* cls, U2 methods_count, U1** base) {
 
-	assert (NULL != class && base != NULL && methods_count >= 0);
+	assert (NULL != cls && base != NULL && methods_count >= 0);
+
+	ClassEntry *class = CLASS_CE(cls);
+	assert(NULL != class);
 
 	char *name = NULL;
 	U2 acc_flags;
@@ -456,7 +463,7 @@ static void readClassMethod(ClassEntry* class, U2 methods_count, U1** base) {
 	ConstPool* constPool = class->constPool;
 	int i;
 	for (i = 0; i < methods_count; ++i) {
-		class->methods[i].class = CE_CLASS(class);
+		class->methods[i].class = cls;
 
 		READ_U2(acc_flags, *base);
 		class->methods[i].acc_flags = acc_flags;
@@ -584,9 +591,12 @@ static void readAnnotationElementValue(ClassEntry* class, U1** base) {
 /*
  * Read class attributes
  */
-static void readClassAttrib(ClassEntry* class, U2 attr_count, U1** base) {
+static void readClassAttrib(Class* cls, U2 attr_count, U1** base) {
 
-	assert(NULL != class && attr_count >= 0 && base != NULL);
+	assert(NULL != cls && attr_count >= 0 && base != NULL);
+
+	ClassEntry *class = CLASS_CE(cls);
+	assert(NULL != class);
 	
 	U2 attr_name_idx;
 	U2 attr_length;
@@ -744,7 +754,7 @@ Class* defineClass(const char *classname, const char *data, int len) {
     class->fields_count = field_count;
 	class->fields = (FieldEntry *)calloc(field_count, sizeof(FieldEntry));
 	assert(NULL != class->fields);
-	readClassField(class, field_count, &base);
+	readClassField(cls, field_count, &base);
 
 	// read class methods
 	U2 methods_count;
@@ -752,12 +762,12 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	class->methods_count = methods_count;
 	class->methods = calloc(methods_count, sizeof(MethodEntry));
 	assert(NULL != class->methods);
-	readClassMethod(class, methods_count, &base);
+	readClassMethod(cls, methods_count, &base);
 
 	// read class attributes
 	U2 attr_count;
 	READ_U2(attr_count, base);
-	readClassAttrib(class, attr_count, &base);
+	readClassAttrib(cls, attr_count, &base);
 	
 	/** check memory buffer overflow */
 	if ((char *)base > data + len) {
@@ -1000,6 +1010,121 @@ ConstPool* newConstPool(int length) {
 	return pool;
 }
 
+/**
+ * Log the information of ConstPoolEntry
+ */
+void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
+{
+	assert(NULL != pool && NULL != entry);
+
+	int cls_idx;
+	int nametype_idx;
+	int name_idx;
+	int type_idx;
+	int index;
+
+	U4 u4high;
+	U4 u4low;
+	U8 u8;
+
+	switch (entry->tag) {
+		case CONST_Utf8:
+			printf("Utf8\t%s\n", entry->info.utf8_info.bytes);
+			break;
+
+		case CONST_Integer:
+			printf("int\t%d\n", entry->info.integer_info.bytes);
+			break;
+
+		case CONST_Float:
+			printf("float\t%d\n", entry->info.float_info.bytes);
+			break;
+
+		case CONST_Long:
+			u4high = entry->info.long_info.high_bytes;
+			u4low = entry->info.long_info.low_bytes;
+			u8 = u4high;
+			u8<<=32;
+			u8 += u4low;
+			printf("long\t%" PRIu64 "\n", u8);
+			break;
+
+		case CONST_Double:
+			u4high = entry->info.double_info.high_bytes;
+			u4low = entry->info.double_info.low_bytes;
+			u8 = u4high<<32 + u4low;
+			printf("double\t%" PRIu64 "\n", u8);
+			break;
+
+		case CONST_Class:
+			name_idx = entry->info.class_info.name_index;
+			printf("class\t#%d; //%s\n",
+					name_idx,
+					pool->entries[name_idx].info.utf8_info.bytes);
+			break;
+
+		case CONST_String:
+			index = entry->info.string_info.string_index;
+			printf("String\t#%d; //%s\n",
+					index,
+					pool->entries[index].info.utf8_info.bytes);
+			break;
+
+		case CONST_Fieldref:
+			cls_idx = entry->info.fieldref_info.class_index;
+			nametype_idx = entry->info.fieldref_info.name_type_index;
+			name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+			index = pool->entries[cls_idx].info.class_info.name_index;
+			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+
+			printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
+					cls_idx, 
+					nametype_idx,
+					pool->entries[index].info.utf8_info.bytes,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+
+			break;
+
+		case CONST_Methodref:
+			cls_idx = entry->info.methodref_info.class_index,
+					index = pool->entries[cls_idx].info.class_info.name_index;
+			nametype_idx = entry->info.methodref_info.name_type_index,
+						 name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+			printf("Method\t#%d.#%d; // %s.%s:%s\n",
+					cls_idx, 
+					nametype_idx, 
+					pool->entries[index].info.utf8_info.bytes,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+			break;
+
+		case CONST_IfMethodref:
+			printf("InterfaceMethodref_info not implemented\n");
+			break;
+
+		case CONST_NameAndType:
+			name_idx = entry->info.nametype_info.name_index;
+			type_idx = entry->info.nametype_info.type_index;
+			printf("NameAndType #%d:%d;// \"%s\":%s\n",
+					name_idx,
+					type_idx,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+			break;
+
+		case CONST_MethodHandle:
+			break;
+
+		case CONST_MethodType:
+			break;
+
+		case CONST_InvokeDynamic:
+			break;
+	}
+}
+
 /*
  * Log information of .class file
  */
@@ -1077,107 +1202,11 @@ void logClassEntry(ClassEntry *clsEntry)
 	U4 u4low;
 	U8 u8;
 
-    for (i = 1; i < clsEntry->constPool->length; ++i) {
-        printf("const #%d = ", i);
-        switch (clsEntry->constPool->entries[i].tag) {
-            case CONST_Utf8:
-                printf("Asciz\t%s\n", clsEntry->constPool->entries[i].info.utf8_info.bytes);
-                break;
-
-            case CONST_Integer:
-				printf("int\t%d\n", clsEntry->constPool->entries[i].info.integer_info.bytes);
-                break;
-
-            case CONST_Float:
-				printf("float\t%d\n", clsEntry->constPool->entries[i].info.float_info.bytes);
-                break;
-
-            case CONST_Long:
-				u4high = clsEntry->constPool->entries[i].info.long_info.high_bytes;
-				u4low = clsEntry->constPool->entries[i].info.long_info.low_bytes;
-				u8 = u4high;
-				u8<<=32;
-				u8 += u4low;
-				++i;
-				//printf("long\t%lld\n", u8);
-                break;
-
-            case CONST_Double:
-				u4high = clsEntry->constPool->entries[i].info.double_info.high_bytes;
-				u4low = clsEntry->constPool->entries[i].info.double_info.low_bytes;
-				u8 = u4high<<32 + u4low;
-				++i;
-				//printf("double\t%lld\n", u8);
-                break;
-
-            case CONST_Class:
-                name_idx = clsEntry->constPool->entries[i].info.class_info.name_index;
-                printf("class\t#%d; //%s\n",
-                        name_idx,
-                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes);
-                break;
-
-            case CONST_String:
-                index = clsEntry->constPool->entries[i].info.string_info.string_index;
-                printf("String\t#%d; //%s\n",
-                        index,
-                        clsEntry->constPool->entries[index].info.utf8_info.bytes);
-                break;
-
-            case CONST_Fieldref:
-				cls_idx = clsEntry->constPool->entries[i].info.fieldref_info.class_index;
-				nametype_idx = clsEntry->constPool->entries[i].info.fieldref_info.name_type_index;
-				name_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.name_index;
-                index = clsEntry->constPool->entries[cls_idx].info.class_info.name_index;
-				type_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.type_index;
-
-				printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
-						cls_idx, 
-						nametype_idx,
-                        clsEntry->constPool->entries[index].info.utf8_info.bytes,
-						clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
-						clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
-
-                break;
-
-            case CONST_Methodref:
-                cls_idx = clsEntry->constPool->entries[i].info.methodref_info.class_index,
-                index = clsEntry->constPool->entries[cls_idx].info.class_info.name_index;
-                nametype_idx = clsEntry->constPool->entries[i].info.methodref_info.name_type_index,
-                name_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.name_index;
-                type_idx = clsEntry->constPool->entries[nametype_idx].info.nametype_info.type_index;
-                printf("Method\t#%d.#%d; // %s.%s:%s\n",
-                        cls_idx, 
-                        nametype_idx, 
-                        clsEntry->constPool->entries[index].info.utf8_info.bytes,
-                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
-                        clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
-                break;
-
-            case CONST_IfMethodref:
-				printf("InterfaceMethodref_info\n");
-                break;
-
-            case CONST_NameAndType:
-                name_idx = clsEntry->constPool->entries[i].info.nametype_info.name_index;
-                type_idx = clsEntry->constPool->entries[i].info.nametype_info.type_index;
-                printf("NameAndType #%d:%d;// \"%s\":%s\n",
-                        name_idx,
-                        type_idx,
-                        clsEntry->constPool->entries[name_idx].info.utf8_info.bytes,
-                        clsEntry->constPool->entries[type_idx].info.utf8_info.bytes);
-                break;
-
-            case CONST_MethodHandle:
-                break;
-
-            case CONST_MethodType:
-                break;
-
-            case CONST_InvokeDynamic:
-                break;
-        }
-    }
+	for (i = 1; i < clsEntry->constPool->length; ++i) {
+		printf("  #%d = ", i);
+		logConstPoolEntry(clsEntry->constPool, 
+				clsEntry->constPool->entries + i);
+	}
 
     for (i = 0; i < clsEntry->fields_count; ++i) {
         if (clsEntry->fields[i].acc_flags & ACC_PUBLIC) {
@@ -1454,9 +1483,9 @@ void recycleStackFrame(StackFrame* frame)
 }
 
 /*
- * Push stack frame into stack
+ * Push stack frame into java stack
  */
-bool pushStack(JavaStack *stack, StackFrame *frame) {
+bool pushJavaStack(JavaStack *stack, StackFrame *frame) {
 	if (NULL == stack || NULL == frame) {
 		return FALSE;
 	}
@@ -1465,11 +1494,11 @@ bool pushStack(JavaStack *stack, StackFrame *frame) {
 		return FALSE;
 	}
 
-	stack->frames[++stack->top] = frame;
+	stack->frames[stack->top++] = frame;
 	return TRUE;
 }
 
-StackFrame* popStack(JavaStack *stack) {
+StackFrame* popJavaStack(JavaStack *stack) {
 	if (NULL == stack || stack->top < 1) {
 		fprintf(stderr, "Stack is downflow\n");
 		return NULL;
@@ -1478,8 +1507,38 @@ StackFrame* popStack(JavaStack *stack) {
 	return stack->frames[--stack->top];
 }
 
-bool isStackEmpty(JavaStack *stack) {
+bool isJavaStackEmpty(JavaStack *stack) {
 	assert(NULL != stack);
 	return stack->top < 1;
+}
+
+/*
+ * Push operand into operand stack
+ */
+bool pushOperandStack(OperandStack *stack, const Slot *slot) {
+
+	assert(NULL != stack && NULL != slot);
+	assert(NULL != stack->slots);
+	assert(stack->capacity > 0);
+	assert(stack->validCnt <= stack->capacity);
+
+	Slot *current = stack->slots + stack->validCnt;
+	++stack->validCnt;
+	current->tag = slot->tag;
+	current->value = slot->value;
+
+	return TRUE;
+}
+
+/*
+ * Pop operand from operand stack
+ */
+Slot* popOperandStack(OperandStack *stack) {
+	assert(NULL != stack);
+	assert(stack->validCnt > 0);
+	assert(stack->validCnt <= stack->capacity);
+
+	--stack->validCnt;
+	return stack->slots + stack->validCnt;
 }
 
