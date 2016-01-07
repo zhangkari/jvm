@@ -388,6 +388,12 @@ extern bool pushJavaStack(JavaStack *stack, StackFrame *frame);
 extern StackFrame* popJavaStack(JavaStack *stack);
 
 /*
+ * Peek java stack
+ * Return stack top element (not pop out)
+ */
+extern StackFrame* peekJavaStack(JavaStack *stack);
+
+/*
  * Push operand into operand stack
  */
 extern bool pushOperandStack(OperandStack *stack, const Slot *slot);
@@ -401,5 +407,10 @@ extern Slot* popOperandStack(OperandStack *stack);
  * Check whether java stack is empry
  */
 extern bool isJavaStackEmpty(JavaStack *stack);
+
+/*
+ * Initialize Slot with ConstPoolEntry
+ */
+extern void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry);
 
 #endif

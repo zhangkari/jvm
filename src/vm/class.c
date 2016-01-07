@@ -1118,6 +1118,10 @@ void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
 			break;
 
 		case CONST_MethodType:
+            type_idx = entry->info.methodtype_info.type_index;
+            printf("MethodType #%d;// %s\n",
+                type_idx,
+                pool->entries[type_idx].info.utf8_info.bytes);
 			break;
 
 		case CONST_InvokeDynamic:
@@ -1507,6 +1511,19 @@ StackFrame* popJavaStack(JavaStack *stack) {
 	return stack->frames[--stack->top];
 }
 
+/*
+ * Peek java stack
+ * Return stack top element (not pop out)
+ */
+StackFrame* peekJavaStack(JavaStack *stack) {
+	if (NULL == stack || stack->top < 1) {
+		fprintf(stderr, "Stack is downflow\n");
+		return NULL;
+	}
+
+	return stack->frames[stack->top - 1];
+}
+
 bool isJavaStackEmpty(JavaStack *stack) {
 	assert(NULL != stack);
 	return stack->top < 1;
@@ -1542,3 +1559,104 @@ Slot* popOperandStack(OperandStack *stack) {
 	return stack->slots + stack->validCnt;
 }
 
+/*
+ * Initialize Slot with ConstPoolEntry
+ */
+void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
+
+    assert(NULL != slot && NULL != pool && NULL != entry);
+
+    U2 index;
+    U2 name_idx;
+    U2 cls_idx;
+    U2 type_idx;
+    U2 nametype_idx;
+
+    slot->tag = entry->tag;
+	switch (entry->tag) {
+		case CONST_Utf8:
+			slot->value = (uintptr_t)entry->info.utf8_info.bytes;
+			break;
+
+		case CONST_Integer:
+			slot->value = (uintptr_t)entry->info.integer_info.bytes;
+			break;
+
+		case CONST_Float:
+			slot->value = (uintptr_t)entry->info.float_info.bytes;
+			break;
+
+		case CONST_Long:
+			slot->value = (uintptr_t)&entry->info.long_info;
+			break;
+
+		case CONST_Double:
+			slot->value = (uintptr_t)&entry->info.double_info;
+			break;
+
+		case CONST_Class:
+			name_idx = entry->info.class_info.name_index;
+		    slot->value = (uintptr_t)pool->entries[name_idx].info.utf8_info.bytes;
+			break;
+
+		case CONST_String:
+			index = entry->info.string_info.string_index;
+			slot->value = (uintptr_t)pool->entries[index].info.utf8_info.bytes;
+			break;
+
+		case CONST_Fieldref:
+			cls_idx = entry->info.fieldref_info.class_index;
+			nametype_idx = entry->info.fieldref_info.name_type_index;
+			name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+			index = pool->entries[cls_idx].info.class_info.name_index;
+			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+
+			printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
+					cls_idx, 
+					nametype_idx,
+					pool->entries[index].info.utf8_info.bytes,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+
+			break;
+
+		case CONST_Methodref:
+			cls_idx = entry->info.methodref_info.class_index,
+					index = pool->entries[cls_idx].info.class_info.name_index;
+			nametype_idx = entry->info.methodref_info.name_type_index,
+						 name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+			printf("Method\t#%d.#%d; // %s.%s:%s\n",
+					cls_idx, 
+					nametype_idx, 
+					pool->entries[index].info.utf8_info.bytes,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+			break;
+
+		case CONST_IfMethodref:
+			printf("InterfaceMethodref_info not implemented\n");
+			break;
+
+		case CONST_NameAndType:
+			name_idx = entry->info.nametype_info.name_index;
+			type_idx = entry->info.nametype_info.type_index;
+			printf("NameAndType #%d:%d;// \"%s\":%s\n",
+					name_idx,
+					type_idx,
+					pool->entries[name_idx].info.utf8_info.bytes,
+					pool->entries[type_idx].info.utf8_info.bytes);
+			break;
+
+		case CONST_MethodHandle:
+			break;
+
+		case CONST_MethodType:
+        	type_idx = entry->info.methodtype_info.type_index;
+			slot->value = (uintptr_t)pool->entries[type_idx].info.utf8_info.bytes;
+			break;
+
+		case CONST_InvokeDynamic:
+			break;
+	}
+}

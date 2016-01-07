@@ -951,6 +951,46 @@ void logInstruction(const Instruction* inst) {
 
 }
 
+/**
+ * Validate the instruction execute environment
+ */
+#define validate_inst_env(param)                            \
+                                                            \
+    assert(NULL != param);                                  \
+                                                            \
+    InstExecEnv* instEnv = (InstExecEnv *)param;            \
+                                                            \
+	Instruction *inst = instEnv->inst;                      \
+	assert(NULL != inst);                                   \
+                                                            \
+	ExecEnv *env = instEnv->env;                            \
+	assert(NULL != env);                                    \
+                                                            \
+	JavaStack *jstack = env->javaStack;                     \
+	assert(NULL != jstack);                                 \
+                                                            \
+	StackFrame *frame = peekJavaStack(jstack);              \
+	assert(NULL != frame);                                  \
+                                                            \
+	LocalVarTable *localTbl = frame->localTbl;              \
+	assert(NULL != localTbl);                               \
+                                                            \
+	OperandStack *opdStack = frame->opdStack;               \
+	assert(NULL != opdStack);                               \
+                                                            \
+	ConstPool *constPool = frame->constPool;                \
+	assert(NULL != constPool);                              \
+                                                            \
+	U2 use = frame->use;                                    \
+	assert(use == 1);                                       
+
+
+//////////////////////////////////
+//
+// Implement instruction functions
+//
+//////////////////////////////////
+
 DECL_FUNC(nop)
 {
 	return FALSE;
@@ -988,8 +1028,20 @@ DECL_FUNC(iconst_3)
 
 DECL_FUNC(iconst_4)
 {
-    printf("iconst_4\n");
-	return FALSE;
+
+    validate_inst_env(param);
+
+    Slot slot;
+    slot.tag = CONST_Integer;
+    slot.value = 4;
+    bool result = pushOperandStack(opdStack, &slot);
+    assert(result);
+
+#ifdef DEBUG
+    printf("\ticonst_4\n");
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(iconst_5)
@@ -1044,42 +1096,24 @@ DECL_FUNC(sipush)
 
 DECL_FUNC(ldc)
 {
-    assert(NULL != param);
-
-    InstExecEnv* instEnv = (InstExecEnv *)param;
-	Instruction *inst = instEnv->inst;
-	ExecEnv *env = instEnv->env;
-	assert(NULL != inst && NULL != env);
-
-	JavaStack *jstack = env->javaStack;
-	assert(NULL != jstack);
-
-	StackFrame *frame = popJavaStack(jstack);
-	assert(NULL != frame);
-
-	LocalVarTable *localTbl = frame->localTbl;
-	assert(NULL != localTbl);
-
-	OperandStack *opdStack = frame->opdStack;
-	assert(NULL != opdStack);
-
-	ConstPool *constPool = frame->constPool;
-	assert(NULL != constPool);
-
-	U2 use = frame->use;
-	assert(use == 1);
+    validate_inst_env(param);
 
 	U1 u1 = inst->operand.u1;
 	ConstPoolEntry *constEntry = constPool->entries + u1;
 	assert(NULL != constEntry);
 
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+
+    bool result = pushOperandStack(opdStack, &slot);
+    assert(result);
+
 #ifdef DEBUG
-    printf("\tldc  %d // ", u1);
+    printf("\tldc  %d \t\t// ", u1);
 	logConstPoolEntry(constPool, constPool->entries + u1);
-	printf("\n");
 #endif
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(ldc_w)
@@ -1294,14 +1328,34 @@ DECL_FUNC(istore_0)
 
 DECL_FUNC(istore_1)
 {
-    printf("istore_1\n");
-	return FALSE;
+    validate_inst_env(param);
+
+    Slot *slot = popOperandStack(opdStack);
+    (localTbl->slots + 1)->tag = slot->tag;
+    (localTbl->slots + 1)->value = slot->value;
+    localTbl->validCnt = 2;
+
+#ifdef DEBUG
+    printf("\tistore_1\n");
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(istore_2)
 {
-    printf("istore_2\n");
-	return FALSE;
+    validate_inst_env(param);
+
+    Slot *slot = popOperandStack(opdStack);
+    (localTbl->slots + 2)->tag = slot->tag;
+    (localTbl->slots + 2)->value = slot->value;
+    localTbl->validCnt = 3;
+
+#ifndef DEBUG
+    printf("\tistore_2\n");
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(istore_3)
