@@ -2,8 +2,10 @@
 *.o
 *.so
 *.a
+*.la
 *.lo
 *.exe
+*.log
 
 # dependent files
 *.d
@@ -27,3 +29,31 @@ target
 # java object
 *.class
 *.jar
+
+####################
+#
+# CUint
+#
+####################
+# Makefile
+#libs/CUnit-2.1-3/Makefile
+#libs/CUnit-2.1-3/CUnit/Makefile
+#libs/CUnit-2.1-3/CUnit/Headers/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Automated/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Basic/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Console/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Curses/Makefile
+#libs/CUnit-2.1-3/CUnit/Sources/Framework/Makefile
+#libs/CUnit-2.1-3/Man/Makefile
+#libs/CUnit-2.1-3/Man/man3/Makefile
+#libs/CUnit-2.1-3/doc/headers/Makefile
+
+#
+libs/CUnit-2.1-3/CUnit/Sources/.libs
+libs/CUnit-2.1-3/CUnit/Sources/Automated/.libs
+libs/CUnit-2.1-3/CUnit/Sources/Basic/.libs
+libs/CUnit-2.1-3/CUnit/Sources/Console/.libs
+libs/CUnit-2.1-3/doc
+libs/CUnit-2.1-3/libtool
+*.status
