@@ -27,3 +27,13 @@ target
 # java object
 *.class
 *.jar
+
+# debug
+debug/*
+!debug/rt.jar
+!debug/CMakeLists.txt
+
+# release
+release/*
+!release/rt.jar
+!release/CMakeLists.txt

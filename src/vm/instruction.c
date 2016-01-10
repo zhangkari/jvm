@@ -1086,7 +1086,21 @@ DECL_FUNC(dconst_1)
 
 DECL_FUNC(bipush)
 {
-	return FALSE;
+    validate_inst_env(param);
+
+    U1 u1 = inst->operand.u1;
+    Slot slot;
+    slot.tag = CONST_Integer;
+    slot.value = u1;
+
+    bool result = pushOperandStack(opdStack, &slot);
+    assert(result);
+
+#ifdef DEBUG
+    printf("\tbipush  %d \n ", u1);
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(sipush)

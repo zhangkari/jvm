@@ -1552,7 +1552,7 @@ bool pushOperandStack(OperandStack *stack, const Slot *slot) {
  */
 Slot* popOperandStack(OperandStack *stack) {
 	assert(NULL != stack);
-	assert(stack->validCnt > 0);
+	assert(stack->validCnt >= 0);
 	assert(stack->validCnt <= stack->capacity);
 
 	--stack->validCnt;

@@ -1,0 +1,2 @@
+These files included in minizip are under zlib license.
+They are copied from zlib-1.2.8/contrib/minizip.
