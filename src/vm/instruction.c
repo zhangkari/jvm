@@ -1124,7 +1124,7 @@ DECL_FUNC(ldc)
 
 #ifdef DEBUG
     printf("\tldc  %d \t\t// ", u1);
-	logConstPoolEntry(constPool, constPool->entries + u1);
+	logConstPoolEntry(constPool, constEntry);
 #endif
 
 	return TRUE;
@@ -1173,14 +1173,37 @@ DECL_FUNC(iload_0)
 
 DECL_FUNC(iload_1)
 {
-    printf("iload_1\n");
-	return FALSE;
+    validate_inst_env(param);
+
+    Slot *slot = localTbl->slots + 1;
+    assert(NULL != slot);
+
+    bool result = pushOperandStack(opdStack, slot);
+    assert(result);
+
+#ifdef DEBUG
+    printf("\tiload_1 \n");
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(iload_2)
 {
-    printf("iload_2\n");
-	return FALSE;
+    validate_inst_env(param);
+
+    Slot *slot = localTbl->slots + 2;
+    assert(NULL != slot);
+
+    bool result = pushOperandStack(opdStack, slot);
+    assert(result);
+
+#ifdef DEBUG
+    printf("\tiload_2 \n");
+#endif
+
+	return TRUE;
+
 }
 
 DECL_FUNC(iload_3)
@@ -1365,7 +1388,7 @@ DECL_FUNC(istore_2)
     (localTbl->slots + 2)->value = slot->value;
     localTbl->validCnt = 3;
 
-#ifndef DEBUG
+#ifdef DEBUG
     printf("\tistore_2\n");
 #endif
 
@@ -1957,8 +1980,24 @@ DECL_FUNC(_return)
 
 DECL_FUNC(getstatic)
 {
-    printf("getstatic\n");
-	return FALSE;
+    validate_inst_env(param);
+
+	U1 u2 = inst->operand.u2;
+	ConstPoolEntry *constEntry = constPool->entries + u2;
+	assert(NULL != constEntry);
+
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+
+    bool result = pushOperandStack(opdStack, &slot);
+    assert(result);
+
+#ifdef DEBUG
+    printf("\tgetstatic  %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
+	return TRUE;
 }
 
 DECL_FUNC(putstatic)
