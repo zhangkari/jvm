@@ -62,7 +62,6 @@ static void readConstPool(ClassEntry* class, U2 cp_count, U1** base) {
 	ConstPool *constPool = newConstPool(cp_count);
 	assert(NULL != constPool);
 	int i;
-	int j;
 	for (i = 1; i < cp_count; ++i) {
 		READ_U1(tag, *base);
 		constPool->entries[i].tag = tag;
@@ -170,7 +169,6 @@ static void readClassField(Class *cls, U2 field_count, U1** base) {
 	char *name = NULL;
 	U2 acc_flags;
 	U2 attr_count;
-	U2 clsidx;
 	U2 nameidx;
 	U2 typeidx;
 
@@ -576,7 +574,6 @@ static void readAnnotationElementValue(ClassEntry* class, U1** base) {
     U2 type_idx;
     U2 num_pairs;
     U2 elem_name_idx;
-    U1 tag;
     int i, j;
     for (i = 0; i < anno_count; ++i) {
         READ_U2(type_idx, *base);
@@ -831,7 +828,7 @@ Class* loadClassFromFile(char *path, char *classname) {
 		fclose(fp);
 		return NULL;
 	}
-	Class *class = defineClass(classname, buff, size);
+	Class *class = defineClass(classname, (const char *)buff, size);
 	free(buff);
 	fclose(fp);
 	return class;
@@ -1052,7 +1049,9 @@ void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
 		case CONST_Double:
 			u4high = entry->info.double_info.high_bytes;
 			u4low = entry->info.double_info.low_bytes;
-			u8 = u4high<<32 + u4low;
+			u8 = u4high;
+			u8 <<= 32;
+			u8 += u4low;
 			printf("double\t%" PRIu64 "\n", u8);
 			break;
 
@@ -1195,16 +1194,6 @@ void logClassEntry(ClassEntry *clsEntry)
     printf("  minor version: %d\n", (int)clsEntry->reserve[0]);
     printf("  major version: %d\n", (int)clsEntry->reserve[1]);
     printf("  Constant pool count:%d\n", clsEntry->constPool->length);
-
-    int cls_idx;
-    int nametype_idx;
-    int name_idx;
-    int type_idx;
-    int index;
-
-	U4 u4high;
-	U4 u4low;
-	U8 u8;
 
 	for (i = 1; i < clsEntry->constPool->length; ++i) {
 		printf("  #%d = ", i);

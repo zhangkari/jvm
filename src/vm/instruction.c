@@ -459,7 +459,7 @@ bool needAddOffset (U1 opcode)
  */
 #define INST_FUNC(X) func_inst_##X
 #define _T(X) #X
-#define INIT_INST(X, Y) X, _T(X), 0, Y, (Y + 1), INST_FUNC(X), 0
+#define INIT_INST(X, Y) {X, _T(X), {0}, Y, (Y + 1), INST_FUNC(X), 0}
 static Instruction sInstructionTable[] = {
 	INIT_INST(nop, 0),          // 0x00
 	INIT_INST(aconst_null, 0),  // 0x01

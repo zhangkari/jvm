@@ -281,7 +281,7 @@ int parseCmdLine(int argc, char **argv, Property **props) {
 	} 
 	else if (argc == 2) {
 		if (strcmp(argv[1], "-v") == 0) {
-			printf("jvm %s copyright@kari.zhang\n", JAVA_VERSION);
+			printf("jvm %s compiled on %s copyright@kari.zhang\n", JAVA_VERSION, __DATE__);
 			exit(0);
 		}
 		else if (strcmp(argv[1], "-h") == 0) {
@@ -322,4 +322,6 @@ int main(int argc, char *argv[]) {
 	initVM(&initArgs, &vm);
 	startVM(&vm);
 	destroyVM(&vm);
+
+	return 0;
 }

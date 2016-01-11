@@ -15,6 +15,8 @@
 #include <string.h>
 #include "class.h"
 
+#define JVMP_VER "0.0.1"
+
 static void usage();
 
 int main(int argc, char *argv[]) {
@@ -22,19 +24,32 @@ int main(int argc, char *argv[]) {
 		usage();
 		return -1;
 	}
-    char path[256];
-    memset(path, 0, 256);
-    strcpy(path, argv[1]);
-    Class *mainClass = loadClassFromFile(path, argv[1]);
-    if (NULL == mainClass) {
-        fprintf(stderr, "Failed loadClass from file\n");
-        return -1;
-    }
-    ClassEntry *clsEntry = CLASS_CE(mainClass);
-    logClassEntry(clsEntry);
 
-    //TOD
-    // freeClass();
+	if (0 == strncmp(argv[1], "-v", 2)) {
+		printf("jvmp %s compiled on %s copyright@kari.zhang\n", JVMP_VER, __DATE__);
+		return 0;
+
+	} else if (*argv[1] == '-') {
+		usage();
+		return -1;
+
+	} else {
+		char path[256];
+		memset(path, 0, 256);
+		strcpy(path, argv[1]);
+		Class *mainClass = loadClassFromFile(path, argv[1]);
+		if (NULL == mainClass) {
+			fprintf(stderr, "Failed loadClass from file\n");
+			return -1;
+		}
+		ClassEntry *clsEntry = CLASS_CE(mainClass);
+		logClassEntry(clsEntry);
+
+		//TOD
+		// freeClass();
+
+		return 0;
+	}
 }
 
 static void usage() {

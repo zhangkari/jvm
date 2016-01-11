@@ -13,6 +13,8 @@
 #include <string.h>
 #include "libjar.h"
 
+#define JAR_VER "0.0.1"
+
 static void usage() {
 	printf("Usage\n");
 	printf("  %s [-c f1 f2 ...] [-d] path \n", "jar");
@@ -63,9 +65,19 @@ static void on_finish(void *param) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc <= 2) {
+	if (argc < 2) {
 		usage();	
 		return -1;
+	}
+
+	if (2 == argc) {
+		if (0 == strncmp("-v", argv[1], 2)) {
+			printf("jar %s compiled on %s copyright@kari.zhang.\n", JAR_VER, __DATE__);
+			return 0;
+		} else {
+			usage();
+			return -1;
+		}
 	}
 
 	if (strcmp(argv[1], "-d") == 0) {
@@ -74,18 +86,26 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		executeUnpackJar (argv[2], on_start, on_progress, NULL, on_finish, NULL);
-	}
-	else if (strcmp(argv[1], "-c") == 0) {
+		executeUnpackJar (argv[2], 
+				on_start,
+				on_progress,
+				NULL, 
+				on_finish,
+				NULL);
+
+		return 0;
+
+	} else if (strcmp(argv[1], "-c") == 0) {
 		if (argc <= 3) {
 			usage();
 			return -1;
 		}
-		else {
-			executePackJar ((const char**)&argv[2], argc-3, argv[argc-1]);	
-		}
-	}
-	else {
+
+		executePackJar ((const char**)&argv[2], argc-3, argv[argc-1]);	
+
+		return 0;
+
+	} else {
 		usage();
 		return -1;
 	}
