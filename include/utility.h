@@ -11,8 +11,9 @@
 #ifndef __UTILITY__H__
 #define __UTILITY__H__
 
+#define D_TAG "DEBUG:"
 #ifdef DEBUG
-#define LogD(format, ...) printf(format " %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__)
+#define LogD(format, ...) printf(D_TAG format " %s:%d\n", ##__VA_ARGS__, __FILE__, __LINE__)
 #else
 #define LogD(...)
 #endif
