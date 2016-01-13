@@ -8,7 +8,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <comm.h>
-#include <endian_swap.h>
+#include <endianswap.h>
 #include <instruction.h>
 #include <jvm.h>
 

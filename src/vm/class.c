@@ -17,7 +17,7 @@
  *******************************************************/
 
 #include <assert.h>
-#include <endian_swap.h>
+#include <endianswap.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>

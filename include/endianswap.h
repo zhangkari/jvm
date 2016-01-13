@@ -1,17 +1,19 @@
 /*******************************************************
- * file name:   endian_swap.h
+ * file name:   endianswap.h
  * description: swap endian
  * date:        2015-12-20
  * author:      kari.zhang
  *
+ * modifications:
+ *	1. Rename to endianswap.h by kari.zhang @ 2016-01-13
  *******************************************************/
 
-#ifndef __ENDIAN_SWAP__H__
-#define __ENDIAN_SWAP__H__
+#ifndef __ENDIANSWAP__H__
+#define __ENDIANSWAP__H__
 
 #include <byteswap.h>
 #include <comm.h>
-#include <machine_endian.h>
+#include <machineconf.h>
 
 #define READ_U1(u1, data) do {										\
 	u1 = *(data);							        			    \
