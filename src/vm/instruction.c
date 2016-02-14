@@ -1993,8 +1993,8 @@ DECL_FUNC(getstatic)
     assert(result);
 
 #ifdef DEBUG
-    printf("\tgetstatic  %d // ", u2);
-	logConstPoolEntry(constPool, constEntry);
+    printf("\tgetstatic  %d\n ", u2);
+	//logConstPoolEntry(constPool, constEntry);
 #endif
 
 	return TRUE;

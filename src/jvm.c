@@ -265,7 +265,7 @@ int setInitArgs(Property *props, int nprop, InitArgs *args) {
 }
 
 static void usage() {
-	printf("Usage: jvm [-potions] class [args...]\n");
+	printf("Usage: jvm [-options] class [args...]\n");
 	printf("Options include:\n");
 	printf("	 -v			print version\n");
 	printf("	 -h			print this\n");

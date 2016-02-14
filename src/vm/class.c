@@ -1555,6 +1555,10 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 
     assert(NULL != slot && NULL != pool && NULL != entry);
 
+    printf("++++ initSlot() ++++\n");
+
+    printf("Reference types are not implemented!\n");
+
     U2 index;
     U2 name_idx;
     U2 cls_idx;
@@ -1648,4 +1652,6 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 		case CONST_InvokeDynamic:
 			break;
 	}
+
+    printf("---- initSlot() ----\n");
 }
