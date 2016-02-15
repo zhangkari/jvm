@@ -1988,6 +1988,11 @@ DECL_FUNC(getstatic)
 
     Slot slot;
     initSlot(&slot, constPool, constEntry);
+	assert(slot.tag == constEntry->tag);
+	printf("slot value:%s\n", (char *)slot.value);
+
+	// retrieve the class named slot.value
+	// TODO
 
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
