@@ -41,6 +41,14 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 static SlotBufferPool *sSlotBufferPool = NULL;
 static StackFramePool *sStackFramePool = NULL;
 
+/******************************************/
+/* run time classes preload from rt.jar */
+// gRtClsCnt  = VM->execEnv->rtClsCnt
+// gRtClsArea = VM->execEnv->rtClsArea
+int gRtClsCnt = 0;
+Class **gRtClsArea = NULL;
+/******************************************/
+
 /*
  * Read Constant Value Pool
  */
@@ -777,7 +785,51 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	return cls;
 }
 
-void linkClass(Class *class) {
+void linkClass(Class *cls) {
+
+    assert(NULL != cls);
+    ClassEntry *class = CLASS_CE(cls);
+    assert(CLASS_BAD != class->state);
+
+    if (CLASS_LINKED == class->state ||
+            CLASS_INITING == class->state ||
+            CLASS_INITED == class->state) {
+        printf ("Class linked\n");
+        return;
+    }
+
+    assert(CLASS_LOADED == class->state);
+
+    /*
+    ClassEntry *super = CLASS_CE(class->super);
+    printf ("super name:%s\n", super->name);
+    */
+    const char* super_name = class->super_name;
+    if (NULL == super_name) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < gRtClsCnt; ++i) {
+        Class *cls = *(gRtClsArea + i);
+
+        // skip META-INF/
+        // skip META-INF/MANIFEST.MF
+        if (NULL == cls) {
+            continue;
+        }
+
+        if (0 == strcmp(super_name, CLASS_CE(cls)->name)) {
+            break; 
+        }
+    }
+
+    if (i < gRtClsCnt) {
+        class->super = *(gRtClsArea + i);
+        linkClass(class->super);
+    } else {
+        printf("Not find rt class:%s\n", super_name);
+    }
 
 }
 

@@ -19,6 +19,15 @@
 
 static void usage();
 
+/******************************************/
+/* run time classes preload from rt.jar */
+// gRtClsCnt  = VM->execEnv->rtClsCnt
+// gRtClsArea = VM->execEnv->rtClsArea
+extern int gRtClsCnt;
+extern Class **gRtClsArea;
+/******************************************/
+
+
 int main(int argc, char *argv[]) {
 	if (2 != argc) {
 		usage();

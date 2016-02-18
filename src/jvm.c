@@ -21,6 +21,14 @@
 #include "jvm.h"
 #include "mem.h"
 
+/******************************************/
+/* run time classes preload from rt.jar */
+// gRtClsCnt  = VM->execEnv->rtClsCnt
+// gRtClsArea = VM->execEnv->rtClsArea
+extern int gRtClsCnt;
+extern Class **gRtClsArea;
+/******************************************/
+
 void initVM(InitArgs *args, VM *vm) {
 	assert(NULL != args || NULL != vm);
 	vm->initArgs = args;
@@ -39,11 +47,14 @@ void initVM(InitArgs *args, VM *vm) {
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
+    // load classes from rt.jar
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
         printf("Error: Failed load run time class.\n");
         exit(1);
     }
+    gRtClsCnt = env->rtClsCnt;
+    gRtClsArea = env->rtClsArea;
 
     vm->execEnv = env;
 
@@ -298,7 +309,6 @@ int parseCmdLine(int argc, char **argv, Property **props) {
 	return 0;
 }
 
-
 int main(int argc, char *argv[]) {
 	InitArgs initArgs;	
 	setDefaultInitArgs(&initArgs);
@@ -307,6 +317,10 @@ int main(int argc, char *argv[]) {
 	int len = parseCmdLine(argc, argv, &props);
 	setInitArgs(props, len, &initArgs);
 	
+    VM vm;
+	memset(&vm, 0, sizeof(vm));
+	initVM(&initArgs, &vm);
+
     char path[256];
     strcpy(path, argv[1]);
     strcat(path, ".class");
@@ -317,9 +331,7 @@ int main(int argc, char *argv[]) {
     }
 	initArgs.mainClass = mainClass;
 
-	VM vm;
-	memset(&vm, 0, sizeof(vm));
-	initVM(&initArgs, &vm);
+    linkClass(mainClass);
 	startVM(&vm);
 	destroyVM(&vm);
 
