@@ -171,10 +171,12 @@ typedef struct Object Class;
  * |   lock  |   cls   |  clsEntry  |
  * ----------------------------------
  *
+ * cls always be NULL in Class
+ * cls pointed it's Class type in Object
  *******************************************/
 struct Object {
 	uintptr_t lock;			// this
-	Class *cls;				// super class
+	Class *cls;				// class type
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 
