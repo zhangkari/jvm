@@ -20,6 +20,7 @@
 #include "instruction.h"
 #include "jvm.h"
 #include "mem.h"
+#include "utility.h"
 
 /******************************************/
 /* run time classes preload from rt.jar */
@@ -47,12 +48,24 @@ void initVM(InitArgs *args, VM *vm) {
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
+#ifdef DEBUG
+	uint64_t t1 = current_ms();
+#endif
     // load classes from rt.jar
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
     if (env->rtClsCnt < 1) {
         printf("Error: Failed load run time class.\n");
         exit(1);
     }
+#ifdef DEBUG
+	uint64_t t2 = current_ms();
+	printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
+#endif
+
+	/*
+	 * the two variables are assigned values here & defined in class.c . 
+	 * These smell bad! Refactor them in some days;
+	 */
     gRtClsCnt = env->rtClsCnt;
     gRtClsArea = env->rtClsArea;
 

@@ -21,4 +21,11 @@
 #define LOG_FUNC_ENTRY LogD("++++ %s ++++\n", __func__) 
 #define LOG_FUNC_EXIT LogD("---- %s ----\n", __func__) 
 
+#include <stdint.h>
+
+/*
+ * return the current time in milliseconds
+ */
+uint64_t current_ms();
+
 #endif
