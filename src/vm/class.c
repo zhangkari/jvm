@@ -894,6 +894,7 @@ typedef struct UnpackJarArg {
     U4 totalCnt;     // record the count of all the class
     char *jarname;   // the jar file name
 	U4 clsCnt;       // number of the valid class count
+	U4 memUsed;		 // total memory that all the classes used
 } UnpackJarArg;
 
 /*
@@ -905,6 +906,7 @@ static void on_start (int total, void* param) {
 #ifdef DEBUG
         printf("unzip %s start. (%d files)\n", arg->jarname, total);
 #endif
+		arg->memUsed = 0;
         arg->totalCnt = total;
         arg->classes = (Class**)calloc(total, sizeof(Class *));
         if (NULL == arg->classes) {
@@ -958,6 +960,7 @@ static void on_progress (int index,
 		UnpackJarArg* arg = (UnpackJarArg*) param;
 		Class** cls = arg->classes;
         if (isEndWith(name, ".class")) {
+			arg->memUsed += size;
             ++arg->clsCnt;
             cls[index] = defineClass(name, mem, size);
         }
@@ -1003,8 +1006,9 @@ static void on_finish(void* param) {
     if (NULL != param) {
         UnpackJarArg* arg = (UnpackJarArg*) param;
 #ifdef DEBUG
-        printf("unzip %s complete. (%d classes)\n",
-                arg->jarname, arg->clsCnt);
+        printf("unzip %s complete.\n", arg->jarname);
+		printf("load %d classes, %d KB memory used.\n", arg->clsCnt,
+				arg->memUsed / 1024);
 #endif
     } 
 }
