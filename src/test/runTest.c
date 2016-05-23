@@ -11,7 +11,8 @@
 #include <stdlib.h>
 #include <CUnit/Basic.h>
 #include <CUnit/CUnit.h>
- #include "endianswap_test.h"
+#include "classtest.h"
+#include "endianswap_test.h"
 #include "memtest.h"
 
 static int suite_success_clean() {
@@ -39,6 +40,12 @@ CU_TestInfo endianSuite[] = {
     CU_TEST_INFO_NULL
 };
 
+// class test suite
+CU_TestInfo classSuite[] = {
+	{"test_jre_class", test_jre_class},
+	CU_TEST_INFO_NULL
+};
+
 CU_SuiteInfo suites[] = {
     // mem test suite
     {"mem:", suite_success_init, suite_success_clean, NULL, NULL, memSuite},
@@ -46,6 +53,9 @@ CU_SuiteInfo suites[] = {
     // endian swap test suite
     {"endian:", suite_success_init, suite_success_clean, NULL, NULL, endianSuite},
     
+	// class test suite
+	{"class:", suite_success_init, suite_success_clean, NULL, NULL, classSuite},
+
     CU_SUITE_INFO_NULL
 };
 

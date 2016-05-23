@@ -14,6 +14,8 @@
  *	4. update defineClass() & Remove debug 
  *			log (I shoud add readAttribs() in the futrue)
  *			by kari.zhang @ 2015-12-18
+ *
+ *	5. skip validate classname by kari.zhang @ 2016-5-23
  *******************************************************/
 
 #include <assert.h>
@@ -667,7 +669,7 @@ static void readClassAttrib(Class* cls, U2 attr_count, U1** base) {
 /*
  * Load a class from in memory 
  * Parameters:
- *		classname:		name of the class
+ *		classname:		name of the class, may be NULL
  *		data:			data of the class
  *		len:			length of the data
  * Return:
@@ -676,7 +678,9 @@ static void readClassAttrib(Class* cls, U2 attr_count, U1** base) {
  */
 Class* defineClass(const char *classname, const char *data, int len) {
 
-	if (NULL == classname || NULL == data || len <= 0) {
+	// classname can be NULL
+
+	if (NULL == data || len <= 0) {
 		return NULL;
 	}
 
@@ -722,8 +726,14 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	U2 this_class;
 	READ_U2(this_class, base);
 	name = constPool->entries[constPool->entries[this_class].info.class_info.name_index].info.utf8_info.bytes;
-	class->name = calloc(1, strlen(name) + 1);
+	int name_len = strlen(name);
+	class->name = calloc(1, name_len + 1);
 	strcpy(class->name, name);
+
+	if (strncmp(class->name, classname, name_len) != 0) {
+		printf("Failed define %s with name:%s\n", name, classname);
+		exit(1);
+	}
 
 	// read super class
 	U2 super_class;
@@ -838,6 +848,20 @@ Class* initClass(Class *class) {
 }
 
 Class* findSystemClass(char *classname) {
+	int i;
+	Class *cls;
+	for (i = 0; i < gRtClsCnt; i++) {
+		cls = gRtClsArea[i];
+		if (NULL == cls) {
+			continue;
+		}
+
+		ClassEntry *entry = CLASS_CE(cls);
+		if (0 == strcmp(entry->name, classname)) {
+			return cls;
+		}
+	}
+
 	return NULL;
 }
 
@@ -846,6 +870,25 @@ FieldEntry* findField(Class *class, char *name, char *type) {
 }
 
 MethodEntry* findMethod(Class *class, char *name, char *type) {
+
+	if (NULL == class || NULL == name || NULL == type) {
+		return NULL;
+	}
+
+	ClassEntry *entry = CLASS_CE(class);
+	int i;
+	for (i = 0; i < entry->methods_count; ++i) {
+		MethodEntry *method = entry->methods + i;
+		if (NULL == method) {
+			continue;
+		}
+
+		if (strcmp(method->name, name) == 0 &&
+				strcmp(method->type, type) == 0) {
+			return method;
+		}
+	}
+
 	return NULL;
 }
 
@@ -1064,6 +1107,22 @@ ConstPool* newConstPool(int length) {
 }
 
 /**
+ * Log the information of ConstPool
+ */
+void logConstPool(const ConstPool* pool)
+{
+	if (NULL == pool) {
+		return;
+	}
+
+	int i;
+	for (i = 1; i < pool->length; ++i) {
+		printf("  #%d = ", i);
+		logConstPoolEntry(pool, pool->entries + i);
+	}
+}
+
+/**
  * Log the information of ConstPoolEntry
  */
 void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
@@ -1251,11 +1310,7 @@ void logClassEntry(ClassEntry *clsEntry)
     printf("  major version: %d\n", (int)clsEntry->reserve[1]);
     printf("  Constant pool count:%d\n", clsEntry->constPool->length);
 
-	for (i = 1; i < clsEntry->constPool->length; ++i) {
-		printf("  #%d = ", i);
-		logConstPoolEntry(clsEntry->constPool, 
-				clsEntry->constPool->entries + i);
-	}
+	logConstPool(clsEntry->constPool);
 
     for (i = 0; i < clsEntry->fields_count; ++i) {
         if (clsEntry->fields[i].acc_flags & ACC_PUBLIC) {
@@ -1279,54 +1334,68 @@ void logClassEntry(ClassEntry *clsEntry)
     }
 
     for (i = 0; i < clsEntry->methods_count; ++i) {
-        if (clsEntry->methods[i].acc_flags & ACC_PUBLIC) {
-            printf("public ");
-        }
-        else if (clsEntry->methods[i].acc_flags & ACC_PROTECTED) {
-            printf("protected ");
-        }
-        else if (clsEntry->methods[i].acc_flags & ACC_PRIVATE) {
-            printf("private ");
-        }
-
-		if (clsEntry->methods[i].acc_flags & ACC_ABSTRACT) {
-			printf("abstract ");
-		}
-        if (clsEntry->methods[i].acc_flags & ACC_STATIC) {
-			printf("static ");
-		}
-
-        printf("%s ", clsEntry->methods[i].type);
-
-        char *name = clsEntry->methods[i].name;
-        if (!strcmp(name, "<init>")) {
-            printf("%s;\n", clsEntry->name);
-        } else {
-            printf("%s;\n", clsEntry->methods[i].name);
-        }
-
-        printf("  descriptor: %s\n", clsEntry->methods[i].type);
-        printf("  flags: %s\n", "flags");
-
-        printf("  Code:\n");
-        printf("   Stack=%d, Locals=%d, Args_size=%d\n",
-                    clsEntry->methods[i].max_stack,
-                    clsEntry->methods[i].max_locals,
-                    clsEntry->methods[i].args_count);
-
-        int j = 0;
-        while (j < clsEntry->methods[i].code_length) {
-            U1 *code = (U1 *)clsEntry->methods[i].code + j;
-            // debug stub
-			const Instruction* inst = getCachedInstruction(code, clsEntry->methods[i].code_length - j, j);
-			printf("   %d ", j);
-			logInstruction(inst);
-            j += inst->length; 
-        }
-
-        printf("  LineNumberTable:\n");
-        printf("   line %d: %d\n\n", 0, 0);
+		logMethodEntry(clsEntry->methods + i);
     }
+}
+
+/*
+ * log the information of MethodEntry
+ */
+void logMethodEntry(MethodEntry* method)
+{
+	if (NULL == method) {
+		return;
+	}
+
+	ClassEntry* clsEntry = CLASS_CE(method->class);
+
+	if (method->acc_flags & ACC_PUBLIC) {
+		printf("public ");
+	}
+	else if (method->acc_flags & ACC_PROTECTED) {
+		printf("protected ");
+	}
+	else if (method->acc_flags & ACC_PRIVATE) {
+		printf("private ");
+	}
+
+	if (method->acc_flags & ACC_ABSTRACT) {
+		printf("abstract ");
+	}
+	if (method->acc_flags & ACC_STATIC) {
+		printf("static ");
+	}
+
+	printf("%s ", method->type);
+
+	char *name = method->name;
+	if (!strcmp(name, "<init>")) {
+		printf("%s;\n", clsEntry->name);
+	} else {
+		printf("%s;\n", method->name);
+	}
+
+	printf("  descriptor: %s\n", method->type);
+	printf("  flags: %s\n", "flags");
+
+	printf("  Code:\n");
+	printf("   Stack=%d, Locals=%d, Args_size=%d\n",
+			method->max_stack,
+			method->max_locals,
+			method->args_count);
+
+	int j = 0;
+	while (j < method->code_length) {
+		U1 *code = (U1 *)method->code + j;
+		// debug stub
+		const Instruction* inst = getCachedInstruction(code, method->code_length - j, j);
+		printf("   %d ", j);
+		logInstruction(inst);
+		j += inst->length; 
+	}
+
+	printf("  LineNumberTable:\n");
+	printf("   line %d: %d\n\n", 0, 0);
 }
 
 Class* allocClass(MemoryArea* area)

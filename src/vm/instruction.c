@@ -2049,7 +2049,13 @@ DECL_FUNC(invokedynamic)
 
 DECL_FUNC(_new)
 {
-    printf("new\n");
+    validate_inst_env(param);
+
+	U1 u2 = inst->operand.u2;
+    printf("new %d\n", u2);
+
+	printf(" Not implemented.\n");
+
 	return FALSE;
 }
 

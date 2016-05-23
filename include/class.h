@@ -315,6 +315,11 @@ extern int loadClassFromJar(char *path, Class ***classes);
 extern void extractInstructions(MethodEntry *method);
 
 /**
+ * Log the information of ConstPool
+ */
+extern void logConstPool(const ConstPool *pool);
+
+/**
  * Log the information of ConstPoolEntry
  */
 extern void logConstPoolEntry(const ConstPool *pool, 
@@ -324,6 +329,11 @@ extern void logConstPoolEntry(const ConstPool *pool,
  * Log the information of ClassEntry
  */
 extern void logClassEntry(ClassEntry* clsEntry);
+
+/**
+ * Log the information of MethodEntry
+ */
+extern void logMethodEntry(MethodEntry* method);
 
 /*
  * Create a specified capability SlotBufferPool
