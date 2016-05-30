@@ -7,10 +7,10 @@
 #include <assert.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <comm.h>
-#include <endianswap.h>
-#include <instruction.h>
-#include <jvm.h>
+#include "comm.h"
+#include "endianswap.h"
+#include "instruction.h"
+#include "runtime.h"
 
 enum {
 	opcode_min = -1,

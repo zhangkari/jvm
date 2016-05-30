@@ -30,6 +30,13 @@ typedef enum tag_value {
     CONST_MethodHandle	= 15,
     CONST_MethodType	= 16,
     CONST_InvokeDynamic	= 18,
+
+	// this type not defined in JVM specification and exclude the
+	// primer type (such as int, float, long, double), but include the
+	// types all defined above.
+	// I use this type to distinguish primer type & reference type.
+	// Maybe this type will never be used.
+	ReferenceType		= 127
 } TypeTag;
 
 typedef enum access_flags {
@@ -160,6 +167,13 @@ typedef struct ExceptionTable {
 	struct ExceptionEntry* entries;
 } ExceptionTable;
 
+/*
+ I need leave some explanations of jvm memory model.
+ At first, I design a reference handle will hold the pointer of Class type. Therefore, Object struct will hold a Class struct pointer. This make Object struct and Class struct look the same. However, If use this memory model, the jvm GC will be very difficult to realize. So I change another memory model.
+In the new memory model, I use a Reference Handle to hold the Class struct and Object struct.
+Now I should redesign the Object struct.
+ */
+
 typedef struct Object Object;
 typedef struct Object Class;
 /*******************************************
@@ -179,6 +193,11 @@ struct Object {
 	Class *cls;				// class type
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
+
+typedef struct ReferenceHandle {
+	Class *cls_ptr;
+	Object *obj_ptr;
+} RefHandle;
 
 typedef struct FieldEntry {
 	Class *class;

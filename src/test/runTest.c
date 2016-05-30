@@ -13,6 +13,7 @@
 #include <CUnit/CUnit.h>
 #include "classtest.h"
 #include "endianswap_test.h"
+#include "enginetest.h"
 #include "memtest.h"
 
 static int suite_success_clean() {
@@ -42,7 +43,13 @@ CU_TestInfo endianSuite[] = {
 
 // class test suite
 CU_TestInfo classSuite[] = {
-	{"test_jre_class", test_jre_class},
+	{"test_class:", test_class},
+	CU_TEST_INFO_NULL
+};
+
+// engine test suite
+CU_TestInfo engineSuite[] = {
+	{"test_engine:", test_engine},
 	CU_TEST_INFO_NULL
 };
 
@@ -55,6 +62,10 @@ CU_SuiteInfo suites[] = {
     
 	// class test suite
 	{"class:", suite_success_init, suite_success_clean, NULL, NULL, classSuite},
+
+	// engine test suite
+	{"engine:", suite_success_init, suite_success_clean, NULL, NULL, engineSuite},
+
 
     CU_SUITE_INFO_NULL
 };

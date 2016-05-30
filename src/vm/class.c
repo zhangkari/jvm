@@ -797,7 +797,10 @@ Class* defineClass(const char *classname, const char *data, int len) {
 
 void linkClass(Class *cls) {
 
-    assert(NULL != cls);
+	if (NULL == cls) {
+		return;
+	}
+
     ClassEntry *class = CLASS_CE(cls);
     assert(CLASS_BAD != class->state);
 
@@ -903,7 +906,7 @@ Class* loadClassFromFile(char *path, char *classname) {
 	}
 	FILE *fp = fopen(path, "rb");
 	if (NULL == fp) {
-		fprintf(stderr, "Error:failed load class\n");
+		fprintf(stderr, "Error:failed load class:%s\n", path);
 		return NULL;
 	}
 
@@ -918,7 +921,7 @@ Class* loadClassFromFile(char *path, char *classname) {
 		return NULL;
 	}
 	if (size != fread(buff, 1, size, fp)) {
-		fprintf(stderr, "Failed read class file\n");
+		fprintf(stderr, "Failed read class file:%s\n", path);
 		free(buff);
 		fclose(fp);
 		return NULL;

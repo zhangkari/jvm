@@ -59,7 +59,7 @@ static void testJavaClassLoader() {
 	}
 }
 
-void test_jre_class() {
+void test_class() {
 
 	Class ** jreCls = NULL;
 	int jreCnt = loadClassFromJar(RT_PATH, &jreCls);
@@ -73,5 +73,5 @@ void test_jre_class() {
 
 	Class *mainClass = loadClassFromFile(CLASS_PATH, CLASS_NAME);	
 	CU_ASSERT_PTR_NOT_NULL(mainClass);
-
+//	logClassEntry(CLASS_CE(mainClass));
 }

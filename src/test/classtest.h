@@ -10,6 +10,6 @@
 #ifndef __CLASSTEST__H__
 #define __CLASSTEST__H__
 
-void test_jre_class();
+void test_class();
 
 #endif

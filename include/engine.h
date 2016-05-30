@@ -11,7 +11,7 @@
 #define __ENGINE__H__
 
 #include "class.h"
-#include "jvm.h"
+#include "runtime.h"
 
 extern void executeMethod(VM *vm, MethodEntry *method);
 
