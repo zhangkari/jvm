@@ -20,10 +20,6 @@ void executeMethod(VM *vm, MethodEntry *method)
 {
 	assert(NULL != vm && NULL != method);
 
-	// just compile runtime.c
-	// Delete it in some day
-	assert(NULL == getNativeMethod("V main([Ljava/lang/String;"));
-
 #ifdef DEBUG
 	printf("execute %s start:\n", method->name);
 #endif

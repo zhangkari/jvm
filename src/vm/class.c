@@ -42,6 +42,7 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 // static Pools
 static SlotBufferPool *sSlotBufferPool = NULL;
 static StackFramePool *sStackFramePool = NULL;
+static RefHandlePool  *sRefHandlePool  = NULL;
 
 /*
  * Read Constant Value Pool
@@ -839,9 +840,20 @@ bool linkClassImpl(Class *cls, Class* const * list, int size) {
 	return FALSE;
 }
 
-Class* initClass(Class *class) {
+bool resolveClass(Class *class) {
+
+	printf("resolveClass not implemented ! \n");
+
+	return TRUE;
+}
+
+bool initializeClass(Class *class) {
+
 	// invoke <cinit>
-	return class;
+	
+	printf("initializeClass not implemented ! \n");
+
+	return TRUE;
 }
 
 Class* findClassImpl(char *classname, Class * const *list, int size) {
@@ -1180,7 +1192,7 @@ void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
 
 		case CONST_String:
 			index = entry->info.string_info.string_index;
-			printf("String\t#%d; //%s\n",
+			printf("String\t#%d; // %s\n",
 					index,
 					pool->entries[index].info.utf8_info.bytes);
 			break;
@@ -1192,7 +1204,7 @@ void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
 			index = pool->entries[cls_idx].info.class_info.name_index;
 			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
 
-			printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
+			printf("Field\t#%d.#%d; // %s.%s:%s\n",
 					cls_idx, 
 					nametype_idx,
 					pool->entries[index].info.utf8_info.bytes,
@@ -1412,7 +1424,8 @@ Class* allocClass(MemoryArea* area)
 int createSlotBufferPool(int cap) 
 {
 	if (sSlotBufferPool != NULL) {
-		assert ( 0 && "SlotBuffer Pool already exist");
+		printf("SlotBuffer Pool already exist\n");
+		return 0;
 	}
 
 	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
@@ -1530,7 +1543,8 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 int createStackFramePool(int cap) 
 {
 	if (sStackFramePool != NULL) {
-		assert ( 0 && "StackFrame Pool already exist");
+		printf("StackFrame Pool already exist\n");
+		return 0;
 	}
 
 	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
@@ -1599,6 +1613,80 @@ void recycleStackFrame(StackFrame* frame)
 	assert (NULL != frame);
 
 	frame->use = 0;
+}
+
+/*
+ * Create a specified capacity RefHandlePool
+ */
+int createRefHandlePool(int cap) {
+	if (sRefHandlePool != NULL) {
+		printf("RefHandle Pool already exist\n");
+		return 0;
+	}
+
+	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
+	
+	RefHandlePool* pool = (RefHandlePool *)calloc(1, sizeof(*pool));
+	if (NULL == pool) {
+		return -1;
+	}
+
+	pool->capacity = cap;
+	pool->handles = (RefHandle *)calloc(cap, sizeof(RefHandle));
+	if (NULL == pool->handles) {
+		return -1;
+	}
+
+	sRefHandlePool = pool;
+
+	return 0;
+}
+
+/*
+ * Destroy RefHandlePool
+ */
+void destroyRefHandlePool() {
+	RefHandlePool *pool = sRefHandlePool;
+	if (NULL != pool) {
+		if (NULL != pool->handles) {
+			free (pool->handles);
+			pool->handles = NULL;
+		}
+		sRefHandlePool = NULL;
+	}
+}
+
+/*
+ * Obtain a RefHandle
+ * Notice: call recycleRefHandle to release !
+ */
+RefHandle* obtainRefHandle() {
+	assert(NULL != sRefHandlePool);
+
+	RefHandlePool* pool = sRefHandlePool;
+	RefHandle *handle = NULL;
+	int i;
+	for (i = 0; i < pool->capacity; ++i) {
+		handle = pool->handles + i;
+		if (!handle->use) {
+			handle->use = 1;
+			return handle;
+		}
+	}
+
+	printf("Failed obtain RefHandle in pool.\n");
+	printf("Please check if stack overflowed.\n");
+
+	return NULL;
+
+}
+
+/*
+ * Recyle RefHandle for reuse.
+ */
+void recycleRefHandle(RefHandle* handle) {
+	assert (NULL != handle);
+	handle->use = 0;
 }
 
 /*
@@ -1681,9 +1769,11 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 
     assert(NULL != slot && NULL != pool && NULL != entry);
 
+#if 0
     printf("++++ initSlot() ++++\n");
 
     printf("Reference types are not implemented!\n");
+#endif
 
     U2 index;
     U2 name_idx;
@@ -1730,12 +1820,14 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 			index = pool->entries[cls_idx].info.class_info.name_index;
 			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
 
+#if 0
 			printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
 					cls_idx, 
 					nametype_idx,
 					pool->entries[index].info.utf8_info.bytes,
 					pool->entries[name_idx].info.utf8_info.bytes,
 					pool->entries[type_idx].info.utf8_info.bytes);
+#endif
 			
 			slot->value = (uintptr_t)(pool->entries[index].info.utf8_info.bytes);
 
@@ -1747,12 +1839,15 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 			nametype_idx = entry->info.methodref_info.name_type_index,
 						 name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
 			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+
+#if 0
 			printf("Method\t#%d.#%d; // %s.%s:%s\n",
 					cls_idx, 
 					nametype_idx, 
 					pool->entries[index].info.utf8_info.bytes,
 					pool->entries[name_idx].info.utf8_info.bytes,
 					pool->entries[type_idx].info.utf8_info.bytes);
+#endif
 			break;
 
 		case CONST_IfMethodref:
@@ -1762,11 +1857,13 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 		case CONST_NameAndType:
 			name_idx = entry->info.nametype_info.name_index;
 			type_idx = entry->info.nametype_info.type_index;
+#if 0
 			printf("NameAndType #%d:%d;// \"%s\":%s\n",
 					name_idx,
 					type_idx,
 					pool->entries[name_idx].info.utf8_info.bytes,
 					pool->entries[type_idx].info.utf8_info.bytes);
+#endif
 			break;
 
 		case CONST_MethodHandle:
@@ -1783,5 +1880,8 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 			break;
 	}
 
+#if 0
     printf("---- initSlot() ----\n");
+#endif
+
 }

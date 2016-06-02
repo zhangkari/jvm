@@ -1993,23 +1993,38 @@ DECL_FUNC(getstatic)
 
 	// Please reference here:
 	// class.c line:1742
+#if 0
 	printf("slot value:%s\n", (char *)slot.value);
+#endif
+
+#ifdef TIME_COST_LOG
+	uint64_t t1 = current_ms();
+#endif
 
 	// retrieve the class named slot.value
-	uint64_t t1 = current_ms();
 	Class *cls = findClass((char *)slot.value, env);
-	uint64_t t2 = current_ms();
-	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
 	assert (NULL != cls);
 
-	linkClass(cls, env);
+#ifdef TIME_COST_LOG
+	uint64_t t2 = current_ms();
+	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
+#endif
+
+	bool status = linkClass(cls, env);
+	assert (status);
+
+	status = resolveClass(cls);
+	assert (status);
+
+	status = initializeClass(cls);
+	assert (status);
 
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
 
 #ifdef DEBUG
-    printf("\tgetstatic  %d\n ", u2);
-	//logConstPoolEntry(constPool, constEntry);
+    printf("\tgetstatic %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
 #endif
 
 	return TRUE;
@@ -2032,7 +2047,21 @@ DECL_FUNC(putfield)
 
 DECL_FUNC(invokevirtual)
 {
-    printf("invokevirtual\n");
+	validate_inst_env(param);
+
+	U1 u2 = inst->operand.u2;
+	ConstPoolEntry *constEntry = constPool->entries + u2;
+	assert(NULL != constEntry);
+
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+	assert(slot.tag == constEntry->tag);
+
+#ifdef DEBUG
+    printf("\tinvokevirtual %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
 	return FALSE;
 }
 

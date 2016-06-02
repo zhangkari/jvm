@@ -61,11 +61,15 @@ typedef enum access_flags {
 } AccTag;
 
 enum Class_State {
-	CLASS_LOADED	= 0x01,
-	CLASS_LINKED	= 0x02,
-	CLASS_BAD		= 0x03,
-	CLASS_INITING	= 0x04,
-	CLASS_INITED	= 0x05
+	CLASS_BAD		= 0x00,
+	CLASS_LOADING	= 0x01,
+	CLASS_LOADED	= 0x02,
+	CLASS_LINKING	= 0x03,
+	CLASS_LINKED	= 0x04,
+	CLASS_RESOLVING	= 0x05,
+	CLASS_RESOLVED	= 0x06,
+	CLASS_INITING	= 0x07,
+	CLASS_INITED	= 0x08
 };
 
 enum Prime_Class_Type {
@@ -195,7 +199,8 @@ struct Object {
 }; 
 
 typedef struct ReferenceHandle {
-	Class *cls_ptr;
+	U1		use;			// 0 free, 1 used
+	Class  *cls_ptr;
 	Object *obj_ptr;
 } RefHandle;
 
@@ -231,21 +236,26 @@ typedef SlotBuffer OperandStack;
  * SlotBufferPool
  */
 typedef struct SlotBufferPool {
-	SlotBuffer *slotbufs;
 	U4			capacity;
+	SlotBuffer *slotbufs;
 } SlotBufferPool;
 
 typedef struct StackFrame {
+	U1			  use;
 	LocalVarTable *localTbl;
 	OperandStack  *opdStack;
 	ConstPool	  *constPool;
-	U1			  use;
 } StackFrame;
 
 typedef struct StackFramePool {
+	U4			capacity;
 	StackFrame *frames;
-	U4 capacity;
 } StackFramePool;
+
+typedef struct RefHandlePool {
+	U4		   capacity;
+	RefHandle *handles;
+} RefHandlePool;
 
 /**
  * Java stack
@@ -299,7 +309,8 @@ extern ConstPool* newConstPool(int length);
 extern Class* defineClass(const char *clsname, const char *data, int len);
 extern Class* findClassImpl(char *classname, Class * const *list, int size);
 extern bool linkClassImpl(Class *class, Class * const *list, int size);
-extern Class* initClass(Class *class);
+extern bool resolveClass(Class *class);
+extern bool initializeClass(Class *class);
 
 extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);
@@ -407,6 +418,27 @@ extern StackFrame* obtainStackFrame();
  * Recyle StackFrame for reuse.
  */
 extern void recycleStackFrame(StackFrame* frame);
+
+/*
+ * Create a specified capacity RefHandlePool
+ */
+extern int createRefHandlePool(int cap);
+
+/*
+ * Destroy RefHandlePool
+ */
+extern void destroyRefHandlePool();
+
+/*
+ * Obtain a RefHandle
+ * Notice: call recycleRefHandle to release !
+ */
+extern RefHandle* obtainRefHandle();
+
+/*
+ * Recyle RefHandle for reuse.
+ */
+extern void recycleRefHandle(RefHandle* handle);
 
 /*
  * Push stack frame into java stack

@@ -70,6 +70,11 @@ void initVM(InitArgs *args, VM *vm) {
         printf("Failed create instruction pool.\n");
         exit (-1);
     }
+
+	if (createRefHandlePool(STACK_MAX_DEPTH) < 0) {
+		printf("Failed create RefHandle pool.\n");
+		exit (-1);
+	}
 }
 
 
@@ -99,6 +104,7 @@ void destroyVM(VM *vm) {
 	destroySlotBufferPool();
     destroyStackFramePool();
     destroyInstPool();
+	destroyRefHandlePool();
 
 	assert (NULL != vm);
 }

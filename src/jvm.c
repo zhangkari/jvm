@@ -41,7 +41,25 @@ int main(int argc, char *argv[]) {
     }
 	initArgs.mainClass = mainClass;
 
-    linkClass(mainClass, vm.execEnv);
+	bool status = FALSE;
+    status = linkClass(mainClass, vm.execEnv);
+	if (!status) {
+		fprintf(stderr, "Failed linkClass %s\n", path);
+		return -1;
+	}
+
+	status = resolveClass(mainClass);
+	if (!status) {
+		fprintf(stderr, "Failed resolveClass %s\n", path);
+		return -1;
+	}
+
+	status = initializeClass(mainClass);
+	if (!status) {
+		fprintf(stderr, "Failed initializeClass %s\n", path);
+		return -1;
+	}
+
 	startVM(&vm);
 	destroyVM(&vm);
 
