@@ -11,6 +11,7 @@
 #include "endianswap.h"
 #include "instruction.h"
 #include "runtime.h"
+#include "utility.h"
 
 enum {
 	opcode_min = -1,
@@ -1989,10 +1990,19 @@ DECL_FUNC(getstatic)
     Slot slot;
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
+
+	// Please reference here:
+	// class.c line:1742
 	printf("slot value:%s\n", (char *)slot.value);
 
 	// retrieve the class named slot.value
-	// TODO
+	uint64_t t1 = current_ms();
+	Class *cls = findClass((char *)slot.value, env);
+	uint64_t t2 = current_ms();
+	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
+	assert (NULL != cls);
+
+	linkClass(cls, env);
 
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);

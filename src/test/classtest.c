@@ -10,17 +10,15 @@
 #include <stdio.h>
 #include <CUnit/CUnit.h>
 #include "class.h"
+#include "runtime.h"
 
 #define RT_PATH "rt.jar"
 #define CLASS_PATH "Hello.class"
 #define CLASS_NAME "Hello"
 #define MIN_JRE_CNT 8
 
-extern int gRtClsCnt;
-extern Class **gRtClsArea;
-
-static void testJavaClassLoader() {
-	Class *cls = findSystemClass("java/lang/ClassLoader");
+static void testJavaClassLoader(const VM *vm) {
+	Class *cls = findClass("java/lang/ClassLoader", vm->execEnv);
 	CU_ASSERT_PTR_NOT_NULL(cls);
 	ClassEntry *entry = CLASS_CE(cls);
 	CU_ASSERT_PTR_NOT_NULL(entry);
@@ -60,16 +58,21 @@ static void testJavaClassLoader() {
 }
 
 void test_class() {
+	
+	InitArgs initArgs;
+	setDefaultInitArgs(&initArgs);
+
+	VM vm;
+	memset(&vm, 0, sizeof(vm));
+	initVM(&initArgs, &vm);
 
 	Class ** jreCls = NULL;
 	int jreCnt = loadClassFromJar(RT_PATH, &jreCls);
 	CU_ASSERT_TRUE(jreCnt > MIN_JRE_CNT);
 	CU_ASSERT_PTR_NOT_NULL(jreCls);
 	printf("jre class count:%d\n", jreCnt);
-	gRtClsCnt = jreCnt;
-	gRtClsArea = jreCls;
 
-	testJavaClassLoader();
+	testJavaClassLoader(&vm);
 
 	Class *mainClass = loadClassFromFile(CLASS_PATH, CLASS_NAME);	
 	CU_ASSERT_PTR_NOT_NULL(mainClass);

@@ -43,14 +43,6 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 static SlotBufferPool *sSlotBufferPool = NULL;
 static StackFramePool *sStackFramePool = NULL;
 
-/******************************************/
-/* run time classes preload from rt.jar */
-// gRtClsCnt  = VM->execEnv->rtClsCnt
-// gRtClsArea = VM->execEnv->rtClsArea
-int gRtClsCnt = 0;
-Class **gRtClsArea = NULL;
-/******************************************/
-
 /*
  * Read Constant Value Pool
  */
@@ -795,10 +787,10 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	return cls;
 }
 
-void linkClass(Class *cls) {
+bool linkClassImpl(Class *cls, Class* const * list, int size) {
 
-	if (NULL == cls) {
-		return;
+	if (NULL == cls || NULL == list || size < 1) {
+		return FALSE;
 	}
 
     ClassEntry *class = CLASS_CE(cls);
@@ -808,7 +800,7 @@ void linkClass(Class *cls) {
             CLASS_INITING == class->state ||
             CLASS_INITED == class->state) {
         printf ("Class linked\n");
-        return;
+        return TRUE;
     }
 
     assert(CLASS_LOADED == class->state);
@@ -819,12 +811,12 @@ void linkClass(Class *cls) {
     */
     const char* super_name = class->super_name;
     if (NULL == super_name) {
-        return;
+        return TRUE;
     }
 
     int i;
-    for (i = 0; i < gRtClsCnt; ++i) {
-        Class *cls = *(gRtClsArea + i);
+    for (i = 0; i < size; ++i) {
+        const Class *cls = list[i];
 
         // skip META-INF/
         // skip META-INF/MANIFEST.MF
@@ -837,24 +829,30 @@ void linkClass(Class *cls) {
         }
     }
 
-    if (i < gRtClsCnt) {
-        class->super = *(gRtClsArea + i);
-        linkClass(class->super);
+    if (i < size) {
+        class->super = (Class *)list[i];
+        return linkClassImpl(class->super, list, size);
     } else {
         printf("Not find rt class:%s\n", super_name);
     }
 
+	return FALSE;
 }
 
 Class* initClass(Class *class) {
+	// invoke <cinit>
 	return class;
 }
 
-Class* findSystemClass(char *classname) {
+Class* findClassImpl(char *classname, Class * const *list, int size) {
+	if (NULL == classname || list == NULL || size < 1) {
+		return NULL;
+	}
+
 	int i;
 	Class *cls;
-	for (i = 0; i < gRtClsCnt; i++) {
-		cls = gRtClsArea[i];
+	for (i = 0; i < size; i++) {
+		cls = (Class *)list[i];
 		if (NULL == cls) {
 			continue;
 		}
@@ -1738,6 +1736,8 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 					pool->entries[index].info.utf8_info.bytes,
 					pool->entries[name_idx].info.utf8_info.bytes,
 					pool->entries[type_idx].info.utf8_info.bytes);
+			
+			slot->value = (uintptr_t)(pool->entries[index].info.utf8_info.bytes);
 
 			break;
 
@@ -1770,6 +1770,7 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 			break;
 
 		case CONST_MethodHandle:
+			printf("MethodHandle not implemented.\n");
 			break;
 
 		case CONST_MethodType:
@@ -1778,6 +1779,7 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
 			break;
 
 		case CONST_InvokeDynamic:
+			printf("InvokeDynamic not implemented.\n");
 			break;
 	}
 

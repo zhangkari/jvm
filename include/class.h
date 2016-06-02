@@ -297,9 +297,9 @@ typedef struct ClassEntry {
 extern Class* allocClass();
 extern ConstPool* newConstPool(int length);
 extern Class* defineClass(const char *clsname, const char *data, int len);
-extern void linkClass(Class *class);
+extern Class* findClassImpl(char *classname, Class * const *list, int size);
+extern bool linkClassImpl(Class *class, Class * const *list, int size);
 extern Class* initClass(Class *class);
-extern Class* findSystemClass(char *classname);
 
 extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);

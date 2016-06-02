@@ -18,14 +18,6 @@
 #include "runtime.h"
 #include "utility.h"
 
-/******************************************/
-/* run time classes preload from rt.jar */
-// gRtClsCnt  = VM->execEnv->rtClsCnt
-// gRtClsArea = VM->execEnv->rtClsArea
-extern int gRtClsCnt;
-extern Class **gRtClsArea;
-/******************************************/
-
 /** static function declare **/
 static int findEntryMain(const ClassEntry *clsEntry);
 /** declare end **/
@@ -61,13 +53,6 @@ void initVM(InitArgs *args, VM *vm) {
 	uint64_t t2 = current_ms();
 	printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
 #endif
-
-	/*
-	 * the two variables are assigned values here & defined in class.c . 
-	 * These smell bad! Refactor them in some days;
-	 */
-    gRtClsCnt = env->rtClsCnt;
-    gRtClsArea = env->rtClsArea;
 
     vm->execEnv = env;
 
@@ -330,3 +315,15 @@ int parseCmdLine(int argc, char **argv, Property **props) {
 	return 0;
 }
 
+Class* findClass(char *clsname, ExecEnv *env) {
+	Class *cls = findClassImpl(clsname, env->rtClsArea, env->rtClsCnt);
+	if (NULL == cls) {
+		cls = findClassImpl(clsname, env->userClsArea, env->userClsCnt);
+	}
+	return cls;
+}
+
+bool linkClass(Class *cls, const ExecEnv *env) {
+	return linkClassImpl(cls, env->rtClsArea, env->rtClsCnt) ||
+		linkClassImpl(cls, env->userClsArea, env->userClsCnt);
+}

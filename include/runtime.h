@@ -76,6 +76,12 @@ extern int readSysConfig(char *path, Property *props);
 extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 
 /**
+ * findClass & linkClass
+ */
+extern Class* findClass(char *clsname, ExecEnv *env);
+extern bool linkClass(Class *cls, const ExecEnv *env);
+
+/**
  * Manage java virtual machine
  */
 extern void initVM(InitArgs *args, VM *vm);

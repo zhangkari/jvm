@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     }
 	initArgs.mainClass = mainClass;
 
-    linkClass(mainClass);
+    linkClass(mainClass, vm.execEnv);
 	startVM(&vm);
 	destroyVM(&vm);
 

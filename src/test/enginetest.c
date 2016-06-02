@@ -32,7 +32,7 @@ void test_engine()
 
 	logClassEntry(CLASS_CE(mainClass));
 
-	linkClass(mainClass);
+	linkClass(mainClass, vm.execEnv);
 	startVM(&vm);
 	destroyVM(&vm);
 }
