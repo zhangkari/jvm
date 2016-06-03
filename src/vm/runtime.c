@@ -97,7 +97,7 @@ void startVM(VM *vm) {
 	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
 	// Used as a root node by gc to mark garbage in the future
 	vm->execEnv->mainMethod = mainMethod;
-	executeMethod(vm, mainMethod);
+	executeMethod(vm->execEnv, mainMethod);
 }
 
 void destroyVM(VM *vm) {
@@ -212,22 +212,15 @@ static int findRtJar (char **path) {
 void setDefaultInitArgs(InitArgs *args)
 {
     assert (NULL != args);
-
 	char* rtpath = NULL;
-
-/*
- * do not search rt.jar in CLASSPATH
- * We just support jdk1.5 util now
- * We enable it in some day
- */
-#if 0
+#ifdef DEBUG
+    #define RT_JAR "./rt.jar"
+    rtpath = strdup(RT_JAR);
+#else
 	if (findRtJar(&rtpath) < 0) {
 		printf ("Falal error: rt.jar not found\n");
 		exit (1);
 	}
-#else
-    #define RT_JAR "./rt.jar"
-    rtpath = strdup(RT_JAR);
 #endif
 
 	args->bootpath = rtpath;
@@ -321,7 +314,7 @@ int parseCmdLine(int argc, char **argv, Property **props) {
 	return 0;
 }
 
-Class* findClass(char *clsname, ExecEnv *env) {
+Class* findClass(char *clsname, const ExecEnv *env) {
 	Class *cls = findClassImpl(clsname, env->rtClsArea, env->rtClsCnt);
 	if (NULL == cls) {
 		cls = findClassImpl(clsname, env->userClsArea, env->userClsCnt);
@@ -332,4 +325,37 @@ Class* findClass(char *clsname, ExecEnv *env) {
 bool linkClass(Class *cls, const ExecEnv *env) {
 	return linkClassImpl(cls, env->rtClsArea, env->rtClsCnt) ||
 		linkClassImpl(cls, env->userClsArea, env->userClsCnt);
+}
+
+bool initializeClass(Class *cls, ExecEnv *env) {
+
+	if (NULL == cls || NULL == env) {
+		return FALSE;
+	}
+
+	ClassEntry *ce = CLASS_CE(cls);
+
+	assert(ce->state >= CLASS_RESOLVED);
+
+	if (ce->state == CLASS_INITED) {
+		return TRUE;
+	}
+
+	if (ce->state == CLASS_INITING) {
+		printf("class is initializing. Not support mutli-thread !\n");
+		exit (1);
+	}
+
+#define METHOD_NAME "<clinit>"	
+#define METHOD_TYPE "()V"
+	MethodEntry *method = findMethod(cls, METHOD_NAME, METHOD_TYPE);
+	if (NULL == method) {
+		return FALSE;
+	}
+
+	executeMethod(env, method);
+
+	ce->state = CLASS_INITED;
+
+	return TRUE;
 }

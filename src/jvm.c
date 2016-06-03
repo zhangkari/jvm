@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	status = initializeClass(mainClass);
+	status = initializeClass(mainClass, vm.execEnv);
 	if (!status) {
 		fprintf(stderr, "Failed initializeClass %s\n", path);
 		return -1;

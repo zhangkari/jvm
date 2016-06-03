@@ -60,6 +60,7 @@ typedef enum access_flags {
     ACC_ENUM        = 0x4000,
 } AccTag;
 
+// Do not modify the assigned value !!!
 enum Class_State {
 	CLASS_BAD		= 0x00,
 	CLASS_LOADING	= 0x01,
@@ -241,10 +242,11 @@ typedef struct SlotBufferPool {
 } SlotBufferPool;
 
 typedef struct StackFrame {
-	U1			  use;
+	U1			  use;			// used in StackFramePool for recycling
 	LocalVarTable *localTbl;
 	OperandStack  *opdStack;
-	ConstPool	  *constPool;
+	ConstPool	  *constPool;	// for dynamic linking 
+	int32		  pc_reg;		// pc register, -1 means invalid
 } StackFrame;
 
 typedef struct StackFramePool {
@@ -310,7 +312,6 @@ extern Class* defineClass(const char *clsname, const char *data, int len);
 extern Class* findClassImpl(char *classname, Class * const *list, int size);
 extern bool linkClassImpl(Class *class, Class * const *list, int size);
 extern bool resolveClass(Class *class);
-extern bool initializeClass(Class *class);
 
 extern FieldEntry* findField(Class *class, char *name, char *type);
 extern MethodEntry* findMethod(Class *class, char *name, char *type);

@@ -2016,7 +2016,7 @@ DECL_FUNC(getstatic)
 	status = resolveClass(cls);
 	assert (status);
 
-	status = initializeClass(cls);
+	status = initializeClass(cls, env);
 	assert (status);
 
     bool result = pushOperandStack(opdStack, &slot);

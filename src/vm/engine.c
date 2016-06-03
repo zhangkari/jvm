@@ -16,12 +16,13 @@
 #include "jvm.h"
 #include "runtime.h"
 
-void executeMethod(VM *vm, MethodEntry *method)
+void executeMethod(ExecEnv *env, const MethodEntry *method)
 {
-	assert(NULL != vm && NULL != method);
+	assert(NULL != env && NULL != method);
 
+	char* clsname = CLASS_CE(method->class)->name;
 #ifdef DEBUG
-	printf("execute %s start:\n", method->name);
+	printf("execute %s.%s start:\n", clsname, method->name);
 #endif
 
 	StackFrame *frame = obtainStackFrame();
@@ -45,26 +46,41 @@ void executeMethod(VM *vm, MethodEntry *method)
 	frame->opdStack  = oprdStack;
 	frame->constPool = CLASS_CE(method->class)->constPool;
     
-	if (!pushJavaStack(vm->execEnv->javaStack, frame)) {
+	if (!pushJavaStack(env->javaStack, frame)) {
 		printf ("Failed push stack frame to java stack.\n");
 		exit (1);
 	}
 
 	// extract & parse instructions from the byte code
-    extractInstructions(method);
+    extractInstructions((MethodEntry *)method);
 
     InstExecEnv instEnv;
     const Instruction *inst = NULL;
     int i;
-    for (i = 0; i < method->instCnt; ++i) {
-       inst = method->instTbl[i]; 
-	   memset(&instEnv, 0, sizeof(instEnv));
-       instEnv.inst = (Instruction *)inst;
-       instEnv.env = vm->execEnv;
-       inst->handler(&instEnv);
-    }
+
+	do {
+
+		i = frame->pc_reg;
+		inst = method->instTbl[i]; 
+
+		//
+		// FIXME !!!
+		// please take care of these instructions such as goto, goto_w
+		frame->pc_reg++;
+		if (strncmp(stropcode(getInstOpcode(inst)), "goto", 4) == 0) {
+			printf("take care of instruction named 'goto' \n");
+			exit(1);
+		}
+
+		memset(&instEnv, 0, sizeof(instEnv));
+		instEnv.inst = (Instruction *)inst;
+		instEnv.env = env;
+
+		inst->handler(&instEnv);
+
+	} while (frame->pc_reg < method->instCnt);
 
 #ifdef DEBUG
-	printf("execute %s finish.\n", method->name);
+	printf("execute %s.%s finish.\n", clsname, method->name);
 #endif
 }

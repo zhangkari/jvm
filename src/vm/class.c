@@ -25,10 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "class.h"
+#include "engine.h"
 #include "instpool.h"
 #include "instruction.h"
 #include "libjar.h"
 #include "mem.h"
+#include "runtime.h"
 
 #define MAGIC_NUMBER 0XCAFEBABE
 
@@ -795,16 +797,16 @@ bool linkClassImpl(Class *cls, Class* const * list, int size) {
 	}
 
     ClassEntry *class = CLASS_CE(cls);
-    assert(CLASS_BAD != class->state);
 
-    if (CLASS_LINKED == class->state ||
-            CLASS_INITING == class->state ||
-            CLASS_INITED == class->state) {
-        printf ("Class linked\n");
+    assert(class->state >= CLASS_LOADED);
+
+	if (class->state >= CLASS_LINKED) {
         return TRUE;
     }
 
-    assert(CLASS_LOADED == class->state);
+	if (class->state == CLASS_LINKING) {
+		assert(0 && "class is linking. Not support mulit-thread !");
+	}
 
     /*
     ClassEntry *super = CLASS_CE(class->super);
@@ -812,6 +814,7 @@ bool linkClassImpl(Class *cls, Class* const * list, int size) {
     */
     const char* super_name = class->super_name;
     if (NULL == super_name) {
+		class->state = CLASS_LINKED;
         return TRUE;
     }
 
@@ -842,16 +845,21 @@ bool linkClassImpl(Class *cls, Class* const * list, int size) {
 
 bool resolveClass(Class *class) {
 
-	printf("resolveClass not implemented ! \n");
+	if (NULL == class) {
+		return FALSE;
+	}
 
-	return TRUE;
-}
+	ClassEntry *cls = CLASS_CE(class);
 
-bool initializeClass(Class *class) {
-
-	// invoke <cinit>
+	assert (cls->state >= CLASS_LINKED);
 	
-	printf("initializeClass not implemented ! \n");
+	if (cls->state >= CLASS_RESOLVED) {
+		return TRUE;
+	}
+
+	if (cls->state == CLASS_RESOLVING) {
+		assert(0 && "class is resolving, Not support multi-thread ! \n");
+	}
 
 	return TRUE;
 }
@@ -1594,6 +1602,7 @@ StackFrame* obtainStackFrame()
 	for (i = 0; i < pool->capacity; ++i) {
 		frame = pool->frames + i;
 		if (!frame->use) {
+			memset(frame, 0, sizeof(StackFrame));
 			frame->use = 1;
 			return frame;
 		}

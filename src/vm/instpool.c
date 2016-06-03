@@ -108,3 +108,17 @@ void freeInstruction(const Instruction* inst)
     sPool->validCnt--;
 	sPool->freeIndex = (inst - sPool->base);
 }
+
+/**
+ * Get the opcode of the specified instruction
+ */
+U1 getInstOpcode(const Instruction *inst)
+{
+	assert (NULL != inst);
+
+	if (NULL == inst) {
+		exit(-1);
+	}
+
+	return inst->opcode;
+}

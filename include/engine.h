@@ -13,6 +13,6 @@
 #include "class.h"
 #include "runtime.h"
 
-extern void executeMethod(VM *vm, MethodEntry *method);
+extern void executeMethod(ExecEnv *env, const MethodEntry *method);
 
 #endif

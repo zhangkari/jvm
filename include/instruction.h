@@ -104,4 +104,9 @@ const Instruction* getCachedInstruction(U1 *code, int codelen, int offset);
  */
 void logInstruction(const Instruction *inst);
 
+/**
+ * Get the opcode of the specified instruction
+ */
+U1 getInstOpcode(const Instruction *inst);
+
 #endif

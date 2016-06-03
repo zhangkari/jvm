@@ -59,7 +59,6 @@ typedef struct ExecEnv {
 	U2 rtClsCnt;				// runtime class count
 	Class **rtClsArea;		    // runtime class address list
 	MethodEntry *mainMethod;	// user class main()
-	uintptr_t reg_pc;			// pc register
 } ExecEnv;
 
 typedef struct VM {
@@ -78,8 +77,9 @@ extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 /**
  * findClass & linkClass
  */
-extern Class* findClass(char *clsname, ExecEnv *env);
+extern Class* findClass(char *clsname, const ExecEnv *env);
 extern bool linkClass(Class *cls, const ExecEnv *env);
+extern bool initializeClass(Class *cls, ExecEnv *env);
 
 /**
  * Manage java virtual machine
