@@ -121,7 +121,9 @@ static void* findFirstMatch(MemoryArea* area, int size) {
 void* sysAlloc(MemoryArea* area, int size)
 {
 	if (NULL == area || size <= 0) {
+#ifdef LOG_DETAIL
 		LogD("Invalid parameters");
+#endif
 		return NULL;
 	}
 
@@ -134,7 +136,9 @@ void* sysAlloc(MemoryArea* area, int size)
 	// 4 bytes used to indicate the length of the buffer will allocate
 	// Ii will be used in sysFree()
 	if (area->used + size + 4 > area->capability) {
+#ifdef LOG_DETAIL
 		LogD("memory area is overflowed");
+#endif
 		return NULL;
 	}
 
@@ -165,7 +169,9 @@ void* sysAlloc(MemoryArea* area, int size)
 void sysFree(MemoryArea* area, void *base)
 {
 	if (NULL == area || NULL == base) {
+#ifdef LOG_DETAIL
 		LogD("area is NULL or base is NULL");
+#endif
 		return;
 	}
 
@@ -173,6 +179,8 @@ void sysFree(MemoryArea* area, void *base)
 	++area->freeCnt;
 
 	if (area->freeCnt >= MAX_FREE_CNT) {
+#ifdef LOG_DETAIL
 		LogD("Max Free Cnt! gc start work! "); 		
+#endif
 	}
 }

@@ -23,25 +23,25 @@ static int findEntryMain(const ClassEntry *clsEntry);
 /** declare end **/
 
 void initVM(InitArgs *args, VM *vm) {
-	assert(NULL != args || NULL != vm);
-	vm->initArgs = args;
+    assert(NULL != args || NULL != vm);
+    vm->initArgs = args;
 
     ExecEnv *env = (ExecEnv *)calloc(1, sizeof(ExecEnv));
     assert (NULL != env);
 
-	env->heapArea = createMemoryArea(args->max_heap);
-	assert(NULL != env->heapArea);
+    env->heapArea = createMemoryArea(args->max_heap);
+    assert(NULL != env->heapArea);
 
-	env->stackArea = createMemoryArea(args->java_stack);
-	assert(NULL != env->stackArea);
+    env->stackArea = createMemoryArea(args->java_stack);
+    assert(NULL != env->stackArea);
 
     env->javaStack = (JavaStack *)calloc(1, sizeof(JavaStack));
     assert(NULL != env->javaStack);
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
-#ifdef DEBUG
-	uint64_t t1 = current_ms();
+#ifdef LOG_DETAIL
+    uint64_t t1 = current_ms();
 #endif
     // load classes from rt.jar
     env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
@@ -49,64 +49,72 @@ void initVM(InitArgs *args, VM *vm) {
         printf("Error: Failed load run time class.\n");
         exit(1);
     }
-#ifdef DEBUG
-	uint64_t t2 = current_ms();
-	printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
+#ifdef LOG_DETAIL
+    uint64_t t2 = current_ms();
+    printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
 #endif
+
+    /*
+     * temporary solution
+     */
+    // TODO
+#define USER_CLS_MAX_CNT 4*1024
+    env->userClsArea = (Class **) calloc(USER_CLS_MAX_CNT, sizeof(Class*));
+    assert (NULL != env->userClsArea);
 
     vm->execEnv = env;
 
-	if (createSlotBufferPool(STACK_MAX_DEPTH) < 0) {
-		printf("Failed create slot buffer pool.\n");
-		exit (-1);
-	}
+    if (createSlotBufferPool(STACK_MAX_DEPTH) < 0) {
+        printf("Failed create slot buffer pool.\n");
+        exit (-1);
+    }
 
-	if (createStackFramePool(STACK_MAX_DEPTH) < 0) {
-		printf("Failed create StackFrame pool.\n");
-		exit (-1);
-	}
+    if (createStackFramePool(STACK_MAX_DEPTH) < 0) {
+        printf("Failed create StackFrame pool.\n");
+        exit (-1);
+    }
 
     if (!createInstPool()) {
         printf("Failed create instruction pool.\n");
         exit (-1);
     }
 
-	if (createRefHandlePool(STACK_MAX_DEPTH) < 0) {
-		printf("Failed create RefHandle pool.\n");
-		exit (-1);
-	}
+    if (createRefHandlePool(STACK_MAX_DEPTH) < 0) {
+        printf("Failed create RefHandle pool.\n");
+        exit (-1);
+    }
 }
 
 
 void* getNativeMethod(const char* method)
 {
-	return NULL;
+    return NULL;
 }
 
 void startVM(VM *vm) {
-	Class *mainClass = vm->initArgs->mainClass;
+    Class *mainClass = vm->initArgs->mainClass;
     ClassEntry *clsEntry = CLASS_CE(mainClass);
-	int mainIdx = findEntryMain(clsEntry);
-	if (mainIdx < 0) {
-		printf("Error: Not found main() in %s, please define as:\n", 
-				clsEntry->name); 
-		printf("  public static void main(String[] args)\n");
-		return;
-	}
+    int mainIdx = findEntryMain(clsEntry);
+    if (mainIdx < 0) {
+        printf("Error: Not found main() in %s, please define as:\n", 
+                clsEntry->name); 
+        printf("  public static void main(String[] args)\n");
+        return;
+    }
 
-	MethodEntry *mainMethod = clsEntry->methods + mainIdx;
-	// Used as a root node by gc to mark garbage in the future
-	vm->execEnv->mainMethod = mainMethod;
-	executeMethod(vm->execEnv, mainMethod);
+    MethodEntry *mainMethod = clsEntry->methods + mainIdx;
+    // Used as a root node by gc to mark garbage in the future
+    vm->execEnv->mainMethod = mainMethod;
+    executeMethod(vm->execEnv, mainMethod);
 }
 
 void destroyVM(VM *vm) {
-	destroySlotBufferPool();
+    destroySlotBufferPool();
     destroyStackFramePool();
     destroyInstPool();
-	destroyRefHandlePool();
+    destroyRefHandlePool();
 
-	assert (NULL != vm);
+    assert (NULL != vm);
 }
 
 /* 
@@ -153,46 +161,46 @@ static int existRtJar(char *path) {
  *		-1 ERROR
  */
 static int findRtJar (char **path) {
-	if (NULL == path) {
-		return -1;
-	}
+    if (NULL == path) {
+        return -1;
+    }
 
 #define MAX_PATH 256
 #define CLASSPATH "CLASSPATH"
 
-	char rtpath[MAX_PATH];
-	char *clspath = getenv(CLASSPATH);
+    char rtpath[MAX_PATH];
+    char *clspath = getenv(CLASSPATH);
     if (NULL == clspath) {
         printf ("Fatal error: CLASSPATH not set\n");
         return -1;
     }
 
-	char *start = clspath;
-	char *cursor = clspath;
+    char *start = clspath;
+    char *cursor = clspath;
 
-	// skip if start with :
-	while (*cursor == ':') {
-		++start;
-		++cursor;
-	}
+    // skip if start with :
+    while (*cursor == ':') {
+        ++start;
+        ++cursor;
+    }
 
-	while (*cursor != '\0') {
-		if (*cursor == ':') {
-			memset (rtpath, 0, MAX_PATH);
-			strncpy (rtpath, start, cursor - start);
+    while (*cursor != '\0') {
+        if (*cursor == ':') {
+            memset (rtpath, 0, MAX_PATH);
+            strncpy (rtpath, start, cursor - start);
             if (existRtJar(rtpath)) {
-            	*path = (char *)calloc(1, strlen(rtpath) + 1);
-				strcpy(*path, rtpath);
+                *path = (char *)calloc(1, strlen(rtpath) + 1);
+                strcpy(*path, rtpath);
                 return 0;
             }
 
-			start = cursor + 1;
+            start = cursor + 1;
 
-		} // if (*cursor == ':')
+        } // if (*cursor == ':')
 
-		++cursor;
+        ++cursor;
 
-	} // while	
+    } // while	
 
     // No ":" separator
     if (start == clspath) {
@@ -205,25 +213,25 @@ static int findRtJar (char **path) {
         }
     }
 
-	return -1;
+    return -1;
 }
 
 
 void setDefaultInitArgs(InitArgs *args)
 {
     assert (NULL != args);
-	char* rtpath = NULL;
+    char* rtpath = NULL;
 #ifdef DEBUG
-    #define RT_JAR "./rt.jar"
+#define RT_JAR "./rt.jar"
     rtpath = strdup(RT_JAR);
 #else
-	if (findRtJar(&rtpath) < 0) {
-		printf ("Falal error: rt.jar not found\n");
-		exit (1);
-	}
+    if (findRtJar(&rtpath) < 0) {
+        printf ("Falal error: rt.jar not found\n");
+        exit (1);
+    }
 #endif
 
-	args->bootpath = rtpath;
+    args->bootpath = rtpath;
 
 #define DEFAULT_STACK_SIZE (64 * KB)
     args->java_stack = DEFAULT_STACK_SIZE;
@@ -241,14 +249,14 @@ void setDefaultInitArgs(InitArgs *args)
 }
 
 int readSysConfig(char *path, Property *props) {
-	return 0;
+    return 0;
 }
 
 /*
  * Set properties to InitArgs
  */
 int setInitArgs(Property *props, int nprop, InitArgs *args) {
-	return 0;
+    return 0;
 }
 
 /**
@@ -258,104 +266,134 @@ int setInitArgs(Property *props, int nprop, InitArgs *args) {
  *		OK:		index in method area
  */
 static int findEntryMain(const ClassEntry *clsEntry) {
-	if (NULL == clsEntry) {
-		return -1;
-	}
+    if (NULL == clsEntry) {
+        return -1;
+    }
 
 #define MAIN_METHOD "([Ljava/lang/String;)V"
 
-	int retCode = -1;
-	int i;
-	for (i = 0; i < clsEntry->methods_count; ++i) {
-		MethodEntry *method = clsEntry->methods + i;
-		if (strcmp(method->name, "main") == 0 &&
-				strcmp(method->type, MAIN_METHOD) == 0 &&
-				(method->acc_flags & ACC_PUBLIC) &&
-				(method->acc_flags & ACC_STATIC)) {
-			retCode = i;
-			break;
-		}
-	}
-	
-	return retCode;
+    int retCode = -1;
+    int i;
+    for (i = 0; i < clsEntry->methods_count; ++i) {
+        MethodEntry *method = clsEntry->methods + i;
+        if (strcmp(method->name, "main") == 0 &&
+                strcmp(method->type, MAIN_METHOD) == 0 &&
+                (method->acc_flags & ACC_PUBLIC) &&
+                (method->acc_flags & ACC_STATIC)) {
+            retCode = i;
+            break;
+        }
+    }
+
+    return retCode;
 }
 
 static void usage() {
-	printf("Usage: jvm [-options] class [args...]\n");
-	printf("Options include:\n");
-	printf("	 -v			print version\n");
-	printf("	 -h			print this\n");
+    printf("Usage: jvm [-options] class [args...]\n");
+    printf("Options include:\n");
+    printf("	 -v			print version\n");
+    printf("	 -h			print this\n");
 }
 
 /*
  * Parse command line user input
  */
 int parseCmdLine(int argc, char **argv, Property **props) {
-	if (argc == 1) {
-		usage();
-		exit(0);
-	} 
-	else if (argc == 2) {
-		if (strcmp(argv[1], "-v") == 0) {
-			printf("jvm %s compiled on %s copyright@kari.zhang\n", JAVA_VERSION, __DATE__);
-			exit(0);
-		}
-		else if (strcmp(argv[1], "-h") == 0) {
-			usage();
-			exit(0);
-		}
-		else if (argv[1][0] == '-') {
-			printf ("Invalid options\n");
-			usage();
-			exit(0);
-		}
-	}
+    if (argc == 1) {
+        usage();
+        exit(0);
+    } 
+    else if (argc == 2) {
+        if (strcmp(argv[1], "-v") == 0) {
+            printf("jvm %s compiled on %s copyright@kari.zhang\n", JAVA_VERSION, __DATE__);
+            exit(0);
+        }
+        else if (strcmp(argv[1], "-h") == 0) {
+            usage();
+            exit(0);
+        }
+        else if (argv[1][0] == '-') {
+            printf ("Invalid options\n");
+            usage();
+            exit(0);
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
-Class* findClass(char *clsname, const ExecEnv *env) {
-	Class *cls = findClassImpl(clsname, env->rtClsArea, env->rtClsCnt);
-	if (NULL == cls) {
-		cls = findClassImpl(clsname, env->userClsArea, env->userClsCnt);
-	}
-	return cls;
+// Locate class path by classname
+static bool locateClassPath(const char *classname, char path[], int size) {
+    if (NULL == classname || NULL == path || strlen(classname) + 6 >= size) {
+        return FALSE;
+    }
+
+    memset(path, 0, size);
+    strcpy(path, classname);
+    strcat(path, ".class");
+
+    return TRUE;
+}
+
+Class* findClass(const char *clsname, const ExecEnv *env) {
+    if (NULL == clsname || NULL == env) {
+        return NULL;
+    }
+
+    Class *cls = findClassImpl(clsname, env->rtClsArea, env->rtClsCnt);
+    if (NULL == cls) {
+        cls = findClassImpl(clsname, env->userClsArea, env->userClsCnt);
+    }
+    if (NULL == cls) {
+        char path[MAX_PATH];
+        bool status = locateClassPath(clsname, path, MAX_PATH);
+        assert (status);
+        cls = loadClassFromFile(path, clsname);
+        env->userClsArea[env->userClsCnt] = cls;
+        ExecEnv *ev = (ExecEnv *)env;
+        ev->userClsCnt += 1;
+        assert (env->userClsCnt < USER_CLS_MAX_CNT);
+    }
+    return cls;
 }
 
 bool linkClass(Class *cls, const ExecEnv *env) {
-	return linkClassImpl(cls, env->rtClsArea, env->rtClsCnt) ||
-		linkClassImpl(cls, env->userClsArea, env->userClsCnt);
+    return linkClassImpl(cls, env);
 }
 
 bool initializeClass(Class *cls, ExecEnv *env) {
 
-	if (NULL == cls || NULL == env) {
-		return FALSE;
-	}
+    if (NULL == cls || NULL == env) {
+        return FALSE;
+    }
 
-	ClassEntry *ce = CLASS_CE(cls);
+    ClassEntry *ce = CLASS_CE(cls);
 
-	assert(ce->state >= CLASS_RESOLVED);
+    assert(ce->state >= CLASS_RESOLVED);
 
-	if (ce->state == CLASS_INITED) {
-		return TRUE;
-	}
+    if (ce->state == CLASS_INITED) {
+        return TRUE;
+    }
 
-	if (ce->state == CLASS_INITING) {
-		printf("class is initializing. Not support mutli-thread !\n");
-		exit (1);
-	}
+    if (ce->state == CLASS_INITING) {
+        printf("class is initializing. Not support mutli-thread !\n");
+        exit (1);
+    }
+
+    if (NULL != ce->super) {
+        if (!initializeClass(ce->super, env)) {
+            return FALSE;
+        }
+    }
 
 #define METHOD_NAME "<clinit>"	
 #define METHOD_TYPE "()V"
-	MethodEntry *method = findMethod(cls, METHOD_NAME, METHOD_TYPE);
-	if (NULL == method) {
-		return FALSE;
-	}
+    MethodEntry *method = findMethod(cls, METHOD_NAME, METHOD_TYPE);
+    if (NULL != method) {
+        executeMethod(env, method);
+    }
 
-	executeMethod(env, method);
+    ce->state = CLASS_INITED;
 
-	ce->state = CLASS_INITED;
-
-	return TRUE;
+    return TRUE;
 }

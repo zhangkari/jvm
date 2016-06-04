@@ -47,14 +47,32 @@ static void testJavaClassLoader(const VM *vm) {
 
 	int i = 0;
 	int size = sizeof(ALL_SET) / sizeof(ALL_SET[0]);
-	for (i = 1 ; i < size; ++i) {
-		MethodEntry *method = findMethod(cls, ALL_SET[0], ALL_SET[i]);
-		CU_ASSERT_PTR_NOT_NULL(method);
+    for (i = 1 ; i < size; ++i) {
+        MethodEntry *method = findMethod(cls, ALL_SET[0], ALL_SET[i]);
+        CU_ASSERT_PTR_NOT_NULL(method);
 
-#if 0
-		logMethodEntry(method);
+#ifdef LOG_DETAIL
+        logMethodEntry(method);
 #endif
-	}
+    }
+}
+
+static void testJavaClass(const VM *vm) {
+	const char* CLASS_SET[] = {
+		"java/lang/Object",
+		"java/lang/System",
+		"java/lang/Class",
+	};
+
+	int i;
+	int size = sizeof(CLASS_SET)/sizeof(CLASS_SET[0]);
+    for (i = 0; i < size; i++) {
+        Class *cls = findClass(CLASS_SET[i], vm->execEnv);
+        CU_ASSERT_PTR_NOT_NULL(cls);
+#ifdef LOG_DETAIL
+        logClassEntry(CLASS_CE(cls));
+#endif
+    }
 }
 
 void test_class() {
@@ -70,11 +88,17 @@ void test_class() {
 	int jreCnt = loadClassFromJar(RT_PATH, &jreCls);
 	CU_ASSERT_TRUE(jreCnt > MIN_JRE_CNT);
 	CU_ASSERT_PTR_NOT_NULL(jreCls);
+#ifdef LOG_DETAIL
 	printf("jre class count:%d\n", jreCnt);
+#endif
 
 	testJavaClassLoader(&vm);
+	testJavaClass(&vm);
 
 	Class *mainClass = loadClassFromFile(CLASS_PATH, CLASS_NAME);	
 	CU_ASSERT_PTR_NOT_NULL(mainClass);
-//	logClassEntry(CLASS_CE(mainClass));
+#ifdef LOG_DETAIL
+	logClassEntry(CLASS_CE(mainClass));
+#endif
+
 }

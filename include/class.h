@@ -309,8 +309,8 @@ typedef struct ClassEntry {
 extern Class* allocClass();
 extern ConstPool* newConstPool(int length);
 extern Class* defineClass(const char *clsname, const char *data, int len);
-extern Class* findClassImpl(char *classname, Class * const *list, int size);
-extern bool linkClassImpl(Class *class, Class * const *list, int size);
+extern Class* findClassImpl(const char *classname, Class * const *list, int size);
+extern bool linkClassImpl(Class *class, const ExecEnv *env);
 extern bool resolveClass(Class *class);
 
 extern FieldEntry* findField(Class *class, char *name, char *type);
@@ -326,7 +326,7 @@ extern MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type);
  *		if Error: NULL
  *		if OK	: base address of Class
  */
-extern Class* loadClassFromFile(char *path, char *classname);
+extern Class* loadClassFromFile(const char *path, const char *classname);
 
 /*
  * Load a Class from a .jar file

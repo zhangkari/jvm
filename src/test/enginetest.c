@@ -14,8 +14,8 @@
 #include "engine.h"
 #include "runtime.h"
 
-#define PATH "Output.class"
-#define CLASS_NAME "Output"
+#define PATH "Hello.class"
+#define CLASS_NAME "Hello"
 
 void test_engine()
 {
@@ -30,9 +30,18 @@ void test_engine()
 	assert(NULL != mainClass);
 	initArgs.mainClass = mainClass;
 
-	logClassEntry(CLASS_CE(mainClass));
+	bool status = linkClass(mainClass, vm.execEnv);
+    assert (status);
 
-	linkClass(mainClass, vm.execEnv);
+    status = resolveClass(mainClass);
+    assert (status);
+
+    status = initializeClass(mainClass, vm.execEnv);
+    assert (status);
+    
+    Class *cls = findClass("java/lang/Object", vm.execEnv);
+    assert (NULL != cls);
+
 	startVM(&vm);
 	destroyVM(&vm);
 }

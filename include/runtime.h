@@ -77,7 +77,7 @@ extern int setInitArgs(Property *props, int nprop, InitArgs *args);
 /**
  * findClass & linkClass
  */
-extern Class* findClass(char *clsname, const ExecEnv *env);
+extern Class* findClass(const char *clsname, const ExecEnv *env);
 extern bool linkClass(Class *cls, const ExecEnv *env);
 extern bool initializeClass(Class *cls, ExecEnv *env);
 

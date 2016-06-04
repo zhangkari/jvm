@@ -790,81 +790,90 @@ Class* defineClass(const char *classname, const char *data, int len) {
 	return cls;
 }
 
-bool linkClassImpl(Class *cls, Class* const * list, int size) {
+/**
+ * the function designed so bad !!!
+ * the parameters look so strange !
+ * refactor it in some day.
+ */
+static bool linkClassInner(Class *cls, Class* const * list, int size, const ExecEnv *env) {
 
-	if (NULL == cls || NULL == list || size < 1) {
-		return FALSE;
-	}
+    if (NULL == cls || NULL == list || size < 1) {
+        return FALSE;
+    }
 
     ClassEntry *class = CLASS_CE(cls);
 
     assert(class->state >= CLASS_LOADED);
-
-	if (class->state >= CLASS_LINKED) {
+    
+    if (class->state >= CLASS_LINKED) {
         return TRUE;
     }
 
-	if (class->state == CLASS_LINKING) {
-		assert(0 && "class is linking. Not support mulit-thread !");
-	}
+    if (NULL == class->super_name) {
+        class->state = CLASS_LINKED;
+        return TRUE;
+    }
 
-    /*
-    ClassEntry *super = CLASS_CE(class->super);
-    printf ("super name:%s\n", super->name);
-    */
+    if (class->state == CLASS_LINKING) {
+        assert(0 && "class is linking. Not support mulit-thread !");
+    }
+
     const char* super_name = class->super_name;
-    if (NULL == super_name) {
-		class->state = CLASS_LINKED;
+    class->super = findClass(super_name, env);
+    if (NULL != class->super) {
+
+        if (!linkClassInner(class->super, list, size, env)) {
+            return FALSE;
+        }
+
+        class->state = CLASS_LINKED;
         return TRUE;
-    }
 
-    int i;
-    for (i = 0; i < size; ++i) {
-        const Class *cls = list[i];
-
-        // skip META-INF/
-        // skip META-INF/MANIFEST.MF
-        if (NULL == cls) {
-            continue;
-        }
-
-        if (0 == strcmp(super_name, CLASS_CE(cls)->name)) {
-            break; 
-        }
-    }
-
-    if (i < size) {
-        class->super = (Class *)list[i];
-        return linkClassImpl(class->super, list, size);
     } else {
-        printf("Not find rt class:%s\n", super_name);
+        printf("Not find class:%s\n", super_name);
+        return FALSE;
     }
+}
 
-	return FALSE;
+bool linkClassImpl(Class *cls, const ExecEnv *env) {
+    return linkClassInner(cls, env->rtClsArea, env->rtClsCnt, env) ||
+        linkClassInner(cls, env->userClsArea, env->userClsCnt, env);
 }
 
 bool resolveClass(Class *class) {
 
-	if (NULL == class) {
-		return FALSE;
-	}
+    if (NULL == class) {
+        return FALSE;
+    }
 
-	ClassEntry *cls = CLASS_CE(class);
+    ClassEntry *cls = CLASS_CE(class);
 
-	assert (cls->state >= CLASS_LINKED);
-	
-	if (cls->state >= CLASS_RESOLVED) {
-		return TRUE;
-	}
+    assert (cls->state >= CLASS_LINKED);
 
-	if (cls->state == CLASS_RESOLVING) {
-		assert(0 && "class is resolving, Not support multi-thread ! \n");
-	}
+    if (cls->state >= CLASS_RESOLVED) {
+        return TRUE;
+    }
 
-	return TRUE;
+    if (cls->state == CLASS_RESOLVING) {
+        assert(0 && "class is resolving, Not support multi-thread ! \n");
+    }
+
+    if (NULL != cls->super) {
+        if (!resolveClass(cls->super)) {
+            return FALSE;
+        }
+    }
+
+    // TODO
+    // resolve class symbols
+    //
+
+    cls->state = CLASS_RESOLVED;
+
+    return TRUE;
 }
 
-Class* findClassImpl(char *classname, Class * const *list, int size) {
+Class* findClassImpl(const char *classname, Class * const *list, int size) {
 	if (NULL == classname || list == NULL || size < 1) {
 		return NULL;
 	}
@@ -917,9 +926,10 @@ MethodEntry* lookupVirtualMethod(Class *class, char *name, char *type) {
 	return NULL;
 }
 
-Class* loadClassFromFile(char *path, char *classname) {
-	if (NULL == path || NULL == classname) {
-		fprintf(stderr, "path = NULL || NULL = classname\n");
+Class* loadClassFromFile(const char *path, const char *classname) {
+    // classname may be NULL
+	if (NULL == path) {
+		fprintf(stderr, "path = NULL\n");
 		return NULL;
 	}
 	FILE *fp = fopen(path, "rb");
@@ -967,7 +977,7 @@ typedef struct UnpackJarArg {
 static void on_start (int total, void* param) {
     if (NULL != param) {
         UnpackJarArg* arg = (UnpackJarArg*) param;
-#ifdef DEBUG
+#ifdef LOG_DETAIL
         printf("unzip %s start. (%d files)\n", arg->jarname, total);
 #endif
 		arg->memUsed = 0;
@@ -1018,10 +1028,12 @@ static void on_progress (int index,
 		return;
 	}
 
+    if (NULL == param) {
+        return;
+    }
+
     UnpackJarArg* arg = (UnpackJarArg*) param;
-    //printf ("%-4d name:%s\n", index, name);
-	if (NULL != param && size > 0) {
-		UnpackJarArg* arg = (UnpackJarArg*) param;
+	if (size > 0) {
 		Class** cls = arg->classes;
         if (isEndWith(name, ".class")) {
 			arg->memUsed += size;
@@ -1030,13 +1042,13 @@ static void on_progress (int index,
         }
         // this file maybe is META-INF/MANIFEST.MF
         else {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
             printf("Ignore %s in %s\n", name, arg->jarname);
 #endif
             cls[index] = NULL;
         }
 	} // if (NULL != param && size > 0)
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     // this file(directory) maybe is META-INF
     else {
         printf("Ignore %s in %s\n", name, arg->jarname);
@@ -1067,14 +1079,14 @@ static int on_error(int errcode, int index, void* param) {
  * Unpack finish
  */
 static void on_finish(void* param) {
+#ifdef LOG_DETAIL
     if (NULL != param) {
         UnpackJarArg* arg = (UnpackJarArg*) param;
-#ifdef DEBUG
         printf("unzip %s complete.\n", arg->jarname);
 		printf("load %d classes, %d KB memory used.\n", arg->clsCnt,
 				arg->memUsed / 1024);
-#endif
     } 
+#endif
 }
 
 
@@ -1432,7 +1444,9 @@ Class* allocClass(MemoryArea* area)
 int createSlotBufferPool(int cap) 
 {
 	if (sSlotBufferPool != NULL) {
+#ifdef LOG_DETAIL
 		printf("SlotBuffer Pool already exist\n");
+#endif
 		return 0;
 	}
 
@@ -1522,7 +1536,8 @@ void recycleSlotBuffer(SlotBuffer* slotbuf)
  */
 int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 {
-	assert (NULL != buffer && count >= 1);
+    // count maybe zero
+	assert (NULL != buffer && count >= 0);
 
 	if (buffer->validCnt > 0) {
 		printf("Unexpected value occured. slot buffer is not empty.\n");
@@ -1551,7 +1566,9 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 int createStackFramePool(int cap) 
 {
 	if (sStackFramePool != NULL) {
+#ifdef LOG_DETAIL
 		printf("StackFrame Pool already exist\n");
+#endif
 		return 0;
 	}
 
@@ -1629,7 +1646,9 @@ void recycleStackFrame(StackFrame* frame)
  */
 int createRefHandlePool(int cap) {
 	if (sRefHandlePool != NULL) {
+#ifdef LOG_DETAIL
 		printf("RefHandle Pool already exist\n");
+#endif
 		return 0;
 	}
 
