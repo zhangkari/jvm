@@ -1975,7 +1975,7 @@ DECL_FUNC(areturn)
 
 DECL_FUNC(_return)
 {
-    printf("return\n");
+    printf("\t*return\n");
 	return FALSE;
 }
 
@@ -2049,7 +2049,7 @@ DECL_FUNC(invokevirtual)
 {
 	validate_inst_env(param);
 
-	U1 u2 = inst->operand.u2;
+	U2 u2 = inst->operand.u2;
 	ConstPoolEntry *constEntry = constPool->entries + u2;
 	assert(NULL != constEntry);
 
@@ -2058,7 +2058,7 @@ DECL_FUNC(invokevirtual)
 	assert(slot.tag == constEntry->tag);
 
 #ifdef DEBUG
-    printf("\tinvokevirtual %d // ", u2);
+    printf("\t*invokevirtual %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
@@ -2067,12 +2067,13 @@ DECL_FUNC(invokevirtual)
 
 DECL_FUNC(invokespecial)
 {
-    printf("invokespecial\n");
+    printf("\t*invokespecial\n");
 	return FALSE;
 }
 
 DECL_FUNC(invokestatic)
 {
+	printf("\t*invokestatic\n");
 	return FALSE;
 }
 
