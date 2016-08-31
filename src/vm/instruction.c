@@ -1976,7 +1976,7 @@ DECL_FUNC(areturn)
 
 DECL_FUNC(_return)
 {
-    printf("return\n");
+    printf("\t*return\n");
 	return FALSE;
 }
 
