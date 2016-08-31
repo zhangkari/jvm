@@ -58,6 +58,8 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
     const Instruction *inst = NULL;
     int i;
 
+
+#if 0
 	do {
 
 		i = frame->pc_reg;
@@ -79,8 +81,19 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 		inst->handler(&instEnv);
 
 	} while (frame->pc_reg < method->instCnt);
+#endif
+
+    for (i = 0;  i < method->instCnt; i++) {
+        memset(&instEnv, 0, sizeof(instEnv));
+        inst = method->instTbl[i];
+        instEnv.inst = (Instruction *)inst;
+        instEnv.env  = env;
+
+        inst->handler(&instEnv);
+    }
 
 #ifdef DEBUG
 	printf("execute %s.%s finish.\n", clsname, method->name);
 #endif
+
 }

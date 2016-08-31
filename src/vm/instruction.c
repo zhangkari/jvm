@@ -999,6 +999,7 @@ DECL_FUNC(nop)
 
 DECL_FUNC(aconst_null)
 {
+    printf("\t*aconst_null\n");
 	return FALSE;
 }
 
@@ -2023,15 +2024,31 @@ DECL_FUNC(getstatic)
     assert(result);
 
 #ifdef DEBUG
-    printf("\tgetstatic %d // ", u2);
+    printf("\t*getstatic %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
-	return TRUE;
+	return FALSE;
 }
 
 DECL_FUNC(putstatic)
 {
+    validate_inst_env(param);
+
+	U2 u2 = inst->operand.u2;
+	ConstPoolEntry *constEntry = constPool->entries + u2;
+	assert(NULL != constEntry);
+    assert(constEntry->tag == CONST_Fieldref);
+
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+	assert(slot.tag == constEntry->tag);
+
+#ifdef DEBUG
+    printf("\t*putstatic %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
 	return FALSE;
 }
 
@@ -2049,16 +2066,20 @@ DECL_FUNC(invokevirtual)
 {
 	validate_inst_env(param);
 
-	U1 u2 = inst->operand.u2;
+	U2 u2 = inst->operand.u2;
 	ConstPoolEntry *constEntry = constPool->entries + u2;
 	assert(NULL != constEntry);
+    if(constEntry->tag != CONST_Methodref) {
+        printf("\t[crash log:constEntry->tag:%d]\n", constEntry->tag);
+        assert(constEntry->tag == CONST_Methodref);
+    }
 
     Slot slot;
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
 
 #ifdef DEBUG
-    printf("\tinvokevirtual %d // ", u2);
+    printf("\t*invokevirtual %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
@@ -2067,13 +2088,45 @@ DECL_FUNC(invokevirtual)
 
 DECL_FUNC(invokespecial)
 {
-    printf("invokespecial\n");
+	validate_inst_env(param);
+
+	U2 u2 = inst->operand.u2;
+	ConstPoolEntry *constEntry = constPool->entries + u2;
+	assert(NULL != constEntry);
+
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+	assert(slot.tag == constEntry->tag);
+
+#ifdef DEBUG
+    printf("\t*invokespecial %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
 	return FALSE;
+
 }
 
 DECL_FUNC(invokestatic)
 {
+	validate_inst_env(param);
+
+	U2 u2 = inst->operand.u2;
+	ConstPoolEntry *constEntry = constPool->entries + u2;
+	assert(NULL != constEntry);
+    assert(constEntry->tag == CONST_Methodref);
+
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+	assert(slot.tag == constEntry->tag);
+
+#ifdef DEBUG
+    printf("\t*invokestatic %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
 	return FALSE;
+
 }
 
 DECL_FUNC(invokeinterface)
