@@ -92,6 +92,11 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         inst->handler(&instEnv);
     }
 
+	StackFrame *lastFrame = popJavaStack(env->javaStack);
+	assert (lastFrame != NULL);
+	// TODO
+	// lastFrame->retAddr;
+
 #ifdef DEBUG
 	printf("execute %s.%s finish.\n", clsname, method->name);
 #endif
