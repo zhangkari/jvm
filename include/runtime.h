@@ -91,7 +91,7 @@ extern void destroyVM(VM *vm);
 /**
  * Native method
  */
-typedef int (*NativeFuncPtr)(ExecEnv *env, const char* name, ...);
-extern void* getNativeMethod(const char* method);
+typedef int (*NativeFuncPtr)(ExecEnv *env, Object* thiz, ...);
+extern NativeFuncPtr retrieveNativeMethod(const char* path, const char* name);
 
 #endif

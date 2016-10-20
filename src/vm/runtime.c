@@ -9,6 +9,7 @@
  * ***********************************/
 
 #include <assert.h>
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 #include "class.h"
@@ -85,9 +86,19 @@ void initVM(InitArgs *args, VM *vm) {
     }
 }
 
-
-void* getNativeMethod(const char* method)
+/**
+ * retrieve native method from the specified path
+ */
+NativeFuncPtr retrieveNativeMethod(const char* path, const char* name)
 {
+	void* handle = dlopen(path, RTLD_LAZY);
+	if (NULL == handle) {
+		printf("Fatal error:failed load %s, %s\n", path, dlerror());
+		exit(-1);
+	}
+
+	dlsym(handle, name);
+	dlclose(handle);
     return NULL;
 }
 
