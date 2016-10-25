@@ -20,8 +20,19 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 {
 	assert(NULL != env && NULL != method);
 
-	char* clsname = CLASS_CE(method->class)->name;
+	if (ACC_NATIVE & method->acc_flags) {
+
+		printf("\t<natvie %s:%s>\n", 
+				method->name, method->type);
+		
+		// TODO
+		
+
+		return;
+	}
+
 #ifdef DEBUG
+	char* clsname = CLASS_CE(method->class)->name;
 	printf("execute %s.%s start:\n", clsname, method->name);
 #endif
 

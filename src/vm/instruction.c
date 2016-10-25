@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "comm.h"
 #include "endianswap.h"
+#include "engine.h"
 #include "instruction.h"
 #include "runtime.h"
 #include "utility.h"
@@ -2121,12 +2122,46 @@ DECL_FUNC(invokestatic)
 	assert(slot.tag == constEntry->tag);
 
 #ifdef DEBUG
-    printf("\t*invokestatic %d // ", u2);
+    printf("\tinvokestatic %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
-	return FALSE;
+	ConstPoolEntry *entry = NULL;
+	U2 cls_idx = constEntry->info.methodref_info.class_index;
+	U2 typeidx = constEntry->info.methodref_info.name_type_index;
 
+	entry = constPool->entries + cls_idx;
+	assert(CONST_Class == entry->tag);
+	U2 nameidx = entry->info.class_info.name_index;
+	entry = constPool->entries + nameidx;
+	assert(CONST_Utf8 == entry->tag);
+
+	char* clsname = entry->info.utf8_info.bytes;
+//	printf("class name:%s\n", clsname);
+
+	entry = constPool->entries + typeidx;
+	assert(CONST_NameAndType == entry->tag);
+	
+	nameidx = entry->info.nametype_info.name_index;
+	typeidx = entry->info.nametype_info.type_index;
+	entry = constPool->entries + nameidx;
+	char* methodname = entry->info.utf8_info.bytes;
+	//printf("method name:%s\n", methodname);
+
+	entry = constPool->entries + typeidx;
+	assert(CONST_Utf8 == entry->tag);
+	char *methodtype = entry->info.utf8_info.bytes;
+	//printf("method type:%s\n", methodtype);
+
+	Class *class = findClass(clsname, env);
+	assert(NULL != class);
+
+	MethodEntry *method = findMethod(class, methodname, methodtype);
+	assert(NULL != method);
+
+	executeMethod(env, method);
+
+	return TRUE;
 }
 
 DECL_FUNC(invokeinterface)
