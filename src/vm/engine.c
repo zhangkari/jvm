@@ -10,6 +10,7 @@
  * **************************************************/
 
 #include <assert.h>
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 #include "engine.h"
@@ -24,9 +25,15 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 
 		printf("\t<natvie %s:%s>\n", 
 				method->name, method->type);
-		
-		// TODO
-		
+
+        NativeFuncPtr funcPtr = retrieveNativeMethod(method);
+        if (funcPtr != NULL) {
+            printf("*exec %s\n", method->name);
+        }
+
+        if (NULL != env->dl_handle) {
+            dlclose(env->dl_handle);
+        }
 
 		return;
 	}

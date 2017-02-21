@@ -59,6 +59,7 @@ typedef struct ExecEnv {
 	U2 rtClsCnt;				// runtime class count
 	Class **rtClsArea;		    // runtime class address list
 	MethodEntry *mainMethod;	// user class main()
+    void* dl_handle;            // dynamic link library handle 
 } ExecEnv;
 
 typedef struct VM {
@@ -92,6 +93,15 @@ extern void destroyVM(VM *vm);
  * Native method
  */
 typedef int (*NativeFuncPtr)(ExecEnv *env, Object* thiz, ...);
-extern NativeFuncPtr retrieveNativeMethod(const char* path, const char* name);
+extern NativeFuncPtr retrieveNativeMethod(const MethodEntry* method);
+
+/**
+ * Map java method name to native method name
+ * Parameters:
+ *      method:     the name of the method
+ *      clsname:    the class name of the method 
+ *      signature:  the signature of the method
+ */
+extern char* mapMethodName(const char* method, const char* clsname, const char* signature);
 
 #endif

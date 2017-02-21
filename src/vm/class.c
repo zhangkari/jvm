@@ -1234,18 +1234,18 @@ void logConstPoolEntry(const ConstPool* pool, const ConstPoolEntry* entry)
 			break;
 
 		case CONST_Methodref:
-			cls_idx = entry->info.methodref_info.class_index,
-					index = pool->entries[cls_idx].info.class_info.name_index;
-			nametype_idx = entry->info.methodref_info.name_type_index,
-						 name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
-			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
-			printf("Method\t#%d.#%d; // %s.%s:%s\n",
-					cls_idx, 
-					nametype_idx, 
-					pool->entries[index].info.utf8_info.bytes,
-					pool->entries[name_idx].info.utf8_info.bytes,
-					pool->entries[type_idx].info.utf8_info.bytes);
-			break;
+            cls_idx = entry->info.methodref_info.class_index;
+            index = pool->entries[cls_idx].info.class_info.name_index;
+            nametype_idx = entry->info.methodref_info.name_type_index;
+            name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+            type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+            printf("Method\t#%d.#%d; // %s.%s:%s\n",
+                    cls_idx, 
+                    nametype_idx, 
+                    pool->entries[index].info.utf8_info.bytes,
+                    pool->entries[name_idx].info.utf8_info.bytes,
+                    pool->entries[type_idx].info.utf8_info.bytes);
+            break;
 
 		case CONST_IfMethodref:
 			printf("InterfaceMethodref_info not implemented\n");

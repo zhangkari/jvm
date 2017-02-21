@@ -89,17 +89,38 @@ void initVM(InitArgs *args, VM *vm) {
 /**
  * retrieve native method from the specified path
  */
-NativeFuncPtr retrieveNativeMethod(const char* path, const char* name)
+NativeFuncPtr retrieveNativeMethod(const MethodEntry *method)
 {
-	void* handle = dlopen(path, RTLD_LAZY);
-	if (NULL == handle) {
-		printf("Fatal error:failed load %s, %s\n", path, dlerror());
-		exit(-1);
-	}
+    assert (NULL != method);
+    assert (ACC_NATIVE & method->acc_flags);
 
-	dlsym(handle, name);
-	dlclose(handle);
-    return NULL;
+    void* handle = NULL; 
+    char* path = NULL;
+    ClassEntry *cls = CLASS_CE(method->class);
+    char *clsname = cls->name;
+    if (!strncmp(clsname, "java", 4)) {
+        path = NULL;
+    } else {
+        path = (char *)calloc(1, strlen(clsname) + 4);
+        assert (NULL != path);
+
+        strcpy(path, clsname);
+        strcat(path, ".so");
+    }
+
+    handle = dlopen(path, RTLD_LAZY);
+    if (NULL == handle) {
+        printf("Fatal error:failed load %s, %s\n", path, dlerror());
+        exit(-1);
+    }
+
+    void *funcPtr = dlsym(handle, method->name);
+
+    if (NULL != path) {
+        free (path);
+    }
+
+    return (NativeFuncPtr)funcPtr;
 }
 
 void startVM(VM *vm) {
@@ -408,3 +429,18 @@ bool initializeClass(Class *cls, ExecEnv *env) {
 
     return TRUE;
 }
+
+/**
+ * Map java method name to native method name
+ * Parameters:
+ *      method:     the name of the method
+ *      clsname:    the class name of the method 
+ *      signature:  the signature of the method
+ */
+extern char* mapMethodName(const char* method, const char* clsname, const char* signature) {
+    // TODO
+    assert (0 && "mapMethodName not implemented!");
+
+    return NULL;
+}
+
