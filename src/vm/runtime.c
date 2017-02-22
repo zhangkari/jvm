@@ -431,6 +431,31 @@ bool initializeClass(Class *cls, ExecEnv *env) {
 }
 
 /**
+ * Replace char s with char t in src
+ *
+ * Return:
+ *  replaced string if OK
+ *  NULL if failed
+ *
+ * Notice:
+ *  Remember to call free()
+ */
+static char* strrpl(char *src, char s, char t) {
+    char *dst = NULL;
+    if (NULL != src) {
+	dst = strdup(src);
+	char *tmp = dst;
+	while (tmp++) {
+	    if (*tmp == s) {
+		*tmp = t;
+	    }
+	}
+    }
+
+    return dst;
+}
+
+/**
  * Map java method name to native method name
  * Parameters:
  *      method:     the name of the method

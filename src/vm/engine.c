@@ -29,7 +29,12 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         NativeFuncPtr funcPtr = retrieveNativeMethod(method);
         if (funcPtr != NULL) {
             printf("*exec %s\n", method->name);
-        }
+	    funcPtr(env, method->class);
+        } else {
+	    ClassEntry *cls = CLASS_CE(method->class);
+	    printf("*Failed retrieve native method:%s.%s:%s\n", cls->name, method->name, method->type);
+
+	}
 
         if (NULL != env->dl_handle) {
             dlclose(env->dl_handle);
