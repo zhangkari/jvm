@@ -12,6 +12,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include "class.h"
 #include "engine.h"
 #include "instpool.h"
@@ -114,10 +115,15 @@ NativeFuncPtr retrieveNativeMethod(const MethodEntry *method)
         exit(-1);
     }
 
-    void *funcPtr = dlsym(handle, method->name);
+    char *nativeName = mapMethodName(method->name, clsname, method->type);
+    void *funcPtr = dlsym(handle, nativeName);
 
     if (NULL != path) {
         free (path);
+    }
+
+    if (NULL != nativeName) {
+        free (nativeName);
     }
 
     return (NativeFuncPtr)funcPtr;
@@ -440,19 +446,19 @@ bool initializeClass(Class *cls, ExecEnv *env) {
  * Notice:
  *  Remember to call free()
  */
-static char* strrpl(char *src, char s, char t) {
-    char *dst = NULL;
+static char* strrpl(const char *src, char s, char t) {
+    const char *dst = NULL;
     if (NULL != src) {
-	dst = strdup(src);
-	char *tmp = dst;
-	while (tmp++) {
-	    if (*tmp == s) {
-		*tmp = t;
-	    }
-	}
+        dst = strdup(src);
+        char *tmp = (char *)dst;
+        while (*tmp++) {
+            if (*tmp == s) {
+                *tmp = t;
+            }
+        }
     }
 
-    return dst;
+    return (char *)dst;
 }
 
 /**
@@ -463,9 +469,37 @@ static char* strrpl(char *src, char s, char t) {
  *      signature:  the signature of the method
  */
 extern char* mapMethodName(const char* method, const char* clsname, const char* signature) {
-    // TODO
-    assert (0 && "mapMethodName not implemented!");
 
-    return NULL;
+    assert (NULL != method);
+    assert (NULL != clsname);
+    assert (NULL != signature);
+
+    char *infix = strrpl(clsname, '/', '_');
+    assert (NULL != infix);
+
+#define PREFIX "Java_"
+    int len = strlen(PREFIX) + strlen(method) + strlen(clsname);
+    char *dest = (char *)calloc(1, len + 1);
+    sprintf(dest, "%s%s_%s", PREFIX, infix, method);
+
+    if (NULL != infix) {
+        free (infix);
+    }
+
+    return dest;
 }
 
+void  Java_java_lang_Object_registerNatives(ExecEnv *env, Class *cls) {
+    printf("\t*java.lang.Object.registerNatives()\n");
+}
+
+void Java_java_lang_System_registerNatives(ExecEnv *env, Class *cls) {
+    printf("\t*java.lang.System.registerNatives()\n");
+}
+
+long Java_java_lang_System_currentTimeMillis(ExecEnv *env, Class *cls) {
+    printf("\tjava_lang_System_currentTimeMillis\n");
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}

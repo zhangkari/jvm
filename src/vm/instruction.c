@@ -1000,8 +1000,13 @@ DECL_FUNC(nop)
 
 DECL_FUNC(aconst_null)
 {
-    printf("\t*aconst_null\n");
-	return FALSE;
+    validate_inst_env(param);
+    Slot slot;
+    slot.tag = ReferenceType;
+    slot.value = (uintptr_t)NULL;
+    pushOperandStack(opdStack, &slot);
+    printf("\taconst_null\n");
+	return TRUE;
 }
 
 DECL_FUNC(iconst_m1)
@@ -1536,7 +1541,7 @@ DECL_FUNC(pop2)
 
 DECL_FUNC(dup)
 {
-    printf("dup\n");
+    printf("\t*dup\n");
 	return FALSE;
 }
 
@@ -2179,9 +2184,16 @@ DECL_FUNC(_new)
     validate_inst_env(param);
 
 	U1 u2 = inst->operand.u2;
-    printf("new %d\n", u2);
+    printf("\t*new %d\n", u2);
 
-	printf(" Not implemented.\n");
+    ConstPoolEntry *constEntry = constPool->entries + u2;
+    assert (CONST_Class == constEntry->tag);
+
+    U2 name_idx = constEntry->info.class_info.name_index;
+    char *clsname = constPool->entries[name_idx].info.utf8_info.bytes;
+	Class *class = findClass(clsname, env);
+	assert(NULL != class);
+    assert(CLASS_CE(class)->state = CLASS_RESOLVED);
 
 	return FALSE;
 }
