@@ -51,20 +51,20 @@ typedef struct InitArgs {
  * Java virtual machine executing environment in runtime
  */
 typedef struct ExecEnv {
-	MemoryArea *heapArea;		// java heap memory area
-	MemoryArea *stackArea;		// java stack memory area
-    JavaStack  *javaStack;		// JavaStack to store stack frames
-	U2 userClsCnt;				// user class count
-	Class **userClsArea;	    // user class list exclude entry main()
-	U2 rtClsCnt;				// runtime class count
-	Class **rtClsArea;		    // runtime class address list
-	MethodEntry *mainMethod;	// user class main()
-    void* dl_handle;            // dynamic link library handle 
+    MemoryArea *heapArea;   // java heap memory area
+    MemoryArea *stackArea;  // java stack memory area
+    JavaStack  *javaStack;  // JavaStack to store stack frames
+    U2 userClsCnt;	    // user class count
+    Class **userClsArea;    // user class list exclude entry main()
+    U2 rtClsCnt;	    // runtime class count
+    Class **rtClsArea;	    // runtime class address list
+    MethodEntry *mainMethod;// user class main()
+    void* dl_handle;	    // dynamic link library handle 
 } ExecEnv;
 
 typedef struct VM {
-   	InitArgs *initArgs;			// initialization arguments
-    ExecEnv *execEnv;			// executing environment
+    InitArgs *initArgs;	// initialization arguments
+    ExecEnv *execEnv;	// executing environment
 } VM;
 
 /**

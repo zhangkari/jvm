@@ -15,9 +15,9 @@
 #include "utility.h"
 
 struct MemoryArea {
-	void *base;			// base address
+	void *base;		// base address
 	void *current;		// address used currently
-	U4  used;			// memory area has used
+	U4  used;		// memory area has used
 	U4  capability;		// area capability
 	void **free;		// space that user free
 	U4  freeCnt;		// count of free
@@ -180,6 +180,7 @@ void sysFree(MemoryArea* area, void *base)
 
 	if (area->freeCnt >= MAX_FREE_CNT) {
 #ifdef LOG_DETAIL
+		// collect memory fragment
 		LogD("Max Free Cnt! gc start work! "); 		
 #endif
 	}

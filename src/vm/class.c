@@ -44,7 +44,10 @@ static void readAnnotationElementValue(ClassEntry*, U1**);
 // static Pools
 static SlotBufferPool *sSlotBufferPool = NULL;
 static StackFramePool *sStackFramePool = NULL;
-static RefHandlePool  *sRefHandlePool  = NULL;
+
+// TODO
+// gc need hold sRefHandlePool
+RefHandlePool  *sRefHandlePool  = NULL;
 
 /*
  * Read Constant Value Pool

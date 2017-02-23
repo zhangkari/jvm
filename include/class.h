@@ -195,12 +195,12 @@ typedef struct Object Class;
  *******************************************/
 struct Object {
 	uintptr_t lock;			// this
-	Class *cls;				// class type
+	Class *cls;			// class type
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 
 typedef struct ReferenceHandle {
-	U1		use;			// 0 free, 1 used
+	U1	use;			// 0 free, 1 used
 	Class  *cls_ptr;
 	Object *obj_ptr;
 } RefHandle;
