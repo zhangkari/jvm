@@ -134,7 +134,7 @@ void* sysAlloc(MemoryArea* area, int size)
 	}
 
 	// 4 bytes used to indicate the length of the buffer will allocate
-	// Ii will be used in sysFree()
+	// It will be used in sysFree()
 	if (area->used + size + 4 > area->capability) {
 #ifdef LOG_DETAIL
 		LogD("memory area is overflowed");

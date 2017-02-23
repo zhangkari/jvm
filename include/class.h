@@ -199,12 +199,6 @@ struct Object {
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 
-typedef struct ReferenceHandle {
-	U1	use;			// 0 free, 1 used
-	Class  *cls_ptr;
-	Object *obj_ptr;
-} RefHandle;
-
 typedef struct FieldEntry {
 	Class *class;
 	char *name;	
@@ -213,59 +207,6 @@ typedef struct FieldEntry {
 	U2	acc_flags;
 	U2	constant;
 } FieldEntry;
-
-// Slot store type and value
-typedef struct Slot {
-    TypeTag     tag;
-    uintptr_t   value;
-} Slot;
-
-/*
- * SlotBuffer
- */
-typedef struct SlotBuffer {
-    Slot *slots;	// slot list
-    U4    validCnt;	// valid slot count
-	U4	  capacity;	// capacity of slot list
-	U1	  use;		// 1 means in use, 0 means free
-} SlotBuffer;
-
-typedef SlotBuffer LocalVarTable;
-typedef SlotBuffer OperandStack;
-
-/**
- * SlotBufferPool
- */
-typedef struct SlotBufferPool {
-	U4			capacity;
-	SlotBuffer *slotbufs;
-} SlotBufferPool;
-
-typedef struct StackFrame {
-	U1			  use;			// used in StackFramePool for recycling
-	LocalVarTable *localTbl;
-	OperandStack  *opdStack;
-	ConstPool	  *constPool;	// for dynamic linking 
-	int32		  pc_reg;		// pc register, -1 means invalid
-} StackFrame;
-
-typedef struct StackFramePool {
-	U4			capacity;
-	StackFrame *frames;
-} StackFramePool;
-
-typedef struct RefHandlePool {
-	U4		   capacity;
-	RefHandle *handles;
-} RefHandlePool;
-
-/**
- * Java stack
- */
-typedef struct JavaStack {
-	int top;
-	StackFrame **frames;
-} JavaStack;
 
 typedef struct MethodEntry {
 	Class           *class;
@@ -290,7 +231,7 @@ typedef struct ClassEntry {
 	char *signature;					// class signature
 	char *super_name;					// super class name
 	char *source_file;					// file name of this class
-	Class *super;						// ignore me, not used
+	Class *super;						// super class 
 	U1 state;							// class state
 	U2 acc_flags;						// class access flag
 	U2 fields_count;					// filed count
@@ -365,116 +306,5 @@ extern void logClassEntry(ClassEntry* clsEntry);
  * Log the information of MethodEntry
  */
 extern void logMethodEntry(MethodEntry* method);
-
-/*
- * Create a specified capability SlotBufferPool
- */
-extern int createSlotBufferPool(int cap);
-
-/*
- * Destroy SlotBufferPool
- */
-extern void destroySlotBufferPool();
-
-/*
- * Obtain a SlotBuffer.
- * BE CAREFUL: call recycleSlotBuffer to release
- */
-extern SlotBuffer* obtainSlotBuffer();
-
-/*
- * Obtain an SlotBuffer that match the specified capacity
- * It takes the same effect with 
- *  obtainSlotBuffer + ensureCapSlotBufferCap
- */
-extern SlotBuffer* obtainCapSlotBuffer(int cap);
-
-/*
- * Recyle SlotBuffer for reuse.
- */
-extern void recycleSlotBuffer(SlotBuffer* slotbuf);
-
-/*
- * Ensure SlotBuffer capability
- */
-extern int ensureSlotBufferCap(SlotBuffer* buffer, int count);
-
-/*
- * Create a specified capability StackFramePool
- */
-extern int createStackFramePool(int cap); 
-
-/*
- * Destroy StackFramePool
- */
-extern void destroyStackFramePool(); 
-
-/*
- * Obtain a StackFrame.
- * Notice: call recycleStackFrame to release !
- */
-extern StackFrame* obtainStackFrame();
-
-/*
- * Recyle StackFrame for reuse.
- */
-extern void recycleStackFrame(StackFrame* frame);
-
-/*
- * Create a specified capacity RefHandlePool
- */
-extern int createRefHandlePool(int cap);
-
-/*
- * Destroy RefHandlePool
- */
-extern void destroyRefHandlePool();
-
-/*
- * Obtain a RefHandle
- * Notice: call recycleRefHandle to release !
- */
-extern RefHandle* obtainRefHandle();
-
-/*
- * Recyle RefHandle for reuse.
- */
-extern void recycleRefHandle(RefHandle* handle);
-
-/*
- * Push stack frame into java stack
- */
-extern bool pushJavaStack(JavaStack *stack, StackFrame *frame);
-
-/*
- * Pop stack frame from java stack
- */
-extern StackFrame* popJavaStack(JavaStack *stack);
-
-/*
- * Peek java stack
- * Return stack top element (not pop out)
- */
-extern StackFrame* peekJavaStack(JavaStack *stack);
-
-/*
- * Push operand into operand stack
- */
-extern bool pushOperandStack(OperandStack *stack, const Slot *slot);
-
-/*
- * Pop operand from operand stack
- */
-extern Slot* popOperandStack(OperandStack *stack);
-
-/*
- * Check whether java stack is empry
- */
-extern bool isJavaStackEmpty(JavaStack *stack);
-
-/*
- * Initialize Slot with ConstPoolEntry
- */
-extern void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry);
 
 #endif

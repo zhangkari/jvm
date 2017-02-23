@@ -14,6 +14,9 @@
 #include "runtime.h"
 #include "utility.h"
 
+// defined in runtime.c
+extern RefHandlePool *sRefHandlePool;
+
 enum {
 	opcode_min = -1,
 	nop,			// 0x00
