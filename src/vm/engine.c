@@ -126,3 +126,73 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 #endif
 
 }
+
+
+/*
+ *  Execute constructor, 
+ *  the parameters will popped from OperandStack
+ *  and placed in LocalTable, these will be done before enter INST_FUNCs
+ */
+void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
+{
+    assert(NULL != env && NULL != method);
+
+    assert(0 && "TODO");
+
+#ifdef DEBUG
+    char* clsname = CLASS_CE(method->class)->name;
+    printf("[++ execute %s.%s start:]\n", clsname, method->name);
+#endif
+
+    StackFrame *frame = obtainStackFrame();
+    assert (NULL != frame);
+
+    OperandStack *oprdStack = obtainSlotBuffer();
+    assert (NULL != oprdStack);
+    if (ensureSlotBufferCap(oprdStack, method->max_stack) < 0) {
+        printf("Failed ensure operand statck capacity");
+        exit(-1);
+    }
+
+    LocalVarTable *localTbl = obtainSlotBuffer();
+    assert (NULL != localTbl);
+    if (ensureSlotBufferCap(localTbl, method->max_stack) < 0) {
+        printf("Failed ensure local variable table capacity");
+        exit(-1);
+    }
+
+    frame->localTbl  = localTbl;
+    frame->opdStack  = oprdStack;
+    frame->constPool = CLASS_CE(method->class)->constPool;
+
+    if (!pushJavaStack(env->javaStack, frame)) {
+        printf ("Failed push stack frame to java stack.\n");
+        exit (1);
+    }
+
+    // extract & parse instructions from the byte code
+    extractInstructions((MethodEntry *)method);
+
+    InstExecEnv instEnv;
+    const Instruction *inst = NULL;
+    int i;
+
+    for (i = 0;  i < method->instCnt; i++) {
+        memset(&instEnv, 0, sizeof(instEnv));
+        inst = method->instTbl[i];
+        instEnv.inst = (Instruction *)inst;
+        instEnv.env  = env;
+
+        inst->handler(&instEnv);
+    }
+
+    StackFrame *lastFrame = popJavaStack(env->javaStack);
+    assert (lastFrame != NULL);
+    // TODO
+    // lastFrame->retAddr;
+
+#ifdef DEBUG
+    printf("[-- execute %s.%s finish.]\n", clsname, method->name);
+#endif
+
+}

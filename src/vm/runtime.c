@@ -12,6 +12,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/time.h>
 #include "class.h"
 #include "engine.h"
@@ -796,6 +797,17 @@ Slot* popOperandStack(OperandStack *stack) {
 }
 
 /*
+ *
+ */
+Slot* peekOperandStack(OperandStack *stack) {
+    assert (NULL != stack);
+    assert (stack->validCnt >= 0);
+    assert (stack->validCnt <= stack->capacity);
+
+    return stack->slots + (stack->validCnt -1);
+}
+
+/*
  * Initialize Slot with ConstPoolEntry
  */
 void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
@@ -950,14 +962,52 @@ static char* strrpl(const char *src, char s, char t) {
 extern Object* newInstance(MemoryArea* mem, const Class* cls) {
     assert (NULL != mem && NULL != cls);
 
-    return NULL;
+    int size = sizeof(Class) + sizeof(ClassEntry); 
+    Object *obj = sysAlloc(mem, size); 
+    if (NULL == obj) {
+        assert (0 && "sysAlloc() return NULL"); 
+    }
+    bzero(obj, size);
+
+    const int CNT = CLASS_CE(cls)->fields_count;
+    ClassEntry *ce = CLASS_CE(cls);
+    int fcnt = 0;
+    int i;
+    for (i = 0; i < CNT; i++) {
+        if (ACC_STATIC & ce->fields[i].acc_flags) {
+            continue;
+        }
+        fcnt++;
+    }
+
+    if (fcnt > 0) {
+        CLASS_CE(obj)->fields_count = fcnt;
+        FieldEntry* fields = sysAlloc(mem, fcnt * sizeof(FieldEntry));
+        if (NULL == obj) {
+            assert (0 && "sysAlloc() return NULL"); 
+        }
+
+        CLASS_CE(obj)->fields = fields;
+        fcnt = 0;
+        for (i = 0; i < CNT; i++) {
+            if (ACC_STATIC & ce->fields[i].acc_flags) {
+                continue;
+            }
+
+            memcpy(fields + fcnt, ce->fields + i, sizeof(FieldEntry));
+            fcnt++;
+        }
+    }
+
+    return obj;
 }
 
 /*
  * Free the specified instance
  */
 extern void freeInstance(MemoryArea* mem, Object* obj) {
-
+    sysFree(mem, CLASS_CE(obj)->fields);
+    sysFree(mem, obj);
 }
 
 /**

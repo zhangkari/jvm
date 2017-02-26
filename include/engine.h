@@ -14,5 +14,6 @@
 #include "runtime.h"
 
 extern void executeMethod(ExecEnv *env, const MethodEntry *method);
+extern void executeMethod_spec(ExecEnv *env, const MethodEntry *method);
 
 #endif

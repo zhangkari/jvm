@@ -195,7 +195,7 @@ typedef struct Object Class;
  *******************************************/
 struct Object {
 	uintptr_t lock;			// this
-	Class *cls;			// class type
+	Class *cls;			    // class type(may be NULL in Class type)
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 

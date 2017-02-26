@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <string.h>
 #include "comm.h"
 #include "endianswap.h"
 #include "engine.h"
@@ -1544,8 +1545,14 @@ DECL_FUNC(pop2)
 
 DECL_FUNC(dup)
 {
-    printf("\t*dup\n");
-	return FALSE;
+    validate_inst_env(param);
+
+    Slot *top = peekOperandStack(opdStack);
+    bool status = pushOperandStack(opdStack, top);
+    assert (status);
+
+    printf("\tdup\n");
+	return TRUE;
 }
 
 DECL_FUNC(dup_x1)
@@ -2111,9 +2118,31 @@ DECL_FUNC(invokespecial)
     printf("\t*invokespecial %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
+    U2 cls_idx = constEntry->info.methodref_info.class_index;
+    U2 index = constPool->entries[cls_idx].info.class_info.name_index;
+    U2 nametype_idx = constEntry->info.methodref_info.name_type_index;
+    U2 name_idx = constPool->entries[nametype_idx].info.nametype_info.name_index;
+    U2 type_idx = constPool->entries[nametype_idx].info.nametype_info.type_index;
+
+    char *clsname = constPool->entries[index].info.utf8_info.bytes;
+    printf("class:%s\n", clsname);
+    char *methodname = constPool->entries[name_idx].info.utf8_info.bytes;
+    printf("method:%s\n", methodname);
+    char *type = constPool->entries[type_idx].info.utf8_info.bytes;
+    printf("type:%s\n", type);
+
+    if (strcmp(type, "()V")) {
+        printf("\t just support default constructor now !\n");
+        assert (0 && "not implemented");
+    }
+
+	Class *class = findClass(clsname, env);
+	MethodEntry *method = findMethod(class, methodname, type);
+	assert(NULL != method);
+
+	executeMethod_spec(env, method);
 
 	return FALSE;
-
 }
 
 DECL_FUNC(invokestatic)
@@ -2187,10 +2216,12 @@ DECL_FUNC(_new)
     validate_inst_env(param);
 
 	U1 u2 = inst->operand.u2;
-    printf("\t*new %d\n", u2);
+    printf("\tnew %d // ", u2);
 
     ConstPoolEntry *constEntry = constPool->entries + u2;
     assert (CONST_Class == constEntry->tag);
+
+    logConstPoolEntry(constPool, constEntry);
 
     U2 name_idx = constEntry->info.class_info.name_index;
     char *clsname = constPool->entries[name_idx].info.utf8_info.bytes;
@@ -2198,7 +2229,19 @@ DECL_FUNC(_new)
 	assert(NULL != class);
     assert(CLASS_CE(class)->state = CLASS_RESOLVED);
 
-	return FALSE;
+    Object *obj = newInstance(env->heapArea, class);
+
+    RefHandle *refHandle = obtainRefHandle();
+    assert (NULL != refHandle);
+    refHandle->cls_ptr = class;
+    refHandle->obj_ptr = obj;
+
+    Slot slot;
+    slot.tag = ReferenceType;
+    slot.value = (uintptr_t)refHandle;
+    pushOperandStack(opdStack, &slot);
+
+	return TRUE;
 }
 
 DECL_FUNC(newarray)

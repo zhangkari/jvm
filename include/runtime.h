@@ -250,6 +250,12 @@ extern bool pushOperandStack(OperandStack *stack, const Slot *slot);
 extern Slot* popOperandStack(OperandStack *stack);
 
 /*
+ * Peek operand stack
+ * Return stack top element (not pop out)
+ */
+extern Slot* peekOperandStack(OperandStack *stack);
+
+/*
  * Check whether java stack is empry
  */
 extern bool isJavaStackEmpty(JavaStack *stack);
