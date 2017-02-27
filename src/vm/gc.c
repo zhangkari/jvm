@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "gc.h"
+#include "runtime.h"
 
 // TODO
 extern RefHandlePool *sRefHandlePool;
@@ -25,7 +26,7 @@ struct gc_context {
  */
 gc_context* gcCreate(MemoryArea *mem) {
     assert (NULL != mem);
-    gc_context *gc = (gc *)calloc(1, sizeof(gc_context));
+    gc_context *gc = (gc_context *)calloc(1, sizeof(gc_context));
     if (NULL != gc) {
 	gc->mem = mem;
     }
