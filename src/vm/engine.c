@@ -137,7 +137,10 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 {
     assert(NULL != env && NULL != method);
 
-    assert(0 && "TODO");
+    assert (!strcmp(method->name, "<init>"));
+    if (strcmp(method->type, "()V")) {
+	assert (0 && "just default constructor support!");
+    }
 
 #ifdef DEBUG
     char* clsname = CLASS_CE(method->class)->name;
@@ -164,6 +167,14 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     frame->localTbl  = localTbl;
     frame->opdStack  = oprdStack;
     frame->constPool = CLASS_CE(method->class)->constPool;
+
+    Slot* thiz = popOperandStack(peekJavaStack(env->javaStack)->opdStack);
+    // add slots[0] = thiz
+    memcpy(frame->localTbl->slots, thiz, sizeof(Slot));
+    //free (thiz);
+    // add slots[1]
+    //
+
 
     if (!pushJavaStack(env->javaStack, frame)) {
         printf ("Failed push stack frame to java stack.\n");
