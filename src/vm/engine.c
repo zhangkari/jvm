@@ -61,7 +61,7 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 
     LocalVarTable *localTbl = obtainSlotBuffer();
     assert (NULL != localTbl);
-    if (ensureSlotBufferCap(localTbl, method->max_stack) < 0) {
+    if (ensureSlotBufferCap(localTbl, method->max_locals) < 0) {
         printf("Failed ensure local variable table capacity");
         exit(-1);
     }
@@ -159,7 +159,7 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 
     LocalVarTable *localTbl = obtainSlotBuffer();
     assert (NULL != localTbl);
-    if (ensureSlotBufferCap(localTbl, method->max_stack) < 0) {
+    if (ensureSlotBufferCap(localTbl, method->max_locals) < 0) {
         printf("Failed ensure local variable table capacity");
         exit(-1);
     }
