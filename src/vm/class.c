@@ -198,7 +198,8 @@ static void readClassField(Class *cls, U2 field_count, U1** base) {
 
 			if (!strcmp(name, "ConstantValue")) {
 				READ_U2(const_value_idx, *base);	
-				class->fields[i].constant = constPool->entries[const_value_idx].tag;
+				//class->fields[i].constant = constPool->entries[const_value_idx].tag;
+				class->fields[i].constant = const_value_idx;
 
 			}
             else if (!strcmp(name, "Signature")) {
@@ -891,6 +892,16 @@ Class* findClassImpl(const char *classname, Class * const *list, int size) {
 }
 
 FieldEntry* findField(Class *class, char *name, char *type) {
+    ClassEntry *ce = CLASS_CE(class);
+    FieldEntry *f = NULL;
+    int i;
+    for (i = 0; i < ce->fields_count; i++) {
+        f = ce->fields + i;
+        if (!strcmp(f->name, name) ||
+                !strcmp(f->type, type)) {
+            return f;
+        }
+    }
 	return NULL;
 }
 

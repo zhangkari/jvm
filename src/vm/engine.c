@@ -171,6 +171,8 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     Slot* thiz = popOperandStack(peekJavaStack(env->javaStack)->opdStack);
     // add slots[0] = thiz
     memcpy(frame->localTbl->slots, thiz, sizeof(Slot));
+    ++frame->localTbl->validCnt;
+
     //free (thiz);
     // add slots[1]
     //
