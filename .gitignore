@@ -30,7 +30,7 @@ target
 
 # debug
 debug/*
-!debug/rt.jar
+!debug/mkrt.sh
 !debug/CMakeLists.txt
 
 # release

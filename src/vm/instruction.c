@@ -2779,11 +2779,6 @@ DECL_FUNC(invokespecial)
     char *methodname = constPool->entries[name_idx].info.utf8_info.bytes;
     char *type = constPool->entries[type_idx].info.utf8_info.bytes;
 
-    if (strcmp(type, "()V")) {
-        printf("\t just support default constructor now !\n");
-        assert (0 && "not implemented");
-    }
-
 	Class *class = findClass(clsname, env);
 	MethodEntry *method = findMethod(class, methodname, type);
 	assert(NULL != method);

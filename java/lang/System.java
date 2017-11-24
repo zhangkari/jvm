@@ -1,33 +1,27 @@
 /***************************
  *
  * file name:	System.java
+ * author:      Karim.zhang
  *
  **************************/
 
 package java.lang;
 
+import java.io.PrintStream;
+
 public final class System {
-	// public static final PrintStream err = null;
-	// public static final PrintStream in = null;
-	// public static final PrintStream out = null;
+    final static String TAG = "System";
 
-	/*
-	public static void setIn (InputStream newIn) {
-		in = newIn;
-	}
-	*/
+    public static PrintStream out;
 
-	/*
-	public static void setOut (PrintStream newOut) {
-		out = newOut;
-	}
-	*/
+    // just for compiling correctly
+    static {
+        try {
+            out = new PrintStream(TAG);
+        } catch(Exception e) {
 
-	/*
-	public static void setErr (PrintStream newErr) {
-		err = newErr;
-	}
-	*/
+        }
+    }
 
 	public static native long currentTimeMillis();
 

@@ -127,6 +127,26 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 
 }
 
+/*  
+ * pop operands from statck to local table
+ */
+static void popOpdStackToLocalTbl(OperandStack* stack, 
+        LocalVarTable *tbl, int count) {
+
+    assert (stack != NULL);
+    assert (tbl != NULL);
+    assert (count >= 0);
+    assert (stack->validCnt >= count);
+    assert (tbl->capacity >= count);
+
+    Slot* s;
+    int i;
+    for (i = count - 1; i >= 0; i--) {
+       s = popOperandStack(stack); 
+       memcpy(tbl->slots + i, s, sizeof(*s));
+    }
+    tbl->validCnt = count;
+}
 
 /*
  *  Execute constructor, 
@@ -138,9 +158,6 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     assert(NULL != env && NULL != method);
 
     assert (!strcmp(method->name, "<init>"));
-    if (strcmp(method->type, "()V")) {
-	assert (0 && "just default constructor support!");
-    }
 
 #ifdef DEBUG
     char* clsname = CLASS_CE(method->class)->name;
@@ -168,15 +185,12 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     frame->opdStack  = oprdStack;
     frame->constPool = CLASS_CE(method->class)->constPool;
 
-    Slot* thiz = popOperandStack(peekJavaStack(env->javaStack)->opdStack);
-    // add slots[0] = thiz
-    memcpy(frame->localTbl->slots, thiz, sizeof(Slot));
-    ++frame->localTbl->validCnt;
-
-    //free (thiz);
-    // add slots[1]
-    //
-
+    /* pop operands from statck to local table */
+    StackFrame *top = peekJavaStack(env->javaStack);
+    OperandStack *stack = top->opdStack;
+    // usually, max_localal equals args_count except main(String[])
+    popOpdStackToLocalTbl(stack, frame->localTbl, method->max_locals);
+    /** pop finish **/
 
     if (!pushJavaStack(env->javaStack, frame)) {
         printf ("Failed push stack frame to java stack.\n");

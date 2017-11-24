@@ -1109,6 +1109,13 @@ int loadClassFromJar(char *path, Class ***classes) {
 	if (NULL == path || NULL == classes) {
 		return -1;
 	}
+
+    FILE *fp = fopen(path, "rb");
+    if (fp == NULL) {
+        return -1;
+    }
+    fclose(fp);
+    fp = NULL;
 	
 	UnpackJarArg arg;
 	memset(&arg, 0, sizeof(arg) );

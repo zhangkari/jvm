@@ -55,11 +55,13 @@ void initVM(InitArgs *args, VM *vm) {
     uint64_t t1 = current_ms();
 #endif
     // load classes from rt.jar
-    env->rtClsCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
-    if (env->rtClsCnt < 1) {
+    int loadCnt = loadClassFromJar(args->bootpath, &env->rtClsArea);
+    if (loadCnt < 1) {
         printf("Error: Failed load run time class.\n");
         exit(1);
     }
+    env->rtClsCnt = loadCnt;
+
 #ifdef LOG_DETAIL
     uint64_t t2 = current_ms();
     printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
