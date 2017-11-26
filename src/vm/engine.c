@@ -17,30 +17,59 @@
 #include "jvm.h"
 #include "runtime.h"
 
+static void executeNative(ExecEnv *env, const MethodEntry *method) {
+#ifdef DEBUG
+    printf("\t<natvie %s:%s>\n", 
+            method->name, method->type);
+#endif
+
+    NativeFuncPtr funcPtr = retrieveNativeMethod(method);
+    if (funcPtr != NULL) {
+
+#ifdef DEBUG
+        printf("\t*exec %s\n", method->name);
+
+
+        /********************
+          debug operand stack in stack frame !
+          debug begin
+          */
+        StackFrame *frame = peekJavaStack(env->javaStack);
+        OperandStack *stack = frame->opdStack;
+        printf("stack cnt cap:%d, %d\n", stack->validCnt, stack->capacity);
+
+        printf("0 tag:%d\n", stack->slots->tag);
+        printf("1 tag:%d\n", (stack->slots + 1)->tag);
+        printf("2 tag:%d\n", (stack->slots + 2)->tag);
+
+        LocalVarTable *tbl = frame->localTbl;
+        printf("tbl cnt cap:%d, %d\n", tbl->validCnt, tbl->capacity);
+
+        /********************
+          debug end
+          */
+
+#endif
+        funcPtr(env, method->class);
+
+    } else {
+        ClassEntry *cls = CLASS_CE(method->class);
+        printf("\t*Failed retrieve native method:%s.%s:%s\n", cls->name, method->name, method->type);
+
+    }
+
+    if (NULL != env->dl_handle) {
+        dlclose(env->dl_handle);
+    }
+
+}
+
 void executeMethod(ExecEnv *env, const MethodEntry *method)
 {
     assert(NULL != env && NULL != method);
 
     if (ACC_NATIVE & method->acc_flags) {
-
-        printf("\t<natvie %s:%s>\n", 
-                method->name, method->type);
-
-        NativeFuncPtr funcPtr = retrieveNativeMethod(method);
-        if (funcPtr != NULL) {
-            printf("\t*exec %s\n", method->name);
-            funcPtr(env, method->class);
-
-        } else {
-            ClassEntry *cls = CLASS_CE(method->class);
-            printf("\t*Failed retrieve native method:%s.%s:%s\n", cls->name, method->name, method->type);
-
-        }
-
-        if (NULL != env->dl_handle) {
-            dlclose(env->dl_handle);
-        }
-
+        executeNative(env, method);
         return;
     }
 
@@ -157,11 +186,20 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 {
     assert(NULL != env && NULL != method);
 
+    if (ACC_NATIVE & method->acc_flags) {
+        executeNative(env, method);
+        return;
+    }
+
+    // do not just support constructor only!
+    // do not forget to refacor me !
+#if 0
     assert (!strcmp(method->name, "<init>"));
+#endif
 
 #ifdef DEBUG
     char* clsname = CLASS_CE(method->class)->name;
-    printf("[++ execute %s.%s start:]\n", clsname, method->name);
+    printf("[++ execute %s.%s spec start:]\n", clsname, method->name);
 #endif
 
     StackFrame *frame = obtainStackFrame();
@@ -219,7 +257,7 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     // lastFrame->retAddr;
 
 #ifdef DEBUG
-    printf("[-- execute %s.%s finish.]\n", clsname, method->name);
+    printf("[-- execute %s.%s spec finish.]\n", clsname, method->name);
 #endif
 
 }

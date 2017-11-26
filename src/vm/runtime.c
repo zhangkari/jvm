@@ -17,6 +17,7 @@
 #include "class.h"
 #include "engine.h"
 #include "instpool.h"
+#include "jnikit.h"
 #include "jvm.h"
 #include "runtime.h"
 #include "utility.h"
@@ -776,6 +777,11 @@ bool pushOperandStack(OperandStack *stack, const Slot *slot) {
 	assert(NULL != stack && NULL != slot);
 	assert(NULL != stack->slots);
 	assert(stack->capacity > 0);
+
+    // fixed me! here is a bug.
+    // right is
+    // assert(stack->validCnt < stack->capacity);
+    // I will fixed later because I should run the jvm demo first!
 	assert(stack->validCnt <= stack->capacity);
 
 	Slot *current = stack->slots + stack->validCnt;
@@ -1014,8 +1020,7 @@ extern void freeInstance(MemoryArea* mem, Object* obj) {
 
 /**
  * Map java method name to native method name
- * Parameters:
- *      method:     the name of the method
+ * Parameters: *      method:     the name of the method
  *      clsname:    the class name of the method 
  *      signature:  the signature of the method
  */
@@ -1041,16 +1046,56 @@ extern char* mapMethodName(const char* method, const char* clsname, const char* 
 }
 
 void Java_java_lang_Object_registerNatives(ExecEnv *env, Class *cls) {
+#ifdef DEBUG
     printf("\t*java.lang.Object.registerNatives()\n");
+#endif
 }
 
 void Java_java_lang_System_registerNatives(ExecEnv *env, Class *cls) {
+#ifdef DEBUG
     printf("\t*java.lang.System.registerNatives()\n");
+#endif
 }
 
 long Java_java_lang_System_currentTimeMillis(ExecEnv *env, Class *cls) {
+#ifdef DEBUG
     printf("\tjava_lang_System_currentTimeMillis\n");
+#endif
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+/**
+  * PrintStream.println(String)
+  */
+void Java_java_io_PrintStream_println(ExecEnv *env, 
+        Object *thiz, 
+        Object *param) {
+
+#ifdef DEBUG
+    printf("\tjava_io_PrintStream_println\n");
+#endif
+    
+    printf("run\n");
+
+    printf("thiz:%p\n", thiz);
+    printf("param:%p\n", param);
+
+    
+    ClassEntry *cls = CLASS_CE(thiz);
+    printf("cls name:%s\n", cls->name);
+
+    JavaStack *stack = env->javaStack;
+    assert(stack != NULL);
+
+    StackFrame *frame = peekJavaStack(stack);
+    assert(frame != NULL);
+
+    OperandStack *opds = frame->opdStack;
+    printf("cnt:%d, cap:%d\n", opds->validCnt, opds->capacity);
+
+    Slot * slot = opds + 0;
+    printf("0:tag:%x\n", slot->tag);
+    printf("1:tag:%x\n", (slot + 1)->tag);
 }

@@ -1820,7 +1820,10 @@ DECL_FUNC(dup)
     bool status = pushOperandStack(opdStack, top);
     assert (status);
 
+#ifdef DEBUG
     printf("\tdup\n");
+#endif
+
 	return TRUE;
 }
 
@@ -2617,7 +2620,9 @@ DECL_FUNC(areturn)
 
 DECL_FUNC(_return)
 {
+#ifdef DEBUG
     printf("\t*return\n");
+#endif
 	return FALSE;
 }
 
@@ -2632,12 +2637,6 @@ DECL_FUNC(getstatic)
     Slot slot;
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
-
-	// Please reference here:
-	// class.c line:1742
-#if 0
-	printf("slot value:%s\n", (char *)slot.value);
-#endif
 
 #ifdef TIME_COST_LOG
 	uint64_t t1 = current_ms();
@@ -2665,11 +2664,27 @@ DECL_FUNC(getstatic)
     assert(result);
 
 #ifdef DEBUG
-    printf("\t*getstatic %d // ", u2);
+    printf("\tgetstatic %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
-	return FALSE;
+    assert (constEntry->tag == CONST_Fieldref);
+
+    const ConstPool *pool = constPool;
+    int nametype_idx = constEntry->info.fieldref_info.name_type_index;
+    int name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+    int type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+    char* name = pool->entries[name_idx].info.utf8_info.bytes; 
+    char* type = pool->entries[type_idx].info.utf8_info.bytes; 
+    FieldEntry* field = findField(cls, name, type);
+    assert (field != NULL);
+    assert (field->acc_flags & ACC_STATIC);
+    assert (field->slot);
+
+    status = pushOperandStack(opdStack, field->slot);
+    assert (status);
+
+	return TRUE;
 }
 
 DECL_FUNC(putstatic)
@@ -2682,7 +2697,7 @@ DECL_FUNC(putstatic)
     assert(constEntry->tag == CONST_Fieldref);
     
 #ifdef DEBUG
-    printf("\t*putstatic %d // ", u2);
+    printf("\tputstatic %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
 
@@ -2703,12 +2718,13 @@ DECL_FUNC(putstatic)
     assert (field->acc_flags & ACC_STATIC);
 
     U2 cons = field->constant;
-    int tag = constPool->entries[cons].tag;
+    logConstPoolEntry(constPool, constPool->entries + cons);
 
     Slot *slot = popOperandStack(opdStack);
     assert (slot != NULL);
+    field->slot = slot;
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(getfield)
@@ -2736,21 +2752,56 @@ DECL_FUNC(invokevirtual)
 	U2 u2 = inst->operand.u2;
 	ConstPoolEntry *constEntry = constPool->entries + u2;
 	assert(NULL != constEntry);
+
+#ifdef DEBUG
+    printf("\tinvokevirtual %d // ", u2);
+	logConstPoolEntry(constPool, constEntry);
+#endif
+
     if(constEntry->tag != CONST_Methodref) {
         printf("\t[crash log:constEntry->tag:%d]\n", constEntry->tag);
         assert(constEntry->tag == CONST_Methodref);
     }
 
-    Slot slot;
-    initSlot(&slot, constPool, constEntry);
-	assert(slot.tag == constEntry->tag);
 
-#ifdef DEBUG
-    printf("\t*invokevirtual %d // ", u2);
-	logConstPoolEntry(constPool, constEntry);
+    int cls_idx = constEntry->info.methodref_info.class_index;
+    int cls_name_idx = constPool->entries[cls_idx].info.class_info.name_index;
+    char *clsname = constPool->entries[cls_name_idx].info.utf8_info.bytes;
+
+   #ifdef TIME_COST_LOG
+	uint64_t t1 = current_ms();
 #endif
 
-	return FALSE;
+	// retrieve the class named slot.value
+	Class *cls = findClass(clsname, env);
+	assert (NULL != cls);
+
+#ifdef TIME_COST_LOG
+	uint64_t t2 = current_ms();
+	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
+#endif
+
+	bool status = linkClass(cls, env);
+	assert (status);
+
+	status = resolveClass(cls);
+	assert (status);
+
+	status = initializeClass(cls, env);
+	assert (status);
+
+    const ConstPool *pool = constPool;
+    const ConstPoolEntry *entry = constEntry;
+    int nametype_idx = entry->info.methodref_info.name_type_index;
+    int name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+    int type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+    char *name = pool->entries[name_idx].info.utf8_info.bytes;
+    char *type = pool->entries[type_idx].info.utf8_info.bytes;
+    MethodEntry *method = findMethod(cls, name, type);
+    assert(method != NULL);
+    executeMethod_spec(env, method);
+
+	return TRUE;
 }
 
 DECL_FUNC(invokespecial)
@@ -2766,7 +2817,7 @@ DECL_FUNC(invokespecial)
 	assert(slot.tag == constEntry->tag);
 
 #ifdef DEBUG
-    printf("\t*invokespecial %d // ", u2);
+    printf("\tinvokespecial %d // ", u2);
 	logConstPoolEntry(constPool, constEntry);
 #endif
     U2 cls_idx = constEntry->info.methodref_info.class_index;
@@ -2785,7 +2836,7 @@ DECL_FUNC(invokespecial)
 
 	executeMethod_spec(env, method);
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(invokestatic)
@@ -2867,12 +2918,13 @@ DECL_FUNC(_new)
     validate_inst_env(param);
 
 	U1 u2 = inst->operand.u2;
-    printf("\tnew %d // ", u2);
-
     ConstPoolEntry *constEntry = constPool->entries + u2;
     assert (CONST_Class == constEntry->tag);
 
+#ifdef DEBUG
+    printf("\tnew %d // ", u2);
     logConstPoolEntry(constPool, constEntry);
+#endif
 
     U2 name_idx = constEntry->info.class_info.name_index;
     char *clsname = constPool->entries[name_idx].info.utf8_info.bytes;

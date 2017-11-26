@@ -199,6 +199,7 @@ struct Object {
 	/* classEntry */		// classEntry ( see allocClass() )
 }; 
 
+typedef struct Slot Slot;
 typedef struct FieldEntry {
 	Class *class;
 	char *name;	
@@ -206,6 +207,7 @@ typedef struct FieldEntry {
 	char *signature;
 	U2	acc_flags;
 	U2	constant;
+    Slot *slot;
 } FieldEntry;
 
 typedef struct MethodEntry {

@@ -66,6 +66,7 @@ typedef struct SlotBuffer {
     Slot *slots;	// slot list
     U4    validCnt;	// valid slot count
 	U4	  capacity;	// capacity of slot list
+    U2    id;       // used for debugger
 	U1	  use;		// 1 means in use, 0 means free
 } SlotBuffer;
 
@@ -86,6 +87,7 @@ typedef struct StackFrame {
 	OperandStack  *opdStack;
 	ConstPool	  *constPool;	// for dynamic linking 
 	int32		  pc_reg;		// pc register, -1 means invalid
+    U2            id;           // used for debugger
 } StackFrame;
 
 typedef struct StackFramePool {
