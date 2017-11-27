@@ -17,6 +17,9 @@
 #include "jvm.h"
 #include "runtime.h"
 
+static int sFrameIdx = 0;
+static int sOperandIdx = 0;
+
 static void executeNative(ExecEnv *env, const MethodEntry *method) {
 #ifdef DEBUG
     printf("\t<natvie %s:%s>\n", 
@@ -28,29 +31,28 @@ static void executeNative(ExecEnv *env, const MethodEntry *method) {
 
 #ifdef DEBUG
         printf("\t*exec %s\n", method->name);
-
-
-        /********************
-          debug operand stack in stack frame !
-          debug begin
-          */
-        StackFrame *frame = peekJavaStack(env->javaStack);
-        OperandStack *stack = frame->opdStack;
-        printf("stack cnt cap:%d, %d\n", stack->validCnt, stack->capacity);
-
-        printf("0 tag:%d\n", stack->slots->tag);
-        printf("1 tag:%d\n", (stack->slots + 1)->tag);
-        printf("2 tag:%d\n", (stack->slots + 2)->tag);
-
-        LocalVarTable *tbl = frame->localTbl;
-        printf("tbl cnt cap:%d, %d\n", tbl->validCnt, tbl->capacity);
-
-        /********************
-          debug end
-          */
-
 #endif
-        funcPtr(env, method->class);
+
+        StackFrame *frame = popJavaStack(env->javaStack);
+        OperandStack *stack = frame->opdStack;
+
+        // TODO
+        // util now just support one argument
+        // const int cnt = stack->validCnt;
+
+        Slot *slot = stack->slots;
+        assert(slot);
+        assert(slot->tag == ReferenceType);
+        RefHandle *ref = (RefHandle *)slot->value;
+        assert(ref->cls_ptr);
+        assert(ref->obj_ptr);
+
+        Slot *param = stack->slots + 1;
+        assert(param);
+
+        // TODO
+        // util now just support one argument
+        funcPtr(env, ref->obj_ptr, param);
 
     } else {
         ClassEntry *cls = CLASS_CE(method->class);
@@ -83,6 +85,12 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 
     OperandStack *oprdStack = obtainSlotBuffer();
     assert (NULL != oprdStack);
+
+#ifdef DEBUG
+    frame->id = sFrameIdx++;
+    oprdStack->id = sOperandIdx++;
+#endif
+
     if (ensureSlotBufferCap(oprdStack, method->max_stack) < 0) {
         printf("Failed ensure operand statck capacity");
         exit(-1);
@@ -103,6 +111,10 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         printf ("Failed push stack frame to java stack.\n");
         exit (1);
     }
+
+#ifdef DEBUG
+    printf("[++ push stack frame:%d]\n", frame->id);
+#endif
 
     // extract & parse instructions from the byte code
     extractInstructions((MethodEntry *)method);
@@ -144,11 +156,6 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
 
         inst->handler(&instEnv);
     }
-
-    StackFrame *lastFrame = popJavaStack(env->javaStack);
-    assert (lastFrame != NULL);
-    // TODO
-    // lastFrame->retAddr;
 
 #ifdef DEBUG
     printf("[-- execute %s.%s finish.]\n", clsname, method->name);
@@ -207,6 +214,12 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 
     OperandStack *oprdStack = obtainSlotBuffer();
     assert (NULL != oprdStack);
+
+#ifdef DEBUG
+    frame->id = sFrameIdx++;
+    oprdStack->id = sOperandIdx++;
+#endif
+
     if (ensureSlotBufferCap(oprdStack, method->max_stack) < 0) {
         printf("Failed ensure operand statck capacity");
         exit(-1);
@@ -235,6 +248,10 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
         exit (1);
     }
 
+#ifdef DEBUG
+    printf("[++ push stack frame:%d]\n", frame->id);
+#endif
+
     // extract & parse instructions from the byte code
     extractInstructions((MethodEntry *)method);
 
@@ -250,11 +267,6 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 
         inst->handler(&instEnv);
     }
-
-    StackFrame *lastFrame = popJavaStack(env->javaStack);
-    assert (lastFrame != NULL);
-    // TODO
-    // lastFrame->retAddr;
 
 #ifdef DEBUG
     printf("[-- execute %s.%s spec finish.]\n", clsname, method->name);

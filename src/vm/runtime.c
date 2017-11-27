@@ -744,7 +744,6 @@ bool pushJavaStack(JavaStack *stack, StackFrame *frame) {
 
 StackFrame* popJavaStack(JavaStack *stack) {
 	if (NULL == stack || stack->top < 1) {
-		fprintf(stderr, "Stack is downflow\n");
 		return NULL;
 	}
 
@@ -757,7 +756,6 @@ StackFrame* popJavaStack(JavaStack *stack) {
  */
 StackFrame* peekJavaStack(JavaStack *stack) {
 	if (NULL == stack || stack->top < 1) {
-		fprintf(stderr, "Stack is downflow\n");
 		return NULL;
 	}
 
@@ -777,12 +775,7 @@ bool pushOperandStack(OperandStack *stack, const Slot *slot) {
 	assert(NULL != stack && NULL != slot);
 	assert(NULL != stack->slots);
 	assert(stack->capacity > 0);
-
-    // fixed me! here is a bug.
-    // right is
-    // assert(stack->validCnt < stack->capacity);
-    // I will fixed later because I should run the jvm demo first!
-	assert(stack->validCnt <= stack->capacity);
+	assert(stack->validCnt < stack->capacity);
 
 	Slot *current = stack->slots + stack->validCnt;
 	++stack->validCnt;
@@ -1076,26 +1069,14 @@ void Java_java_io_PrintStream_println(ExecEnv *env,
 #ifdef DEBUG
     printf("\tjava_io_PrintStream_println\n");
 #endif
-    
-    printf("run\n");
 
-    printf("thiz:%p\n", thiz);
-    printf("param:%p\n", param);
+    Slot* slot = (Slot *)param;
+    if (slot->tag == CONST_String) {
+        char* str = (char *)(((Slot*)param)->value);
+        printf("%s\n", str);
+    } else if (slot->tag == CONST_Integer) {
+        int value = (int)(((Slot*)param)->value);
+        printf("%d\n", value);
+    }
 
-    
-    ClassEntry *cls = CLASS_CE(thiz);
-    printf("cls name:%s\n", cls->name);
-
-    JavaStack *stack = env->javaStack;
-    assert(stack != NULL);
-
-    StackFrame *frame = peekJavaStack(stack);
-    assert(frame != NULL);
-
-    OperandStack *opds = frame->opdStack;
-    printf("cnt:%d, cap:%d\n", opds->validCnt, opds->capacity);
-
-    Slot * slot = opds + 0;
-    printf("0:tag:%x\n", slot->tag);
-    printf("1:tag:%x\n", (slot + 1)->tag);
 }

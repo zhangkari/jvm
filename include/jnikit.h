@@ -5,7 +5,7 @@
   * date:   2017-11-26
   **************************************/
 
-#ifdef  __JNIKIT__H__
+#ifndef __JNIKIT__H__
 #define __JNIKIT__H__
 
 typedef char jchar;

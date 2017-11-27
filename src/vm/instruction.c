@@ -976,7 +976,7 @@ void logInstruction(const Instruction* inst) {
 	assert(NULL != jstack);                                 \
                                                             \
 	StackFrame *frame = peekJavaStack(jstack);              \
-	assert(NULL != frame);                                  \
+    if (frame == NULL) return TRUE; /* exit normal */       \
                                                             \
 	LocalVarTable *localTbl = frame->localTbl;              \
 	assert(NULL != localTbl);                               \
@@ -1173,11 +1173,20 @@ DECL_FUNC(bipush)
 
 DECL_FUNC(sipush)
 {
+    validate_inst_env(param);
+
+    U2 u2 = inst->operand.u2;
+    Slot slot;
+    slot.tag = CONST_Integer;
+    slot.value = u2;
+    bool result = pushOperandStack(opdStack, &slot);
+    assert(result);
+
 #ifdef DEBUG
-    printf("\tsipush\n");
+    printf("\tsipush %d\n", u2);
 #endif
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(ldc)
@@ -1883,11 +1892,27 @@ DECL_FUNC(swap)
 
 DECL_FUNC(iadd)
 {
+    validate_inst_env(param);
+
+    Slot *slot = popOperandStack(opdStack);
+    assert(slot);
+    int a = slot->value;
+
+    slot = popOperandStack(opdStack);
+    assert(slot);
+    int b = slot->value;
+
+    Slot s;
+    s.tag = CONST_Integer;
+    s.value = a + b;
+    bool status = pushOperandStack(opdStack, &s);
+    assert(status);
+
 #ifdef DEBUG
-    printf("\t*iadd\n");
+    printf("\tiadd\n");
 #endif
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(ladd)
@@ -2621,9 +2646,21 @@ DECL_FUNC(areturn)
 DECL_FUNC(_return)
 {
 #ifdef DEBUG
-    printf("\t*return\n");
+    printf("\treturn\n");
 #endif
-	return FALSE;
+
+    validate_inst_env(param);
+    frame = popJavaStack(jstack); 
+
+#ifdef DEBUG
+    printf("[-- pop stack frame:%d, operand statck:%d\n", frame->id, frame->opdStack->id);
+#endif
+
+    recycleSlotBuffer(localTbl);
+    recycleSlotBuffer(opdStack);
+    recycleStackFrame(frame);
+
+	return TRUE;
 }
 
 DECL_FUNC(getstatic)
@@ -2659,9 +2696,6 @@ DECL_FUNC(getstatic)
 
 	status = initializeClass(cls, env);
 	assert (status);
-
-    bool result = pushOperandStack(opdStack, &slot);
-    assert(result);
 
 #ifdef DEBUG
     printf("\tgetstatic %d // ", u2);
