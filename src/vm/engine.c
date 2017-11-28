@@ -21,19 +21,14 @@ static int sFrameIdx = 0;
 static int sOperandIdx = 0;
 
 static void executeNative(ExecEnv *env, const MethodEntry *method) {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t<natvie %s:%s>\n", 
             method->name, method->type);
 #endif
 
     NativeFuncPtr funcPtr = retrieveNativeMethod(method);
     if (funcPtr != NULL) {
-
-#ifdef DEBUG
-        printf("\t*exec %s\n", method->name);
-#endif
-
-        StackFrame *frame = popJavaStack(env->javaStack);
+        StackFrame *frame = peekJavaStack(env->javaStack);
         OperandStack *stack = frame->opdStack;
 
         // TODO
@@ -52,6 +47,9 @@ static void executeNative(ExecEnv *env, const MethodEntry *method) {
 
         // TODO
         // util now just support one argument
+        popOperandStack(stack);
+        popOperandStack(stack);
+
         funcPtr(env, ref->obj_ptr, param);
 
     } else {
@@ -75,9 +73,9 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         return;
     }
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     char* clsname = CLASS_CE(method->class)->name;
-    printf("[++ execute %s.%s start:]\n", clsname, method->name);
+    printf("\t  [++ %s.%s ++]\n", clsname, method->name);
 #endif
 
     StackFrame *frame = obtainStackFrame();
@@ -112,8 +110,8 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         exit (1);
     }
 
-#ifdef DEBUG
-    printf("[++ push stack frame:%d]\n", frame->id);
+#ifdef LOG_DETAIL
+    printf("\t  [++ stack frame:%d ++]\n", frame->id);
 #endif
 
     // extract & parse instructions from the byte code
@@ -122,32 +120,6 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
     InstExecEnv instEnv;
     const Instruction *inst = NULL;
     int i;
-
-
-#if 0
-    do {
-
-        i = frame->pc_reg;
-        inst = method->instTbl[i]; 
-
-        //
-        // FIXME !!!
-        // please take care of these instructions such as goto, goto_w
-        frame->pc_reg++;
-        if (strncmp(stropcode(getInstOpcode(inst)), "goto", 4) == 0) {
-            printf("take care of instruction named 'goto' \n");
-            exit(1);
-        }
-
-        memset(&instEnv, 0, sizeof(instEnv));
-        instEnv.inst = (Instruction *)inst;
-        instEnv.env = env;
-
-        inst->handler(&instEnv);
-
-    } while (frame->pc_reg < method->instCnt);
-#endif
-
     for (i = 0;  i < method->instCnt; i++) {
         memset(&instEnv, 0, sizeof(instEnv));
         inst = method->instTbl[i];
@@ -157,8 +129,8 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         inst->handler(&instEnv);
     }
 
-#ifdef DEBUG
-    printf("[-- execute %s.%s finish.]\n", clsname, method->name);
+#ifdef LOG_DETAIL
+    printf("\t  [-- %s.%s --]\n", clsname, method->name);
 #endif
 
 }
@@ -204,9 +176,9 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
     assert (!strcmp(method->name, "<init>"));
 #endif
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     char* clsname = CLASS_CE(method->class)->name;
-    printf("[++ execute %s.%s spec start:]\n", clsname, method->name);
+    printf("\t  {++ %s.%s ++}\n", clsname, method->name);
 #endif
 
     StackFrame *frame = obtainStackFrame();
@@ -248,8 +220,8 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
         exit (1);
     }
 
-#ifdef DEBUG
-    printf("[++ push stack frame:%d]\n", frame->id);
+#ifdef LOG_DETAIL
+    printf("\t  [++ stack frame:%d ++]\n", frame->id);
 #endif
 
     // extract & parse instructions from the byte code
@@ -268,8 +240,8 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
         inst->handler(&instEnv);
     }
 
-#ifdef DEBUG
-    printf("[-- execute %s.%s spec finish.]\n", clsname, method->name);
+#ifdef LOG_DETAIL
+    printf("\t  {-- %s.%s --}\n", clsname, method->name);
 #endif
 
 }

@@ -999,7 +999,7 @@ void logInstruction(const Instruction* inst) {
 
 DECL_FUNC(nop)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*nop");
 #endif
 
@@ -1019,7 +1019,7 @@ DECL_FUNC(aconst_null)
 
 DECL_FUNC(iconst_m1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iconst_m1");
 #endif
 
@@ -1028,7 +1028,7 @@ DECL_FUNC(iconst_m1)
 
 DECL_FUNC(iconst_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iconst_0");
 #endif
 
@@ -1037,7 +1037,7 @@ DECL_FUNC(iconst_0)
 
 DECL_FUNC(iconst_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iconst_1");
 #endif
 
@@ -1046,7 +1046,7 @@ DECL_FUNC(iconst_1)
 
 DECL_FUNC(iconst_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iconst_2");
 #endif
 
@@ -1055,7 +1055,7 @@ DECL_FUNC(iconst_2)
 
 DECL_FUNC(iconst_3)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iconst_3");
 #endif
 
@@ -1073,7 +1073,7 @@ DECL_FUNC(iconst_4)
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\ticonst_4\n");
 #endif
 
@@ -1082,7 +1082,7 @@ DECL_FUNC(iconst_4)
 
 DECL_FUNC(iconst_5)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\ticonst_5\n");
 #endif
 
@@ -1091,7 +1091,7 @@ DECL_FUNC(iconst_5)
 
 DECL_FUNC(lconst_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tlconst_0\n");
 #endif
 
@@ -1100,7 +1100,7 @@ DECL_FUNC(lconst_0)
 
 DECL_FUNC(lconst_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tlconst_1\n");
 #endif
 
@@ -1109,7 +1109,7 @@ DECL_FUNC(lconst_1)
 
 DECL_FUNC(fconst_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tfconst_0\n");
 #endif
 
@@ -1118,7 +1118,7 @@ DECL_FUNC(fconst_0)
 
 DECL_FUNC(fconst_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tfconst_1\n");
 #endif
 
@@ -1127,7 +1127,7 @@ DECL_FUNC(fconst_1)
 
 DECL_FUNC(fconst_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tfconst_2\n");
 #endif
 
@@ -1136,7 +1136,7 @@ DECL_FUNC(fconst_2)
 
 DECL_FUNC(dconst_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tdconst_0\n");
 #endif
 
@@ -1145,7 +1145,7 @@ DECL_FUNC(dconst_0)
 
 DECL_FUNC(dconst_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tdconst_1\n");
 #endif
 
@@ -1164,7 +1164,7 @@ DECL_FUNC(bipush)
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tbipush  %d \n ", u1);
 #endif
 
@@ -1182,7 +1182,7 @@ DECL_FUNC(sipush)
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tsipush %d\n", u2);
 #endif
 
@@ -1203,9 +1203,13 @@ DECL_FUNC(ldc)
     bool result = pushOperandStack(opdStack, &slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tldc  %d \t\t// ", u1);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else
+    printf("\n");
+    #endif
 #endif
 
 	return TRUE;
@@ -1213,7 +1217,7 @@ DECL_FUNC(ldc)
 
 DECL_FUNC(ldc_w)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ldc_w\n");
 #endif
 
@@ -1222,7 +1226,7 @@ DECL_FUNC(ldc_w)
 
 DECL_FUNC(ldc2_w)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ldc2_w\n");
 #endif
 
@@ -1231,7 +1235,7 @@ DECL_FUNC(ldc2_w)
 
 DECL_FUNC(iload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iload\n");
 #endif
 
@@ -1240,7 +1244,7 @@ DECL_FUNC(iload)
 
 DECL_FUNC(lload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lload\n");
 #endif
 
@@ -1249,7 +1253,7 @@ DECL_FUNC(lload)
 
 DECL_FUNC(fload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fload\n");
 #endif
 
@@ -1259,7 +1263,7 @@ DECL_FUNC(fload)
 DECL_FUNC(dload)
 {
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dload\n");
 #endif
 	return FALSE;
@@ -1287,7 +1291,7 @@ DECL_FUNC(iload_1)
     bool result = pushOperandStack(opdStack, slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tiload_1 \n");
 #endif
 
@@ -1304,7 +1308,7 @@ DECL_FUNC(iload_2)
     bool result = pushOperandStack(opdStack, slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tiload_2 \n");
 #endif
 
@@ -1401,7 +1405,7 @@ DECL_FUNC(aload_0)
     bool result = pushOperandStack(opdStack, slot);
     assert(result);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\taload_0\n");
 #endif
 
@@ -1428,7 +1432,7 @@ DECL_FUNC(aload_3)
 
 DECL_FUNC(iaload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iaload\n");
 #endif
 
@@ -1437,7 +1441,7 @@ DECL_FUNC(iaload)
 
 DECL_FUNC(laload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*laload\n");
 #endif
 
@@ -1446,7 +1450,7 @@ DECL_FUNC(laload)
 
 DECL_FUNC(faload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*faload\n");
 #endif
 
@@ -1455,7 +1459,7 @@ DECL_FUNC(faload)
 
 DECL_FUNC(daload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*daload\n");
 #endif
 
@@ -1464,7 +1468,7 @@ DECL_FUNC(daload)
 
 DECL_FUNC(aaload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*aaload\n");
 #endif
 
@@ -1473,7 +1477,7 @@ DECL_FUNC(aaload)
 
 DECL_FUNC(baload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*baload\n");
 #endif
 
@@ -1482,7 +1486,7 @@ DECL_FUNC(baload)
 
 DECL_FUNC(caload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*caload\n");
 #endif
 
@@ -1491,7 +1495,7 @@ DECL_FUNC(caload)
 
 DECL_FUNC(saload)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*saload\n");
 #endif
 
@@ -1506,7 +1510,7 @@ DECL_FUNC(istore)
 
 DECL_FUNC(lstore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lstore\n");
 #endif
 
@@ -1515,7 +1519,7 @@ DECL_FUNC(lstore)
 
 DECL_FUNC(fstore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fstore\n");
 #endif
 
@@ -1524,7 +1528,7 @@ DECL_FUNC(fstore)
 
 DECL_FUNC(dstore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dstore\n");
 #endif
 
@@ -1533,7 +1537,7 @@ DECL_FUNC(dstore)
 
 DECL_FUNC(astore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*astore\n");
 #endif
 
@@ -1542,7 +1546,7 @@ DECL_FUNC(astore)
 
 DECL_FUNC(istore_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*istore\n");
 #endif
 
@@ -1558,7 +1562,7 @@ DECL_FUNC(istore_1)
     (localTbl->slots + 1)->value = slot->value;
     localTbl->validCnt = 2;
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tistore_1\n");
 #endif
 
@@ -1574,7 +1578,7 @@ DECL_FUNC(istore_2)
     (localTbl->slots + 2)->value = slot->value;
     localTbl->validCnt = 3;
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tistore_2\n");
 #endif
 
@@ -1583,7 +1587,7 @@ DECL_FUNC(istore_2)
 
 DECL_FUNC(istore_3)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*istore_3\n");
 #endif
    
@@ -1592,7 +1596,7 @@ DECL_FUNC(istore_3)
 
 DECL_FUNC(lstore_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lstore_0\n");
 #endif
 
@@ -1601,7 +1605,7 @@ DECL_FUNC(lstore_0)
 
 DECL_FUNC(lstore_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lstore_1\n");
 #endif
 
@@ -1610,7 +1614,7 @@ DECL_FUNC(lstore_1)
 
 DECL_FUNC(lstore_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lstore_2\n");
 #endif
 
@@ -1619,7 +1623,7 @@ DECL_FUNC(lstore_2)
 
 DECL_FUNC(lstore_3)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lstore_3\n");
 #endif
 
@@ -1628,7 +1632,7 @@ DECL_FUNC(lstore_3)
 
 DECL_FUNC(fstore_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fstore_0\n");
 #endif
 
@@ -1637,7 +1641,7 @@ DECL_FUNC(fstore_0)
 
 DECL_FUNC(fstore_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fstore_1\n");
 #endif
 
@@ -1646,7 +1650,7 @@ DECL_FUNC(fstore_1)
 
 DECL_FUNC(fstore_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fstore_2\n");
 #endif
 
@@ -1655,7 +1659,7 @@ DECL_FUNC(fstore_2)
 
 DECL_FUNC(fstore_3)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fstore_3\n");
 #endif
 
@@ -1664,7 +1668,7 @@ DECL_FUNC(fstore_3)
 
 DECL_FUNC(dstore_0)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dstore_0\n");
 #endif
 
@@ -1673,7 +1677,7 @@ DECL_FUNC(dstore_0)
 
 DECL_FUNC(dstore_1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dstore_1\n");
 #endif
 
@@ -1682,7 +1686,7 @@ DECL_FUNC(dstore_1)
 
 DECL_FUNC(dstore_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dstore_2\n");
 #endif
 
@@ -1691,7 +1695,7 @@ DECL_FUNC(dstore_2)
 
 DECL_FUNC(dstore_3)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dstore_3\n");
 #endif
 
@@ -1700,7 +1704,18 @@ DECL_FUNC(dstore_3)
 
 DECL_FUNC(astore_0)
 {
-#ifdef DEBUG
+
+// complete astore_o later !
+#if 0
+    validate_inst_env(param);
+    Slot *slot = popOperandStack(opdStack);
+    assert(slot);
+    assert(slot->tag == ReferenceType);
+
+    memcpy(localTbl, slot, sizeof(*slot));
+#endif
+
+#ifdef LOG_DETAIL
     printf("\t*astore_0\n");
 #endif
 
@@ -1709,16 +1724,22 @@ DECL_FUNC(astore_0)
 
 DECL_FUNC(astore_1)
 {
-#ifdef DEBUG
-    printf("\t*astore_1\n");
+    validate_inst_env(param);
+    Slot *slot = popOperandStack(opdStack);
+    assert(slot);
+    assert(slot->tag == ReferenceType);
+
+    memcpy(localTbl + 1, slot, sizeof(*slot));
+#ifdef LOG_DETAIL
+    printf("\tastore_1\n");
 #endif
 
-	return FALSE;
+	return TRUE;
 }
 
 DECL_FUNC(astore_2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*astore_2\n");
 #endif
 
@@ -1733,7 +1754,7 @@ DECL_FUNC(astore_3)
 
 DECL_FUNC(iastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iastore\n");
 #endif
 
@@ -1742,7 +1763,7 @@ DECL_FUNC(iastore)
 
 DECL_FUNC(lastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lastore\n");
 #endif
 
@@ -1751,7 +1772,7 @@ DECL_FUNC(lastore)
 
 DECL_FUNC(fastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fastore\n");
 #endif
 
@@ -1760,7 +1781,7 @@ DECL_FUNC(fastore)
 
 DECL_FUNC(dastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dastore\n");
 #endif
 
@@ -1769,7 +1790,7 @@ DECL_FUNC(dastore)
 
 DECL_FUNC(aastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*aastore\n");
 #endif
 
@@ -1778,7 +1799,7 @@ DECL_FUNC(aastore)
 
 DECL_FUNC(bastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*bastore\n");
 #endif
 
@@ -1787,7 +1808,7 @@ DECL_FUNC(bastore)
 
 DECL_FUNC(castore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*castore\n");
 #endif
 
@@ -1796,7 +1817,7 @@ DECL_FUNC(castore)
 
 DECL_FUNC(sastore)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*sastore\n");
 #endif
 
@@ -1805,7 +1826,7 @@ DECL_FUNC(sastore)
 
 DECL_FUNC(pop)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*pop\n");
 #endif
 
@@ -1814,7 +1835,7 @@ DECL_FUNC(pop)
 
 DECL_FUNC(pop2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*pop2\n");
 #endif
 
@@ -1829,7 +1850,7 @@ DECL_FUNC(dup)
     bool status = pushOperandStack(opdStack, top);
     assert (status);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tdup\n");
 #endif
 
@@ -1838,7 +1859,7 @@ DECL_FUNC(dup)
 
 DECL_FUNC(dup_x1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dup_x1\n");
 #endif
 
@@ -1847,7 +1868,7 @@ DECL_FUNC(dup_x1)
 
 DECL_FUNC(dup_x2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dup_x2\n");
 #endif
 
@@ -1856,7 +1877,7 @@ DECL_FUNC(dup_x2)
 
 DECL_FUNC(dup2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dup2\n");
 #endif
 
@@ -1865,7 +1886,7 @@ DECL_FUNC(dup2)
 
 DECL_FUNC(dup2_x1)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dup2_x1\n");
 #endif
 
@@ -1874,7 +1895,7 @@ DECL_FUNC(dup2_x1)
 
 DECL_FUNC(dup2_x2)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dup2_x2\n");
 #endif
 
@@ -1883,7 +1904,7 @@ DECL_FUNC(dup2_x2)
 
 DECL_FUNC(swap)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*swap\n");
 #endif
 
@@ -1908,7 +1929,7 @@ DECL_FUNC(iadd)
     bool status = pushOperandStack(opdStack, &s);
     assert(status);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tiadd\n");
 #endif
 
@@ -1917,7 +1938,7 @@ DECL_FUNC(iadd)
 
 DECL_FUNC(ladd)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ladd\n");
 #endif
 
@@ -1926,7 +1947,7 @@ DECL_FUNC(ladd)
 
 DECL_FUNC(fadd)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fadd\n");
 #endif
 
@@ -1935,7 +1956,7 @@ DECL_FUNC(fadd)
 
 DECL_FUNC(dadd)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dadd\n");
 #endif
 
@@ -1944,7 +1965,7 @@ DECL_FUNC(dadd)
 
 DECL_FUNC(isub)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*isub\n");
 #endif
 
@@ -1953,7 +1974,7 @@ DECL_FUNC(isub)
 
 DECL_FUNC(lsub)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lsub\n");
 #endif
    
@@ -1962,7 +1983,7 @@ DECL_FUNC(lsub)
 
 DECL_FUNC(fsub)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fsub\n");
 #endif
 
@@ -1971,7 +1992,7 @@ DECL_FUNC(fsub)
 
 DECL_FUNC(dsub)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dsub\n");
 #endif
 
@@ -1980,7 +2001,7 @@ DECL_FUNC(dsub)
 
 DECL_FUNC(imul)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*imul\n");
 #endif
 
@@ -1989,7 +2010,7 @@ DECL_FUNC(imul)
 
 DECL_FUNC(lmul)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lmul\n");
 #endif
 
@@ -1998,7 +2019,7 @@ DECL_FUNC(lmul)
 
 DECL_FUNC(fmul)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fmul\n");
 #endif
 
@@ -2007,7 +2028,7 @@ DECL_FUNC(fmul)
 
 DECL_FUNC(dmul)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dmul\n");
 #endif
 
@@ -2016,7 +2037,7 @@ DECL_FUNC(dmul)
 
 DECL_FUNC(idiv)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*idiv\n");
 #endif
 
@@ -2025,7 +2046,7 @@ DECL_FUNC(idiv)
 
 DECL_FUNC(ldiv)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ldiv\n");
 #endif
 
@@ -2034,7 +2055,7 @@ DECL_FUNC(ldiv)
 
 DECL_FUNC(fdiv)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fdiv\n");
 #endif
 
@@ -2043,7 +2064,7 @@ DECL_FUNC(fdiv)
 
 DECL_FUNC(ddiv)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ddiv\n");
 #endif
 
@@ -2052,7 +2073,7 @@ DECL_FUNC(ddiv)
 
 DECL_FUNC(irem)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*irem\n");
 #endif
 
@@ -2061,7 +2082,7 @@ DECL_FUNC(irem)
 
 DECL_FUNC(lrem)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lrem\n");
 #endif
 
@@ -2070,7 +2091,7 @@ DECL_FUNC(lrem)
 
 DECL_FUNC(frem)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*frem\n");
 #endif
 
@@ -2079,7 +2100,7 @@ DECL_FUNC(frem)
 
 DECL_FUNC(drem)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*drem\n");
 #endif
 
@@ -2088,7 +2109,7 @@ DECL_FUNC(drem)
 
 DECL_FUNC(ineg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ineg\n");
 #endif
 
@@ -2097,7 +2118,7 @@ DECL_FUNC(ineg)
 
 DECL_FUNC(lneg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lneg\n");
 #endif
 
@@ -2106,7 +2127,7 @@ DECL_FUNC(lneg)
 
 DECL_FUNC(fneg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fneg\n");
 #endif
 
@@ -2115,7 +2136,7 @@ DECL_FUNC(fneg)
 
 DECL_FUNC(dneg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dneg\n");
 #endif
 
@@ -2124,7 +2145,7 @@ DECL_FUNC(dneg)
 
 DECL_FUNC(ishl)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ishl\n");
 #endif
 
@@ -2133,7 +2154,7 @@ DECL_FUNC(ishl)
 
 DECL_FUNC(lshl)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lshl\n");
 #endif
 
@@ -2142,7 +2163,7 @@ DECL_FUNC(lshl)
 
 DECL_FUNC(ishr)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ishr\n");
 #endif
 
@@ -2151,7 +2172,7 @@ DECL_FUNC(ishr)
 
 DECL_FUNC(lshr)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lshr\n");
 #endif
 
@@ -2160,7 +2181,7 @@ DECL_FUNC(lshr)
 
 DECL_FUNC(iushr)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iushr\n");
 #endif
 
@@ -2169,7 +2190,7 @@ DECL_FUNC(iushr)
 
 DECL_FUNC(lushr)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lushr\n");
 #endif
 
@@ -2178,7 +2199,7 @@ DECL_FUNC(lushr)
 
 DECL_FUNC(iand)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iand\n");
 #endif
 
@@ -2187,7 +2208,7 @@ DECL_FUNC(iand)
 
 DECL_FUNC(land)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*land\n");
 #endif
 
@@ -2196,7 +2217,7 @@ DECL_FUNC(land)
 
 DECL_FUNC(ior)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ior\n");
 #endif
 
@@ -2205,7 +2226,7 @@ DECL_FUNC(ior)
 
 DECL_FUNC(lor)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lor\n");
 #endif
 
@@ -2214,7 +2235,7 @@ DECL_FUNC(lor)
 
 DECL_FUNC(ixor)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ixor\n");
 #endif
 
@@ -2223,7 +2244,7 @@ DECL_FUNC(ixor)
 
 DECL_FUNC(lxor)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lxor\n");
 #endif
 
@@ -2232,7 +2253,7 @@ DECL_FUNC(lxor)
 
 DECL_FUNC(iinc)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iinc\n");
 #endif
 
@@ -2241,7 +2262,7 @@ DECL_FUNC(iinc)
 
 DECL_FUNC(i2l)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2l\n");
 #endif
 
@@ -2250,7 +2271,7 @@ DECL_FUNC(i2l)
 
 DECL_FUNC(i2f)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2f\n");
 #endif
 
@@ -2259,7 +2280,7 @@ DECL_FUNC(i2f)
 
 DECL_FUNC(i2d)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2d\n");
 #endif
 
@@ -2268,7 +2289,7 @@ DECL_FUNC(i2d)
 
 DECL_FUNC(l2i)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*l2i\n");
 #endif
 
@@ -2277,7 +2298,7 @@ DECL_FUNC(l2i)
 
 DECL_FUNC(l2f)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*l2f\n");
 #endif
 
@@ -2286,7 +2307,7 @@ DECL_FUNC(l2f)
 
 DECL_FUNC(l2d)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*l2d\n");
 #endif
 
@@ -2295,7 +2316,7 @@ DECL_FUNC(l2d)
 
 DECL_FUNC(f2i)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*f2i\n");
 #endif
 
@@ -2304,7 +2325,7 @@ DECL_FUNC(f2i)
 
 DECL_FUNC(f2l)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*f2l\n");
 #endif
 
@@ -2313,7 +2334,7 @@ DECL_FUNC(f2l)
 
 DECL_FUNC(f2d)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*f2d\n");
 #endif
 
@@ -2322,7 +2343,7 @@ DECL_FUNC(f2d)
 
 DECL_FUNC(d2i)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*d2i\n");
 #endif
 
@@ -2331,7 +2352,7 @@ DECL_FUNC(d2i)
 
 DECL_FUNC(d2l)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*d2l\n");
 #endif
 
@@ -2340,7 +2361,7 @@ DECL_FUNC(d2l)
 
 DECL_FUNC(d2f)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*d2f\n");
 #endif
 
@@ -2349,7 +2370,7 @@ DECL_FUNC(d2f)
 
 DECL_FUNC(i2b)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2b\n");
 #endif
 
@@ -2358,7 +2379,7 @@ DECL_FUNC(i2b)
 
 DECL_FUNC(i2c)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2c\n");
 #endif
 
@@ -2367,7 +2388,7 @@ DECL_FUNC(i2c)
 
 DECL_FUNC(i2s)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*i2s\n");
 #endif
 
@@ -2376,7 +2397,7 @@ DECL_FUNC(i2s)
 
 DECL_FUNC(lcmp)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lcmp\n");
 #endif
 
@@ -2385,7 +2406,7 @@ DECL_FUNC(lcmp)
 
 DECL_FUNC(fcmpl)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fcmpl\n");
 #endif
 
@@ -2394,7 +2415,7 @@ DECL_FUNC(fcmpl)
 
 DECL_FUNC(fcmpg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*fcmpg\n");
 #endif
 
@@ -2403,7 +2424,7 @@ DECL_FUNC(fcmpg)
 
 DECL_FUNC(dcmpl)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dcmpl\n");
 #endif
 
@@ -2412,7 +2433,7 @@ DECL_FUNC(dcmpl)
 
 DECL_FUNC(dcmpg)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dcmpg\n");
 #endif
 
@@ -2421,7 +2442,7 @@ DECL_FUNC(dcmpg)
 
 DECL_FUNC(ifeq)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifeq\n");
 #endif
 
@@ -2430,7 +2451,7 @@ DECL_FUNC(ifeq)
 
 DECL_FUNC(ifne)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifne\n");
 #endif
 
@@ -2439,7 +2460,7 @@ DECL_FUNC(ifne)
 
 DECL_FUNC(iflt)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*iflt\n");
 #endif
 
@@ -2448,7 +2469,7 @@ DECL_FUNC(iflt)
 
 DECL_FUNC(ifge)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifge\n");
 #endif
 
@@ -2457,7 +2478,7 @@ DECL_FUNC(ifge)
 
 DECL_FUNC(ifgt)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifgt\n");
 #endif
 
@@ -2466,7 +2487,7 @@ DECL_FUNC(ifgt)
 
 DECL_FUNC(ifle)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifle\n");
 #endif
 
@@ -2475,7 +2496,7 @@ DECL_FUNC(ifle)
 
 DECL_FUNC(if_icmpeq)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmpeq\n");
 #endif
 
@@ -2484,7 +2505,7 @@ DECL_FUNC(if_icmpeq)
 
 DECL_FUNC(if_icmpne)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmpne\n");
 #endif
 
@@ -2493,7 +2514,7 @@ DECL_FUNC(if_icmpne)
 
 DECL_FUNC(if_icmplt)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmplt\n");
 #endif
 
@@ -2502,7 +2523,7 @@ DECL_FUNC(if_icmplt)
 
 DECL_FUNC(if_icmpge)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmpge\n");
 #endif
 
@@ -2511,7 +2532,7 @@ DECL_FUNC(if_icmpge)
 
 DECL_FUNC(if_icmpgt)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmpgt\n");
 #endif
 
@@ -2520,7 +2541,7 @@ DECL_FUNC(if_icmpgt)
 
 DECL_FUNC(if_icmple)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_icmple\n");
 #endif
 
@@ -2529,7 +2550,7 @@ DECL_FUNC(if_icmple)
 
 DECL_FUNC(if_acmpeq)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_acmpeq\n");
 #endif
 
@@ -2538,7 +2559,7 @@ DECL_FUNC(if_acmpeq)
 
 DECL_FUNC(if_acmpne)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*if_acmpne\n");
 #endif
 
@@ -2547,7 +2568,7 @@ DECL_FUNC(if_acmpne)
 
 DECL_FUNC(_goto)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*goto\n");
 #endif
 
@@ -2556,7 +2577,7 @@ DECL_FUNC(_goto)
 
 DECL_FUNC(jsr)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*jsr\n");
 #endif
 
@@ -2565,7 +2586,7 @@ DECL_FUNC(jsr)
 
 DECL_FUNC(ret)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ret\n");
 #endif
 
@@ -2574,7 +2595,7 @@ DECL_FUNC(ret)
 
 DECL_FUNC(tableswitch)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*tableswitch\n");
 #endif
 
@@ -2583,7 +2604,7 @@ DECL_FUNC(tableswitch)
 
 DECL_FUNC(lookupswitch)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lookupswitch\n");
 #endif
 
@@ -2592,7 +2613,7 @@ DECL_FUNC(lookupswitch)
 
 DECL_FUNC(ireturn)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ireturn\n");
 #endif
 
@@ -2601,7 +2622,7 @@ DECL_FUNC(ireturn)
 
 DECL_FUNC(lreturn)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*lreturn\n");
 #endif
 
@@ -2610,7 +2631,7 @@ DECL_FUNC(lreturn)
 
 DECL_FUNC(freturn)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*freturn\n");
 #endif
 
@@ -2619,7 +2640,7 @@ DECL_FUNC(freturn)
 
 DECL_FUNC(dreturn)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*dreturn\n");
 #endif
 
@@ -2636,7 +2657,7 @@ DECL_FUNC(areturn)
     // TODO
     //pushOperandStack
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*areturn\n");
 #endif
 
@@ -2645,20 +2666,16 @@ DECL_FUNC(areturn)
 
 DECL_FUNC(_return)
 {
-#ifdef DEBUG
-    printf("\treturn\n");
-#endif
-
     validate_inst_env(param);
     frame = popJavaStack(jstack); 
-
-#ifdef DEBUG
-    printf("[-- pop stack frame:%d, operand statck:%d\n", frame->id, frame->opdStack->id);
-#endif
-
     recycleSlotBuffer(localTbl);
     recycleSlotBuffer(opdStack);
     recycleStackFrame(frame);
+
+#ifdef LOG_DETAIL
+    printf("\t  [-- frame:%d,stack:%d --]\n", frame->id, frame->opdStack->id);
+    printf("\treturn\n");
+#endif
 
 	return TRUE;
 }
@@ -2697,9 +2714,13 @@ DECL_FUNC(getstatic)
 	status = initializeClass(cls, env);
 	assert (status);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tgetstatic %d // ", u2);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else 
+    printf("\n");
+    #endif
 #endif
 
     assert (constEntry->tag == CONST_Fieldref);
@@ -2730,9 +2751,13 @@ DECL_FUNC(putstatic)
 	assert(NULL != constEntry);
     assert(constEntry->tag == CONST_Fieldref);
     
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tputstatic %d // ", u2);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else 
+    printf("\n");
+    #endif
 #endif
 
     U2 idx = constEntry->info.fieldref_info.class_index;
@@ -2763,7 +2788,7 @@ DECL_FUNC(putstatic)
 
 DECL_FUNC(getfield)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*getfield\n");
 #endif
 
@@ -2772,7 +2797,7 @@ DECL_FUNC(getfield)
 
 DECL_FUNC(putfield)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*putfield\n");
 #endif
 
@@ -2787,9 +2812,13 @@ DECL_FUNC(invokevirtual)
 	ConstPoolEntry *constEntry = constPool->entries + u2;
 	assert(NULL != constEntry);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tinvokevirtual %d // ", u2);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else
+    printf("\n");
+    #endif
 #endif
 
     if(constEntry->tag != CONST_Methodref) {
@@ -2850,9 +2879,13 @@ DECL_FUNC(invokespecial)
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tinvokespecial %d // ", u2);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else
+    printf("\n");
+    #endif
 #endif
     U2 cls_idx = constEntry->info.methodref_info.class_index;
     U2 index = constPool->entries[cls_idx].info.class_info.name_index;
@@ -2886,9 +2919,13 @@ DECL_FUNC(invokestatic)
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tinvokestatic %d // ", u2);
+    #ifdef LOG_INST_DETAIL
 	logConstPoolEntry(constPool, constEntry);
+    #else
+    printf("\n");
+    #endif
 #endif
 
 	ConstPoolEntry *entry = NULL;
@@ -2931,7 +2968,7 @@ DECL_FUNC(invokestatic)
 
 DECL_FUNC(invokeinterface)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*invokeinterface");
 #endif
 
@@ -2940,7 +2977,7 @@ DECL_FUNC(invokeinterface)
 
 DECL_FUNC(invokedynamic)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*invokedynamic");
 #endif
 
@@ -2955,9 +2992,13 @@ DECL_FUNC(_new)
     ConstPoolEntry *constEntry = constPool->entries + u2;
     assert (CONST_Class == constEntry->tag);
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tnew %d // ", u2);
+    #ifdef LOG_INST_DETAIL
     logConstPoolEntry(constPool, constEntry);
+    #else
+    printf("\n");
+    #endif
 #endif
 
     U2 name_idx = constEntry->info.class_info.name_index;
@@ -2983,7 +3024,7 @@ DECL_FUNC(_new)
 
 DECL_FUNC(newarray)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*newarray");
 #endif
 
@@ -2992,7 +3033,7 @@ DECL_FUNC(newarray)
 
 DECL_FUNC(anewarray)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*anewarray");
 #endif
 
@@ -3001,7 +3042,7 @@ DECL_FUNC(anewarray)
 
 DECL_FUNC(arraylength)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*arraylength");
 #endif
 
@@ -3010,7 +3051,7 @@ DECL_FUNC(arraylength)
 
 DECL_FUNC(athrow)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*athrow");
 #endif
 
@@ -3019,7 +3060,7 @@ DECL_FUNC(athrow)
 
 DECL_FUNC(checkcast)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*checkcast");
 #endif
 
@@ -3028,7 +3069,7 @@ DECL_FUNC(checkcast)
 
 DECL_FUNC(instanceof)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*instanceof");
 #endif
 
@@ -3037,7 +3078,7 @@ DECL_FUNC(instanceof)
 
 DECL_FUNC(monitorenter)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*monitorenter");
 #endif
 
@@ -3046,7 +3087,7 @@ DECL_FUNC(monitorenter)
 
 DECL_FUNC(monitorexit)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*monitorexit");
 #endif
 
@@ -3055,7 +3096,7 @@ DECL_FUNC(monitorexit)
 
 DECL_FUNC(wide)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*wide");
 #endif
 
@@ -3064,7 +3105,7 @@ DECL_FUNC(wide)
 
 DECL_FUNC(multianewarray)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*multianewarray");
 #endif
 
@@ -3073,7 +3114,7 @@ DECL_FUNC(multianewarray)
 
 DECL_FUNC(ifnull)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifnull");
 #endif
 
@@ -3082,7 +3123,7 @@ DECL_FUNC(ifnull)
 
 DECL_FUNC(ifnonnull)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*ifnonnull");
 #endif
 
@@ -3091,7 +3132,7 @@ DECL_FUNC(ifnonnull)
 
 DECL_FUNC(goto_w)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*goto_w");
 #endif
 
@@ -3100,7 +3141,7 @@ DECL_FUNC(goto_w)
 
 DECL_FUNC(jsr_w)
 {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*jsr_w");
 #endif
 

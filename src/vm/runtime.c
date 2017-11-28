@@ -41,6 +41,7 @@ void initVM(InitArgs *args, VM *vm) {
     ExecEnv *env = (ExecEnv *)calloc(1, sizeof(ExecEnv));
     assert (NULL != env);
 
+    env->initConf = args;
     env->heapArea = createMemoryArea(args->max_heap);
     assert(NULL != env->heapArea);
 
@@ -52,7 +53,7 @@ void initVM(InitArgs *args, VM *vm) {
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
-#ifdef LOG_DETAIL
+#ifdef LOG_TIME_COST
     uint64_t t1 = current_ms();
 #endif
     // load classes from rt.jar
@@ -63,7 +64,7 @@ void initVM(InitArgs *args, VM *vm) {
     }
     env->rtClsCnt = loadCnt;
 
-#ifdef LOG_DETAIL
+#ifdef LOG_TIME_COST
     uint64_t t2 = current_ms();
     printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
 #endif
@@ -292,8 +293,10 @@ void setDefaultInitArgs(InitArgs *args)
 #define MAX_HEAP_SIZE (16 * MB)
     args->max_heap = MAX_HEAP_SIZE;
 
-    args->vfprintf = vfprintf;
-    args->vfscanf = vfscanf;
+    args->in = stdin;
+    args->out = stdout;
+    args->fprintf = fprintf;
+    args->fscanf = fscanf;
     args->exit = exit;
     args->abort = abort;
 }
@@ -1039,19 +1042,19 @@ extern char* mapMethodName(const char* method, const char* clsname, const char* 
 }
 
 void Java_java_lang_Object_registerNatives(ExecEnv *env, Class *cls) {
-#ifdef DEBUG
+#ifdef LOG_DETAIL 
     printf("\t*java.lang.Object.registerNatives()\n");
 #endif
 }
 
 void Java_java_lang_System_registerNatives(ExecEnv *env, Class *cls) {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\t*java.lang.System.registerNatives()\n");
 #endif
 }
 
 long Java_java_lang_System_currentTimeMillis(ExecEnv *env, Class *cls) {
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tjava_lang_System_currentTimeMillis\n");
 #endif
     struct timeval tv;
@@ -1066,17 +1069,17 @@ void Java_java_io_PrintStream_println(ExecEnv *env,
         Object *thiz, 
         Object *param) {
 
-#ifdef DEBUG
+#ifdef LOG_DETAIL
     printf("\tjava_io_PrintStream_println\n");
 #endif
 
     Slot* slot = (Slot *)param;
     if (slot->tag == CONST_String) {
         char* str = (char *)(((Slot*)param)->value);
-        printf("%s\n", str);
+        env->initConf->fprintf(env->initConf->out, "%s\n", str);
     } else if (slot->tag == CONST_Integer) {
         int value = (int)(((Slot*)param)->value);
-        printf("%d\n", value);
+        env->initConf->fprintf(env->initConf->out, "%d\n", value);
     }
 
 }

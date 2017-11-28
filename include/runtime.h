@@ -36,15 +36,20 @@ typedef struct InitArgs {
 	U4 max_heap;                // max heap size, total starage size
 	Property *cmdline_props;    // system properties
 	int props_count;            // properties count
+    FILE* in;
+    FILE* out;
 
 	// System.out
-	int (*vfprintf)(FILE *stream, const char *fmt, va_list va);
+	int (*fprintf)(FILE *stream, const char *fmt, ...);
 
 	// System.in
-	int (*vfscanf)(FILE *stream, const char *fmt, va_list va);
+	int (*fscanf)(FILE *stream, const char *fmt, ...);
 
-	void (*exit)(int status);   // System.exit()
-	void (*abort)(void);        // System.abort()
+    // System.exit()
+	void (*exit)(int status);
+
+    // System.abort()
+	void (*abort)(void);
 } InitArgs;
 
 typedef struct ReferenceHandle {
@@ -66,8 +71,10 @@ typedef struct SlotBuffer {
     Slot *slots;	// slot list
     U4    validCnt;	// valid slot count
 	U4	  capacity;	// capacity of slot list
-    U2    id;       // used for debugger
 	U1	  use;		// 1 means in use, 0 means free
+#ifdef DEBUG
+    U2    id;       // used for debugger
+#endif
 } SlotBuffer;
 
 typedef SlotBuffer LocalVarTable;
@@ -87,7 +94,9 @@ typedef struct StackFrame {
 	OperandStack  *opdStack;
 	ConstPool	  *constPool;	// for dynamic linking 
 	int32		  pc_reg;		// pc register, -1 means invalid
+#ifdef DEBUG
     U2            id;           // used for debugger
+#endif
 } StackFrame;
 
 typedef struct StackFramePool {
@@ -112,6 +121,7 @@ typedef struct JavaStack {
  * Java virtual machine executing environment in runtime
  */
 typedef struct ExecEnv {
+    InitArgs   *initConf;
     MemoryArea *heapArea;   // java heap memory area
     MemoryArea *stackArea;  // java stack memory area
     JavaStack  *javaStack;  // JavaStack to store stack frames

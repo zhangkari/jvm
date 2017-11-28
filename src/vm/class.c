@@ -984,7 +984,7 @@ static void on_start (int total, void* param) {
     if (NULL != param) {
         UnpackJarArg* arg = (UnpackJarArg*) param;
 #ifdef LOG_DETAIL
-        printf("unzip %s start. (%d files)\n", arg->jarname, total);
+        printf("\t  unzip %s start. (%d files)\n", arg->jarname, total);
 #endif
 		arg->memUsed = 0;
         arg->totalCnt = total;
@@ -1049,7 +1049,7 @@ static void on_progress (int index,
         // this file maybe is META-INF/MANIFEST.MF
         else {
 #ifdef LOG_DETAIL
-            printf("Ignore %s in %s\n", name, arg->jarname);
+            printf("\t  Ignore %s in %s\n", name, arg->jarname);
 #endif
             cls[index] = NULL;
         }
@@ -1057,7 +1057,7 @@ static void on_progress (int index,
 #ifdef LOG_DETAIL
     // this file(directory) maybe is META-INF
     else {
-        printf("Ignore %s in %s\n", name, arg->jarname);
+        printf("\t  Ignore %s in %s\n", name, arg->jarname);
     }
 #endif
 
@@ -1088,8 +1088,8 @@ static void on_finish(void* param) {
 #ifdef LOG_DETAIL
     if (NULL != param) {
         UnpackJarArg* arg = (UnpackJarArg*) param;
-        printf("unzip %s complete.\n", arg->jarname);
-		printf("load %d classes, %d KB memory used.\n", arg->clsCnt,
+        printf("\t  unzip %s complete.\n", arg->jarname);
+		printf("\t  load %d classes, %d KB memory used.\n", arg->clsCnt,
 				arg->memUsed / 1024);
     } 
 #endif
