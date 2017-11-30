@@ -1414,7 +1414,18 @@ DECL_FUNC(aload_0)
 
 DECL_FUNC(aload_1)
 {
+    validate_inst_env(param);
+    assert(localTbl->capacity >= 2);
+    Slot *slot = localTbl->slots + 1;
+    assert(slot->tag = ReferenceType);
+
+    bool status = pushOperandStack(opdStack, slot);
+    assert(status);
+
+#ifdef LOG_DETAIL
     printf("\t*aload_1\n");
+#endif
+
 	return FALSE;
 }
 
@@ -2692,7 +2703,7 @@ DECL_FUNC(getstatic)
     initSlot(&slot, constPool, constEntry);
 	assert(slot.tag == constEntry->tag);
 
-#ifdef TIME_COST_LOG
+#ifdef LOG_TIME_COST
 	uint64_t t1 = current_ms();
 #endif
 
@@ -2700,7 +2711,7 @@ DECL_FUNC(getstatic)
 	Class *cls = findClass((char *)slot.value, env);
 	assert (NULL != cls);
 
-#ifdef TIME_COST_LOG
+#ifdef LOG_TIME_COST_
 	uint64_t t2 = current_ms();
 	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
 #endif
@@ -2831,7 +2842,7 @@ DECL_FUNC(invokevirtual)
     int cls_name_idx = constPool->entries[cls_idx].info.class_info.name_index;
     char *clsname = constPool->entries[cls_name_idx].info.utf8_info.bytes;
 
-   #ifdef TIME_COST_LOG
+#ifdef LOG_TIME_COST
 	uint64_t t1 = current_ms();
 #endif
 
@@ -2839,7 +2850,7 @@ DECL_FUNC(invokevirtual)
 	Class *cls = findClass(clsname, env);
 	assert (NULL != cls);
 
-#ifdef TIME_COST_LOG
+#ifdef LOG_TIME_COST
 	uint64_t t2 = current_ms();
 	printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
 #endif

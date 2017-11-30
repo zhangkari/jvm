@@ -31,6 +31,10 @@ static void executeNative(ExecEnv *env, const MethodEntry *method) {
         StackFrame *frame = peekJavaStack(env->javaStack);
         OperandStack *stack = frame->opdStack;
 
+        if (stack->validCnt != 2) {
+            assert(0 && "just support native method with 1 param now");
+        }
+
         // TODO
         // util now just support one argument
         // const int cnt = stack->validCnt;

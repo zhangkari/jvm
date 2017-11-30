@@ -15,6 +15,7 @@ typedef long jlong;
 typedef float jfloat;
 typedef double jdouble;
 
+typedef struct jclass  jclass;
 typedef struct jobject  jobject;
 
 #endif

@@ -552,21 +552,18 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
     // count maybe zero
 	assert (NULL != buffer && count >= 0);
 
-	if (buffer->validCnt > 0) {
-		printf("Unexpected value occured. slot buffer is not empty.\n");
-		assert (0 && "slot buffer must be empty");
-	}
-
-	if (buffer->capacity >= count) {
+	if (buffer->capacity - buffer->validCnt >= count) {
 		return 0;
 	}
 
 	Slot *slots = NULL;
 	slots = (Slot *)realloc(buffer->slots, count * sizeof(Slot));
 	if (NULL == slots) {
+        printf("Failed realloc mem.\n");
+        assert(0 && "Failed realloc mem.");
 		return -1;
 	}
-
+    free (buffer->slots);
 	buffer->slots = slots;
 	buffer->capacity = count;
 
@@ -1066,8 +1063,8 @@ long Java_java_lang_System_currentTimeMillis(ExecEnv *env, Class *cls) {
   * PrintStream.println(String)
   */
 void Java_java_io_PrintStream_println(ExecEnv *env, 
-        Object *thiz, 
-        Object *param) {
+        jobject *thiz, 
+        jobject *param) {
 
 #ifdef LOG_DETAIL
     printf("\tjava_io_PrintStream_println\n");

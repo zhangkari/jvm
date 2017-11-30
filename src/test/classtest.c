@@ -15,7 +15,13 @@
 #define RT_PATH "rt.jar"
 #define CLASS_PATH "Hello.class"
 #define CLASS_NAME "Hello"
-#define MIN_JRE_CNT 8
+
+/* 
+ Object 
+ System 
+ ClassLoader 
+*/
+#define MIN_JRE_CNT 3
 
 static void testJavaClassLoader(const VM *vm) {
 	Class *cls = findClass("java/lang/ClassLoader", vm->execEnv);
@@ -92,7 +98,7 @@ void test_class() {
 	printf("jre class count:%d\n", jreCnt);
 #endif
 
-	testJavaClassLoader(&vm);
+//	testJavaClassLoader(&vm);
 	testJavaClass(&vm);
 
 	Class *mainClass = loadClassFromFile(CLASS_PATH, CLASS_NAME);	
