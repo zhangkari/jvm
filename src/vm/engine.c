@@ -249,3 +249,14 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 #endif
 
 }
+
+void* engineRoutine(void *param)
+{
+    assert(param);
+    ExecEnv *env = (ExecEnv *)param;
+    JavaStack *stack = env->javaStack;
+    // TODO
+    printf("java stack top:%d\n", stack->top);
+
+    return NULL;
+}

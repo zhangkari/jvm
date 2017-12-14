@@ -13,6 +13,7 @@
 #include "class.h"
 #include "runtime.h"
 
+extern void* engineRoutine(void *env);
 extern void executeMethod(ExecEnv *env, const MethodEntry *method);
 extern void executeMethod_spec(ExecEnv *env, const MethodEntry *method);
 

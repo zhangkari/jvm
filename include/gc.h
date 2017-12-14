@@ -32,4 +32,6 @@ void gcDestroy(gc_context* gc);
 
 extern void gcWork(gc_context* gc);
 
+extern void* gcRoutine(void *param);
+
 #endif

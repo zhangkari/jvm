@@ -13,7 +13,9 @@
 
 #include "class.h"
 #include "comm.h"
+#include "gc.h"
 #include "mem.h"
+#include "Thread.h"
 
 /*
  * Store system property
@@ -131,6 +133,9 @@ typedef struct ExecEnv {
     Class **rtClsArea;	    // runtime class address list
     MethodEntry *mainMethod;// user class main()
     void* dl_handle;	    // dynamic link library handle 
+    Thread* gcThread;       // garbage collector thread
+    Thread* ngThread;       // engine thread
+    gc_context* gcctx;      // gc context
 } ExecEnv;
 
 typedef struct VM {

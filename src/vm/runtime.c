@@ -16,11 +16,13 @@
 #include <sys/time.h>
 #include "class.h"
 #include "engine.h"
+#include "gc.h"
 #include "instpool.h"
 #include "jnikit.h"
 #include "jvm.h"
 #include "runtime.h"
 #include "utility.h"
+#include "Thread.h"
 
 // static Pools
 static SlotBufferPool *sSlotBufferPool = NULL;
@@ -98,6 +100,9 @@ void initVM(InitArgs *args, VM *vm) {
         printf("Failed create RefHandle pool.\n");
         exit (-1);
     }
+
+    env->ngThread = createThread(engineRoutine, env);
+    env->gcThread = createThread(gcRoutine, env);
 }
 
 /**
@@ -153,6 +158,9 @@ void startVM(VM *vm) {
         return;
     }
 
+    startThread(vm->execEnv->ngThread);
+    startThread(vm->execEnv->gcThread);
+
     MethodEntry *mainMethod = clsEntry->methods + mainIdx;
     // Used as a root node by gc to mark garbage in the future
     vm->execEnv->mainMethod = mainMethod;
@@ -164,7 +172,8 @@ void destroyVM(VM *vm) {
     destroyStackFramePool();
     destroyInstPool();
     destroyRefHandlePool();
-
+    destroyThread(vm->execEnv->gcThread);
+    destroyThread(vm->execEnv->ngThread);
     assert (NULL != vm);
 }
 
