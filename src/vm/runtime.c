@@ -572,7 +572,6 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
         assert(0 && "Failed realloc mem.");
 		return -1;
 	}
-    free (buffer->slots);
 	buffer->slots = slots;
 	buffer->capacity = count;
 
@@ -1088,4 +1087,44 @@ void Java_java_io_PrintStream_println(ExecEnv *env,
         env->initConf->fprintf(env->initConf->out, "%d\n", value);
     }
 
+}
+
+typedef struct RoutineArg {
+    ExecEnv *env;
+    MethodEntry *method;
+} RoutineArg;
+
+static void* nativeThreadRoutine(void* param) {
+    RoutineArg *p = (RoutineArg *)param;
+    assert (p);
+    ExecEnv *env = p->env;
+    MethodEntry *method = p->method;
+    if (method != NULL) {
+        executeMethod_spec(env, method);
+    }
+
+    return NULL;
+}
+
+void Java_java_lang_Thread_nativeCreate(ExecEnv *env, 
+        jobject *thiz, 
+        jobject *param) {
+
+    Slot* slot = (Slot *)param;
+    assert (slot->tag == ReferenceType);
+    RefHandle *ref = (RefHandle *)slot->value;
+
+    Class *cls = ref->cls_ptr;
+    MethodEntry *method = findMethod(cls, "run", "()V");
+    assert(method != NULL);
+
+    RoutineArg arg;
+    arg.env = env;
+    arg.method = method;
+    Thread* thread = createThread(nativeThreadRoutine, &arg);
+    bool status = startThread(thread);
+    assert(status);
+
+    joinThread(getThreadId(thread), NULL);
+    destroyThread(thread);
 }

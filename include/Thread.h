@@ -25,6 +25,7 @@ Thread* createThread(ThreadRoutine func, void *param);
 bool startThread(Thread* thread);
 void destroyThread(Thread* thread);
 bool isThreadValid(const Thread* thread);
+bool joinThread(pthread_t pid, void ** retval);
 
 #ifdef linux
 pthread_t getThreadId(const Thread* thread);

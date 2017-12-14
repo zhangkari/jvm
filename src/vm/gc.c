@@ -55,11 +55,13 @@ extern void gcWork(gc_context* gc) {
 extern void* gcRoutine(void *param)
 {
     assert(param);
+#if 0
     ExecEnv* env = (ExecEnv *)param;
     if (env->gcctx == NULL){
         env->gcctx = gcCreate(env->heapArea);
     }
     gcWork(env->gcctx);
+#endif
 
     return NULL;
 }

@@ -74,6 +74,12 @@ void destroyThread(Thread* thread)
     assert(thread && "thread must not be NULL !");
 }
 
+bool joinThread(pthread_t pid, void** retval)
+{
+    int status = pthread_join(pid, retval);
+    return status == 0 ? TRUE : FALSE;
+}
+
 bool isThreadValid(const Thread* thread)
 {
     if (thread != NULL) {

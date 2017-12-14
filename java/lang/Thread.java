@@ -1,4 +1,6 @@
 
+package java.lang;
+
 public class Thread implements Runnable {
 
     private Runnable target;
