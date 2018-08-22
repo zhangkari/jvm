@@ -20,48 +20,48 @@
 #include "runtime.h"
 
 int main(int argc, char *argv[]) {
-	InitArgs initArgs;	
-	setDefaultInitArgs(&initArgs);
+    InitArgs initArgs;	
+    setDefaultInitArgs(&initArgs);
 
-	Property *props = NULL;
-	int len = parseCmdLine(argc, argv, &props);
-	setInitArgs(props, len, &initArgs);
-	
+    Property *props = NULL;
+    int len = parseCmdLine(argc, argv, &props);
+    setInitArgs(props, len, &initArgs);
+
     VM vm;
-	memset(&vm, 0, sizeof(vm));
-	initVM(&initArgs, &vm);
+    memset(&vm, 0, sizeof(vm));
+    initVM(&initArgs, &vm);
 
     char path[256];
     strcpy(path, argv[1]);
     strcat(path, ".class");
-	Class *mainClass = loadClassFromFile(path, argv[1]);
+    Class *mainClass = loadClassFromFile(path, argv[1]);
     if (NULL == mainClass) {
         fprintf(stderr, "Failed loadClass from file\n");
         return -1;
     }
-	initArgs.mainClass = mainClass;
+    initArgs.mainClass = mainClass;
 
-	bool status = FALSE;
+    bool status = FALSE;
     status = linkClass(mainClass, vm.execEnv);
-	if (!status) {
-		fprintf(stderr, "Failed linkClass %s\n", path);
-		return -1;
-	}
+    if (!status) {
+        fprintf(stderr, "Failed linkClass %s\n", path);
+        return -1;
+    }
 
-	status = resolveClass(mainClass);
-	if (!status) {
-		fprintf(stderr, "Failed resolveClass %s\n", path);
-		return -1;
-	}
+    status = resolveClass(mainClass);
+    if (!status) {
+        fprintf(stderr, "Failed resolveClass %s\n", path);
+        return -1;
+    }
 
-	status = initializeClass(mainClass, vm.execEnv);
-	if (!status) {
-		fprintf(stderr, "Failed initializeClass %s\n", path);
-		return -1;
-	}
+    status = initializeClass(mainClass, vm.execEnv);
+    if (!status) {
+        fprintf(stderr, "Failed initializeClass %s\n", path);
+        return -1;
+    }
 
-	startVM(&vm);
-	destroyVM(&vm);
+    startVM(&vm);
+    destroyVM(&vm);
 
-	return 0;
+    return 0;
 }

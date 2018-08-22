@@ -12,26 +12,24 @@
 #include <pthread.h>
 #endif
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #include "Thread.h"
 
+typedef struct ThreadLock {
+    void* ptr;
+    void* condition;
+} TLock;
+
+typedef struct ThreadCtrlBlock {
+    U8 tid;      // thread id     
+    TLock *lock; // thread lock
+} TCB;
+
 typedef struct Thread {
-#ifdef linux
-    pthread_t pid;
-    pthread_attr_t *attr;
-#endif
-
-#ifdef WIN32
-    HANDLE hThread;
-    // thread attr
-#endif
-
+    TCB* tcb;
     ThreadRoutine func;
     void* param;
-
+    pthread_t pid;
+    pthread_attr_t *attr;
 } Thread;
 
 Thread* createThread(ThreadRoutine func, void* param)
@@ -51,22 +49,18 @@ Thread* createThread(ThreadRoutine func, void* param)
 
 bool startThread(Thread* thread) {
     assert(thread && "thread must not be NULL !");
-#ifdef linux
     int result = pthread_create(
             &thread->pid, 
             thread->attr, 
             thread->func,
             thread->param);
 
-        if (result) {
-            free(thread);
-            thread = NULL;
-            return FALSE;
-        }
-        return TRUE; 
-#endif
-
-    return FALSE;
+    if (result) {
+        free(thread);
+        thread = NULL;
+        return FALSE;
+    }
+    return TRUE; 
 }
 
 void destroyThread(Thread* thread)
@@ -83,30 +77,13 @@ bool joinThread(pthread_t pid, void** retval)
 bool isThreadValid(const Thread* thread)
 {
     if (thread != NULL) {
-        #ifdef linux
-            return thread->pid != 0;
-        #endif
-
-        #ifdef WIN32
-            return thread->hThread != NULL;
-        #endif
+        return thread->pid != 0;
     }
-
     return FALSE;
 }
 
-#ifdef linux
-pthread_t getThreadId(const Thread* thread) 
+U8 getThreadId(const Thread* thread) 
 {
     assert(thread && "thread must not be NULL !");
     return thread->pid;
 }
-#endif
-
-#ifdef WIN32
-HANDLE getThreadHandle(const Thread* thread)
-{
-    assert(thread && "thread must not be NULL !");
-    return thread->hThread;
-}
-#endif

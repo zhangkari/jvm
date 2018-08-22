@@ -95,7 +95,7 @@ typedef struct StackFrame {
 	LocalVarTable *localTbl;
 	OperandStack  *opdStack;
 	ConstPool	  *constPool;	// for dynamic linking 
-	int32		  pc_reg;		// pc register, -1 means invalid
+	int32		  regPC;		// pc register, -1 means invalid
 #ifdef DEBUG
     U2            id;           // used for debugger
 #endif
