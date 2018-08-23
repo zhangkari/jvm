@@ -2850,6 +2850,10 @@ DECL_FUNC(invokevirtual)
     Class *cls = findClass(clsname, env);
     assert (NULL != cls);
 
+    Slot slot;
+    initSlot(&slot, constPool, constEntry);
+    assert(slot.tag == constEntry->tag);
+
 #ifdef LOG_TIME_COST
     uint64_t t2 = current_ms();
     printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
