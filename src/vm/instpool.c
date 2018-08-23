@@ -16,7 +16,7 @@ typedef struct InstPool {
     Instruction* base;
     U4 capacity;
     U4 validCnt;
-	U4 freeIndex;
+    U4 freeIndex;
 } InstPool;
 
 InstPool* sPool = NULL;
@@ -31,11 +31,11 @@ bool createInstPool()
 #define INSTRUCTION_POOL_SIZE 64 * 1024
     sPool = (InstPool *)calloc(1, sizeof(InstPool));
     assert (NULL != sPool);
-    
+
     sPool->capacity = INSTRUCTION_POOL_SIZE;
     sPool->base = (Instruction *)calloc(sPool->capacity, sizeof(Instruction));
     assert (NULL != sPool->base);
-    
+
     return TRUE;
 }
 
@@ -63,37 +63,37 @@ void destroyInstPool()
  */
 const Instruction* cloneInstruction(const Instruction* inst)
 {
-	assert (NULL != inst);
-	assert (sPool->validCnt < sPool->capacity);
+    assert (NULL != inst);
+    assert (sPool->validCnt < sPool->capacity);
 
-	Instruction *dest = NULL;
-	dest = sPool->base + sPool->freeIndex;
+    Instruction *dest = NULL;
+    dest = sPool->base + sPool->freeIndex;
 
-	assert (0 == dest->reserve);
+    assert (0 == dest->reserve);
 
-	memcpy(dest, inst, sizeof(Instruction)); 
-	dest->reserve = 1;
-	++sPool->validCnt;
+    memcpy(dest, inst, sizeof(Instruction)); 
+    dest->reserve = 1;
+    ++sPool->validCnt;
 
-	int i = sPool->freeIndex + 1;
-	while (i < sPool->capacity) {
-		if (0 == (sPool->base + i)->reserve) {
-			sPool->freeIndex = i;
-			return dest;
-		}
-		++i;
-	}
+    int i = sPool->freeIndex + 1;
+    while (i < sPool->capacity) {
+        if (0 == (sPool->base + i)->reserve) {
+            sPool->freeIndex = i;
+            return dest;
+        }
+        ++i;
+    }
 
-	i = sPool->freeIndex - 1;
-	while (i >= 0) {
-		if (0 == (sPool->base + i)->reserve) {
-			sPool->freeIndex = i;
-			return dest;
-		}
-		i--;
-	}
+    i = sPool->freeIndex - 1;
+    while (i >= 0) {
+        if (0 == (sPool->base + i)->reserve) {
+            sPool->freeIndex = i;
+            return dest;
+        }
+        i--;
+    }
 
-	assert (0 && "No free instruction left");
+    assert (0 && "No free instruction left");
 }
 
 /*
@@ -106,7 +106,7 @@ void freeInstruction(const Instruction* inst)
     Instruction *ins = (Instruction *)inst;
     ins->reserve = 0;
     sPool->validCnt--;
-	sPool->freeIndex = (inst - sPool->base);
+    sPool->freeIndex = (inst - sPool->base);
 }
 
 /**
@@ -114,11 +114,11 @@ void freeInstruction(const Instruction* inst)
  */
 U1 getInstOpcode(const Instruction *inst)
 {
-	assert (NULL != inst);
+    assert (NULL != inst);
 
-	if (NULL == inst) {
-		exit(-1);
-	}
+    if (NULL == inst) {
+        exit(-1);
+    }
 
-	return inst->opcode;
+    return inst->opcode;
 }

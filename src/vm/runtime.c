@@ -367,7 +367,7 @@ int parseCmdLine(int argc, char **argv, Property **props) {
     } 
     else if (argc == 2) {
         if (strcmp(argv[1], "-v") == 0) {
-            printf("jvm %s compiled on %s copyright@kari.zhang\n", JAVA_VERSION, __DATE__);
+            printf("jvm %s compiled on %s copyright@kari.zhang\n", JVM_VERSION, __DATE__);
             exit(0);
         }
         else if (strcmp(argv[1], "-h") == 0) {
@@ -465,29 +465,29 @@ bool initializeClass(Class *cls, ExecEnv *env) {
  */
 int createSlotBufferPool(int cap) 
 {
-	if (sSlotBufferPool != NULL) {
+    if (sSlotBufferPool != NULL) {
 #ifdef LOG_DETAIL
-		printf("SlotBuffer Pool already exist\n");
+        printf("SlotBuffer Pool already exist\n");
 #endif
-		return 0;
-	}
+        return 0;
+    }
 
-	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
-	
-	SlotBufferPool* pool = (SlotBufferPool *)calloc(1, sizeof(*pool));
-	if (NULL == pool) {
-		return -1;
-	}
+    assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
 
-	pool->capacity = cap;
-	pool->slotbufs = (SlotBuffer *)calloc(cap, sizeof(SlotBuffer));
-	if (NULL == pool->slotbufs) {
-		return -1;
-	}
+    SlotBufferPool* pool = (SlotBufferPool *)calloc(1, sizeof(*pool));
+    if (NULL == pool) {
+        return -1;
+    }
 
-	sSlotBufferPool = pool;
+    pool->capacity = cap;
+    pool->slotbufs = (SlotBuffer *)calloc(cap, sizeof(SlotBuffer));
+    if (NULL == pool->slotbufs) {
+        return -1;
+    }
 
-	return 0;
+    sSlotBufferPool = pool;
+
+    return 0;
 }
 
 /*
@@ -495,14 +495,14 @@ int createSlotBufferPool(int cap)
  */
 void destroySlotBufferPool() 
 {
-	SlotBufferPool *pool = sSlotBufferPool;
-	if (NULL != pool) {
-		if (NULL != pool->slotbufs) {
-			free (pool->slotbufs);
-			pool->slotbufs = NULL;
-		}
-		sSlotBufferPool = NULL;
-	}
+    SlotBufferPool *pool = sSlotBufferPool;
+    if (NULL != pool) {
+        if (NULL != pool->slotbufs) {
+            free (pool->slotbufs);
+            pool->slotbufs = NULL;
+        }
+        sSlotBufferPool = NULL;
+    }
 }
 
 /*
@@ -511,23 +511,23 @@ void destroySlotBufferPool()
  */
 SlotBuffer* obtainSlotBuffer()
 {
-	assert(NULL != sSlotBufferPool);
+    assert(NULL != sSlotBufferPool);
 
-	SlotBufferPool* pool = sSlotBufferPool;
-	SlotBuffer *slot = NULL;
-	int i;
-	for (i = 0; i < pool->capacity; ++i) {
-		slot = pool->slotbufs + i;
-		if (!slot->use) {
-			slot->use = 1;
-			return slot;
-		}
-	}
+    SlotBufferPool* pool = sSlotBufferPool;
+    SlotBuffer *slot = NULL;
+    int i;
+    for (i = 0; i < pool->capacity; ++i) {
+        slot = pool->slotbufs + i;
+        if (!slot->use) {
+            slot->use = 1;
+            return slot;
+        }
+    }
 
-	printf("Failed obtain SlotBuffer in pool.\n");
-	printf("Please check if stack overflowed.\n");
+    printf("Failed obtain SlotBuffer in pool.\n");
+    printf("Please check if stack overflowed.\n");
 
-	return NULL;
+    return NULL;
 }
 
 /*
@@ -537,9 +537,9 @@ SlotBuffer* obtainSlotBuffer()
  */
 SlotBuffer* obtainCapSlotBuffer(int cap)
 {
-	assert (cap > 0);
+    assert (cap > 0);
 
-	assert (0 && "Not implemented yet!");
+    assert (0 && "Not implemented yet!");
 }
 
 /*
@@ -547,10 +547,10 @@ SlotBuffer* obtainCapSlotBuffer(int cap)
  */
 void recycleSlotBuffer(SlotBuffer* slotbuf)
 {
-	assert (NULL != slotbuf);
+    assert (NULL != slotbuf);
 
-	slotbuf->use = 0;
-	slotbuf->validCnt = 0;
+    slotbuf->use = 0;
+    slotbuf->validCnt = 0;
 }
 
 /*
@@ -559,23 +559,23 @@ void recycleSlotBuffer(SlotBuffer* slotbuf)
 int ensureSlotBufferCap(SlotBuffer* buffer, int count)
 {
     // count maybe zero
-	assert (NULL != buffer && count >= 0);
+    assert (NULL != buffer && count >= 0);
 
-	if (buffer->capacity - buffer->validCnt >= count) {
-		return 0;
-	}
+    if (buffer->capacity - buffer->validCnt >= count) {
+        return 0;
+    }
 
-	Slot *slots = NULL;
-	slots = (Slot *)realloc(buffer->slots, count * sizeof(Slot));
-	if (NULL == slots) {
+    Slot *slots = NULL;
+    slots = (Slot *)realloc(buffer->slots, count * sizeof(Slot));
+    if (NULL == slots) {
         printf("Failed realloc mem.\n");
         assert(0 && "Failed realloc mem.");
-		return -1;
-	}
-	buffer->slots = slots;
-	buffer->capacity = count;
+        return -1;
+    }
+    buffer->slots = slots;
+    buffer->capacity = count;
 
-	return 0;
+    return 0;
 }
 
 /*
@@ -583,29 +583,29 @@ int ensureSlotBufferCap(SlotBuffer* buffer, int count)
  */
 int createStackFramePool(int cap) 
 {
-	if (sStackFramePool != NULL) {
+    if (sStackFramePool != NULL) {
 #ifdef LOG_DETAIL
-		printf("StackFrame Pool already exist\n");
+        printf("StackFrame Pool already exist\n");
 #endif
-		return 0;
-	}
+        return 0;
+    }
 
-	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
-	
-	StackFramePool* pool = (StackFramePool *)calloc(1, sizeof(*pool));
-	if (NULL == pool) {
-		return -1;
-	}
+    assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
 
-	pool->capacity = cap;
-	pool->frames = (StackFrame *)calloc(cap, sizeof(StackFrame));
-	if (NULL == pool->frames) {
-		return -1;
-	}
+    StackFramePool* pool = (StackFramePool *)calloc(1, sizeof(*pool));
+    if (NULL == pool) {
+        return -1;
+    }
 
-	sStackFramePool = pool;
+    pool->capacity = cap;
+    pool->frames = (StackFrame *)calloc(cap, sizeof(StackFrame));
+    if (NULL == pool->frames) {
+        return -1;
+    }
 
-	return 0;
+    sStackFramePool = pool;
+
+    return 0;
 }
 
 /*
@@ -613,14 +613,14 @@ int createStackFramePool(int cap)
  */
 void destroyStackFramePool() 
 {
-	StackFramePool *pool = sStackFramePool;
-	if (NULL != pool) {
-		if (NULL != pool->frames) {
-			free (pool->frames);
-			pool->frames = NULL;
-		}
-		sStackFramePool = NULL;
-	}
+    StackFramePool *pool = sStackFramePool;
+    if (NULL != pool) {
+        if (NULL != pool->frames) {
+            free (pool->frames);
+            pool->frames = NULL;
+        }
+        sStackFramePool = NULL;
+    }
 }
 
 /*
@@ -629,24 +629,24 @@ void destroyStackFramePool()
  */
 StackFrame* obtainStackFrame()
 {
-	assert(NULL != sStackFramePool);
+    assert(NULL != sStackFramePool);
 
-	StackFramePool* pool = sStackFramePool;
-	StackFrame *frame = NULL;
-	int i;
-	for (i = 0; i < pool->capacity; ++i) {
-		frame = pool->frames + i;
-		if (!frame->use) {
-			memset(frame, 0, sizeof(StackFrame));
-			frame->use = 1;
-			return frame;
-		}
-	}
+    StackFramePool* pool = sStackFramePool;
+    StackFrame *frame = NULL;
+    int i;
+    for (i = 0; i < pool->capacity; ++i) {
+        frame = pool->frames + i;
+        if (!frame->use) {
+            memset(frame, 0, sizeof(StackFrame));
+            frame->use = 1;
+            return frame;
+        }
+    }
 
-	printf("Failed obtain StackFrame in pool.\n");
-	printf("Please check if stack overflowed.\n");
+    printf("Failed obtain StackFrame in pool.\n");
+    printf("Please check if stack overflowed.\n");
 
-	return NULL;
+    return NULL;
 }
 
 /*
@@ -654,52 +654,52 @@ StackFrame* obtainStackFrame()
  */
 void recycleStackFrame(StackFrame* frame)
 {
-	assert (NULL != frame);
+    assert (NULL != frame);
 
-	frame->use = 0;
+    frame->use = 0;
 }
 
 /*
  * Create a specified capacity RefHandlePool
  */
 int createRefHandlePool(int cap) {
-	if (sRefHandlePool != NULL) {
+    if (sRefHandlePool != NULL) {
 #ifdef LOG_DETAIL
-		printf("RefHandle Pool already exist\n");
+        printf("RefHandle Pool already exist\n");
 #endif
-		return 0;
-	}
+        return 0;
+    }
 
-	assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
-	
-	RefHandlePool* pool = (RefHandlePool *)calloc(1, sizeof(*pool));
-	if (NULL == pool) {
-		return -1;
-	}
+    assert (cap >= 1 && cap <= STACK_MAX_DEPTH);
 
-	pool->capacity = cap;
-	pool->handles = (RefHandle *)calloc(cap, sizeof(RefHandle));
-	if (NULL == pool->handles) {
-		return -1;
-	}
+    RefHandlePool* pool = (RefHandlePool *)calloc(1, sizeof(*pool));
+    if (NULL == pool) {
+        return -1;
+    }
 
-	sRefHandlePool = pool;
+    pool->capacity = cap;
+    pool->handles = (RefHandle *)calloc(cap, sizeof(RefHandle));
+    if (NULL == pool->handles) {
+        return -1;
+    }
 
-	return 0;
+    sRefHandlePool = pool;
+
+    return 0;
 }
 
 /*
  * Destroy RefHandlePool
  */
 void destroyRefHandlePool() {
-	RefHandlePool *pool = sRefHandlePool;
-	if (NULL != pool) {
-		if (NULL != pool->handles) {
-			free (pool->handles);
-			pool->handles = NULL;
-		}
-		sRefHandlePool = NULL;
-	}
+    RefHandlePool *pool = sRefHandlePool;
+    if (NULL != pool) {
+        if (NULL != pool->handles) {
+            free (pool->handles);
+            pool->handles = NULL;
+        }
+        sRefHandlePool = NULL;
+    }
 }
 
 /*
@@ -707,55 +707,55 @@ void destroyRefHandlePool() {
  * Notice: call recycleRefHandle to release !
  */
 RefHandle* obtainRefHandle() {
-	assert(NULL != sRefHandlePool);
+    assert(NULL != sRefHandlePool);
 
-	RefHandlePool* pool = sRefHandlePool;
-	RefHandle *handle = NULL;
-	int i;
-	for (i = 0; i < pool->capacity; ++i) {
-		handle = pool->handles + i;
-		if (!handle->use) {
-			handle->use = 1;
-			return handle;
-		}
-	}
+    RefHandlePool* pool = sRefHandlePool;
+    RefHandle *handle = NULL;
+    int i;
+    for (i = 0; i < pool->capacity; ++i) {
+        handle = pool->handles + i;
+        if (!handle->use) {
+            handle->use = 1;
+            return handle;
+        }
+    }
 
-	printf("Failed obtain RefHandle in pool.\n");
-	printf("Please check if stack overflowed.\n");
+    printf("Failed obtain RefHandle in pool.\n");
+    printf("Please check if stack overflowed.\n");
 
-	return NULL;
+    return NULL;
 }
 
 /*
  * Recyle RefHandle for reuse.
  */
 void recycleRefHandle(RefHandle* handle) {
-	assert (NULL != handle);
-	handle->use = 0;
+    assert (NULL != handle);
+    handle->use = 0;
 }
 
 /*
  * Push stack frame into java stack
  */
 bool pushJavaStack(JavaStack *stack, StackFrame *frame) {
-	if (NULL == stack || NULL == frame) {
-		return FALSE;
-	}
-	if (stack->top + 1 >= STACK_MAX_DEPTH) {
-		fprintf(stderr, "Stack is overflow\n");
-		return FALSE;
-	}
+    if (NULL == stack || NULL == frame) {
+        return FALSE;
+    }
+    if (stack->top + 1 >= STACK_MAX_DEPTH) {
+        fprintf(stderr, "Stack is overflow\n");
+        return FALSE;
+    }
 
-	stack->frames[stack->top++] = frame;
-	return TRUE;
+    stack->frames[stack->top++] = frame;
+    return TRUE;
 }
 
 StackFrame* popJavaStack(JavaStack *stack) {
-	if (NULL == stack || stack->top < 1) {
-		return NULL;
-	}
+    if (NULL == stack || stack->top < 1) {
+        return NULL;
+    }
 
-	return stack->frames[--stack->top];
+    return stack->frames[--stack->top];
 }
 
 /*
@@ -763,16 +763,16 @@ StackFrame* popJavaStack(JavaStack *stack) {
  * Return stack top element (not pop out)
  */
 StackFrame* peekJavaStack(JavaStack *stack) {
-	if (NULL == stack || stack->top < 1) {
-		return NULL;
-	}
+    if (NULL == stack || stack->top < 1) {
+        return NULL;
+    }
 
-	return stack->frames[stack->top - 1];
+    return stack->frames[stack->top - 1];
 }
 
 bool isJavaStackEmpty(JavaStack *stack) {
-	assert(NULL != stack);
-	return stack->top < 1;
+    assert(NULL != stack);
+    return stack->top < 1;
 }
 
 /*
@@ -780,29 +780,29 @@ bool isJavaStackEmpty(JavaStack *stack) {
  */
 bool pushOperandStack(OperandStack *stack, const Slot *slot) {
 
-	assert(NULL != stack && NULL != slot);
-	assert(NULL != stack->slots);
-	assert(stack->capacity > 0);
-	assert(stack->validCnt < stack->capacity);
+    assert(NULL != stack && NULL != slot);
+    assert(NULL != stack->slots);
+    assert(stack->capacity > 0);
+    assert(stack->validCnt < stack->capacity);
 
-	Slot *current = stack->slots + stack->validCnt;
-	++stack->validCnt;
-	current->tag = slot->tag;
-	current->value = slot->value;
+    Slot *current = stack->slots + stack->validCnt;
+    ++stack->validCnt;
+    current->tag = slot->tag;
+    current->value = slot->value;
 
-	return TRUE;
+    return TRUE;
 }
 
 /*
  * Pop operand from operand stack
  */
 Slot* popOperandStack(OperandStack *stack) {
-	assert(NULL != stack);
-	assert(stack->validCnt > 0);
-	assert(stack->validCnt <= stack->capacity);
+    assert(NULL != stack);
+    assert(stack->validCnt > 0);
+    assert(stack->validCnt <= stack->capacity);
 
-	--stack->validCnt;
-	return stack->slots + stack->validCnt;
+    --stack->validCnt;
+    return stack->slots + stack->validCnt;
 }
 
 /*
@@ -836,103 +836,103 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
     U2 nametype_idx;
 
     slot->tag = entry->tag;
-	switch (entry->tag) {
-		case CONST_Utf8:
-			slot->value = (uintptr_t)entry->info.utf8_info.bytes;
-			break;
+    switch (entry->tag) {
+        case CONST_Utf8:
+            slot->value = (uintptr_t)entry->info.utf8_info.bytes;
+            break;
 
-		case CONST_Integer:
-			slot->value = (uintptr_t)entry->info.integer_info.bytes;
-			break;
+        case CONST_Integer:
+            slot->value = (uintptr_t)entry->info.integer_info.bytes;
+            break;
 
-		case CONST_Float:
-			slot->value = (uintptr_t)entry->info.float_info.bytes;
-			break;
+        case CONST_Float:
+            slot->value = (uintptr_t)entry->info.float_info.bytes;
+            break;
 
-		case CONST_Long:
-			slot->value = (uintptr_t)&entry->info.long_info;
-			break;
+        case CONST_Long:
+            slot->value = (uintptr_t)&entry->info.long_info;
+            break;
 
-		case CONST_Double:
-			slot->value = (uintptr_t)&entry->info.double_info;
-			break;
+        case CONST_Double:
+            slot->value = (uintptr_t)&entry->info.double_info;
+            break;
 
-		case CONST_Class:
-			name_idx = entry->info.class_info.name_index;
-		    slot->value = (uintptr_t)pool->entries[name_idx].info.utf8_info.bytes;
-			break;
+        case CONST_Class:
+            name_idx = entry->info.class_info.name_index;
+            slot->value = (uintptr_t)pool->entries[name_idx].info.utf8_info.bytes;
+            break;
 
-		case CONST_String:
-			index = entry->info.string_info.string_index;
-			slot->value = (uintptr_t)pool->entries[index].info.utf8_info.bytes;
-			break;
+        case CONST_String:
+            index = entry->info.string_info.string_index;
+            slot->value = (uintptr_t)pool->entries[index].info.utf8_info.bytes;
+            break;
 
-		case CONST_Fieldref:
-			cls_idx = entry->info.fieldref_info.class_index;
-			nametype_idx = entry->info.fieldref_info.name_type_index;
-			name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
-			index = pool->entries[cls_idx].info.class_info.name_index;
-			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
-
-#if 0
-			printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
-					cls_idx, 
-					nametype_idx,
-					pool->entries[index].info.utf8_info.bytes,
-					pool->entries[name_idx].info.utf8_info.bytes,
-					pool->entries[type_idx].info.utf8_info.bytes);
-#endif
-			
-			slot->value = (uintptr_t)(pool->entries[index].info.utf8_info.bytes);
-
-			break;
-
-		case CONST_Methodref:
-			cls_idx = entry->info.methodref_info.class_index,
-					index = pool->entries[cls_idx].info.class_info.name_index;
-			nametype_idx = entry->info.methodref_info.name_type_index,
-						 name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
-			type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+        case CONST_Fieldref:
+            cls_idx = entry->info.fieldref_info.class_index;
+            nametype_idx = entry->info.fieldref_info.name_type_index;
+            name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+            index = pool->entries[cls_idx].info.class_info.name_index;
+            type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
 
 #if 0
-			printf("Method\t#%d.#%d; // %s.%s:%s\n",
-					cls_idx, 
-					nametype_idx, 
-					pool->entries[index].info.utf8_info.bytes,
-					pool->entries[name_idx].info.utf8_info.bytes,
-					pool->entries[type_idx].info.utf8_info.bytes);
+            printf("Field\t#%d.#%d;  // %s.%s:%s;\n",
+                    cls_idx, 
+                    nametype_idx,
+                    pool->entries[index].info.utf8_info.bytes,
+                    pool->entries[name_idx].info.utf8_info.bytes,
+                    pool->entries[type_idx].info.utf8_info.bytes);
 #endif
-			break;
 
-		case CONST_IfMethodref:
-			printf("InterfaceMethodref_info not implemented\n");
-			break;
+            slot->value = (uintptr_t)(pool->entries[index].info.utf8_info.bytes);
 
-		case CONST_NameAndType:
-			name_idx = entry->info.nametype_info.name_index;
-			type_idx = entry->info.nametype_info.type_index;
+            break;
+
+        case CONST_Methodref:
+            cls_idx = entry->info.methodref_info.class_index,
+                    index = pool->entries[cls_idx].info.class_info.name_index;
+            nametype_idx = entry->info.methodref_info.name_type_index,
+                         name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
+            type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
+
 #if 0
-			printf("NameAndType #%d:%d;// \"%s\":%s\n",
-					name_idx,
-					type_idx,
-					pool->entries[name_idx].info.utf8_info.bytes,
-					pool->entries[type_idx].info.utf8_info.bytes);
+            printf("Method\t#%d.#%d; // %s.%s:%s\n",
+                    cls_idx, 
+                    nametype_idx, 
+                    pool->entries[index].info.utf8_info.bytes,
+                    pool->entries[name_idx].info.utf8_info.bytes,
+                    pool->entries[type_idx].info.utf8_info.bytes);
 #endif
-			break;
+            break;
 
-		case CONST_MethodHandle:
-			printf("MethodHandle not implemented.\n");
-			break;
+        case CONST_IfMethodref:
+            printf("InterfaceMethodref_info not implemented\n");
+            break;
 
-		case CONST_MethodType:
-        	type_idx = entry->info.methodtype_info.type_index;
-			slot->value = (uintptr_t)pool->entries[type_idx].info.utf8_info.bytes;
-			break;
+        case CONST_NameAndType:
+            name_idx = entry->info.nametype_info.name_index;
+            type_idx = entry->info.nametype_info.type_index;
+#if 0
+            printf("NameAndType #%d:%d;// \"%s\":%s\n",
+                    name_idx,
+                    type_idx,
+                    pool->entries[name_idx].info.utf8_info.bytes,
+                    pool->entries[type_idx].info.utf8_info.bytes);
+#endif
+            break;
 
-		case CONST_InvokeDynamic:
-			printf("InvokeDynamic not implemented.\n");
-			break;
-	}
+        case CONST_MethodHandle:
+            printf("MethodHandle not implemented.\n");
+            break;
+
+        case CONST_MethodType:
+            type_idx = entry->info.methodtype_info.type_index;
+            slot->value = (uintptr_t)pool->entries[type_idx].info.utf8_info.bytes;
+            break;
+
+        case CONST_InvokeDynamic:
+            printf("InvokeDynamic not implemented.\n");
+            break;
+    }
 
 #if 0
     printf("---- initSlot() ----\n");
@@ -1068,8 +1068,8 @@ long Java_java_lang_System_currentTimeMillis(ExecEnv *env, Class *cls) {
 }
 
 /**
-  * PrintStream.println(String)
-  */
+ * PrintStream.println(String)
+ */
 void Java_java_io_PrintStream_println(ExecEnv *env, 
         jobject *thiz, 
         jobject *param) {

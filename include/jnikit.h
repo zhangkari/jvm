@@ -1,9 +1,9 @@
 /****************************************
-  * file:   jni.h
-  * desc:   define Java Native Interface
-  * author: kari.zhang
-  * date:   2017-11-26
-  **************************************/
+ * file:   jni.h
+ * desc:   define Java Native Interface
+ * author: kari.zhang
+ * date:   2017-11-26
+ **************************************/
 
 #ifndef __JNIKIT__H__
 #define __JNIKIT__H__

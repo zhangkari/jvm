@@ -38,24 +38,24 @@ typedef struct LookupSwitch {
 } LookupSwitch;
 
 typedef struct {
-	U1 opcode;		      // opcode 
-	char *name;		      // name of opcode
-	union {
-		U1 u1;
-		U2 u2;
-		U4 u4;
-		U8 u8;
+    U1 opcode;		      // opcode 
+    char *name;		      // name of opcode
+    union {
+        U1 u1;
+        U2 u2;
+        U4 u4;
+        U8 u8;
         TableSwitch  tblSw;
         LookupSwitch lkpSw;
-	} operand;		      // operand
-	U1 tag;			      // indicate the valid operand
+    } operand;		      // operand
+    U1 tag;			      // indicate the valid operand
 
     /*
-    It usually equals tag + 1, 
-    However, tblSw & lkpSw are variable length instructions
-    */
+       It usually equals tag + 1, 
+       However, tblSw & lkpSw are variable length instructions
+       */
     U2 length;            // the length of the instruction
-	HandlerFunc handler;  // handler of opcode
+    HandlerFunc handler;  // handler of opcode
     U1 reserve;           // reserve field for reuse tag
 } Instruction;
 
@@ -82,20 +82,20 @@ bool validate_opcode(int opcode);
  *		opcode's name if valid
  *		"Invalid opcode" if invalid
  * Notice:
-		do not free me
+ do not free me
  */
 const char* stropcode(int opcode);
 
 /**
-  * Get a instruction in the buffer
-  * Param:
-		buff:		the byte code stream
-		codelen:	code's length
+ * Get a instruction in the buffer
+ * Param:
+buff:		the byte code stream
+codelen:	code's length
  * Return:
-		A pointer of the instruction if valid opcode
-		NULL if invalid opcode
+ A pointer of the instruction if valid opcode
+ NULL if invalid opcode
  * Notice:
-		do not free me
+ do not free me
  */
 const Instruction* getCachedInstruction(U1 *code, int codelen, int offset);
 
