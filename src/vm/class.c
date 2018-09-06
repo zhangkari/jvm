@@ -1422,7 +1422,42 @@ void logMethodEntry(MethodEntry* method)
     }
 
     printf("  descriptor: %s\n", method->type);
-    printf("  flags: %s\n", "flags");
+    printf("  flags:");
+    if (method->acc_flags & ACC_PUBLIC) {
+        printf(" ACC_PUBLIC");
+    } else if (method->acc_flags & ACC_PROTECTED) {
+        printf(" ACC_PROTECTED");
+    } else if (method->acc_flags & ACC_PRIVATE) {
+        printf(" ACC_PRIVATE");
+    }
+    if (method->acc_flags & ACC_STATIC) {
+        printf(" ACC_STATIC");
+    }
+    if (method->acc_flags & ACC_FINAL) {
+        printf(" ACC_FINAL");
+    }
+    if (method->acc_flags & ACC_SYNCHRONIZED) {
+        printf(" ACC_SYNCHRONIZED");
+    }
+    if (method->acc_flags & ACC_BRIDGE) {
+        printf(" ACC_BRIDGE");
+    }
+    if (method->acc_flags & ACC_VARARGS) {
+        printf(" ACC_VARARGS");
+    }
+    if (method->acc_flags & ACC_NATIVE) {
+        printf(" ACC_NATIVE");
+    }
+    if (method->acc_flags & ACC_ABSTRACT) {
+        printf(" ACC_ABSTRACT");
+    }
+    if (method->acc_flags & ACC_STRICT) {
+        printf(" ACC_STRICT");
+    }
+    if (method->acc_flags & ACC_SYNTHETIC) {
+        printf(" ACC_SYNCHETIC");
+    }
+    printf("\n");
 
     printf("  Code:\n");
     printf("   Stack=%d, Locals=%d, Args_size=%d\n",
