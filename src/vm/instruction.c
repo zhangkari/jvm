@@ -1,11 +1,18 @@
 /*************************************
- *file name:	instruction.c 
- *description:	define instruction set
- *
+ * file name:	instruction.c 
+ * description:	define instruction set
+ * mofications:
+ *  1. rename ldiv to lDiv to avoid compilation errors in Mac OSX
  ************************************/
 
 #include <assert.h>
+
+#ifdef linux
 #include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include "comm.h"
@@ -129,7 +136,7 @@ enum {
     fmul,			// 0x6a
     dmul,			// 0x6b
     idiv,			// 0x6c
-    ldiv,			// 0x6d
+    lDiv,			// 0x6d
     fdiv,			// 0x6e
     ddiv,			// 0x6f
     irem,			// 0x70
@@ -339,7 +346,7 @@ DECL_FUNC(lmul);
 DECL_FUNC(fmul);
 DECL_FUNC(dmul);
 DECL_FUNC(idiv);
-DECL_FUNC(ldiv);
+DECL_FUNC(lDiv);
 DECL_FUNC(fdiv);
 DECL_FUNC(ddiv);
 DECL_FUNC(irem);
@@ -576,7 +583,7 @@ static Instruction sInstructionTable[] = {
     INIT_INST(fmul, 0),			// 0x6a
     INIT_INST(dmul, 0),			// 0x6b
     INIT_INST(idiv, 0),			// 0x6c
-    INIT_INST(ldiv, 0),			// 0x6d
+    INIT_INST(lDiv, 0),			// 0x6d
     INIT_INST(fdiv, 0),			// 0x6e
     INIT_INST(ddiv, 0),			// 0x6f
     INIT_INST(irem,	0), 		// 0x70
@@ -2055,7 +2062,7 @@ DECL_FUNC(idiv)
     return FALSE;
 }
 
-DECL_FUNC(ldiv)
+DECL_FUNC(lDiv)
 {
 #ifdef LOG_DETAIL
     printf("\t*ldiv\n");

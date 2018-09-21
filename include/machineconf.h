@@ -10,13 +10,11 @@
  *
  * modifications:
  *	1. Rename to machineconf.h by kari.zhang @ 2016-01-16
+ *  2. Never use SMALL_ENDIAN to distinguish CPU endianness,
+ *      use ntohs() or ntohl(), keep this file for memory @ 2018-09-21
  *******************************************************/
 
 #ifndef __MACHINECONF__H__
 #define __MACHINECONF__H__
-
-// default in small endian machine
-// If in big endian, please remove this macro define
-#define SMALL_ENDIAN
 
 #endif
