@@ -68,7 +68,7 @@ void initVM(InitArgs *args, VM *vm) {
 
 #ifdef LOG_TIME_COST
     uint64_t t2 = current_ms();
-    printf("load %d classes cost %lu ms\n", env->rtClsCnt, t2 - t1);
+    printf("load %d classes cost %llu ms\n", env->rtClsCnt, t2 - t1);
 #endif
 
     /*
@@ -888,13 +888,13 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
             break;
 
         case CONST_Methodref:
+#if 0
             cls_idx = entry->info.methodref_info.class_index,
                     index = pool->entries[cls_idx].info.class_info.name_index;
             nametype_idx = entry->info.methodref_info.name_type_index,
                          name_idx = pool->entries[nametype_idx].info.nametype_info.name_index;
             type_idx = pool->entries[nametype_idx].info.nametype_info.type_index;
 
-#if 0
             printf("Method\t#%d.#%d; // %s.%s:%s\n",
                     cls_idx, 
                     nametype_idx, 
@@ -905,7 +905,7 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
             break;
 
         case CONST_IfMethodref:
-            printf("InterfaceMethodref_info not implemented\n");
+            printf("InterfaceMethodref_info not implemented in initSlot\n");
             break;
 
         case CONST_NameAndType:
@@ -918,10 +918,11 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
                     pool->entries[name_idx].info.utf8_info.bytes,
                     pool->entries[type_idx].info.utf8_info.bytes);
 #endif
+            printf("NameAndType not implemented in initSlot.\n");
             break;
 
         case CONST_MethodHandle:
-            printf("MethodHandle not implemented.\n");
+            printf("MethodHandle not implemented in initSlot.\n");
             break;
 
         case CONST_MethodType:
@@ -930,7 +931,7 @@ void initSlot(Slot *slot, ConstPool *pool, ConstPoolEntry *entry) {
             break;
 
         case CONST_InvokeDynamic:
-            printf("InvokeDynamic not implemented.\n");
+            printf("InvokeDynamic not implemented in initSlot.\n");
             break;
     }
 

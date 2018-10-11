@@ -12,6 +12,8 @@
 
 #include <comm.h>
 
+typedef struct MethodEntry MethodEntry;
+
 typedef bool (*HandlerFunc)(void *);
 
 #define TABLE_SWITCH  15
@@ -65,7 +67,9 @@ typedef struct ExecEnv ExecEnv;
  */
 typedef struct InstExecEnv {
     Instruction *inst;
-    ExecEnv     *env;
+    MethodEntry *method;
+    int method_pos;
+    ExecEnv *env;
 } InstExecEnv;
 
 /**

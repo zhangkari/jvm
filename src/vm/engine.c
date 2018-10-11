@@ -68,7 +68,7 @@ static void executeNative(ExecEnv *env, const MethodEntry *method) {
 
 }
 
-void executeMethod(ExecEnv *env, const MethodEntry *method)
+void executeMethod(ExecEnv *env, MethodEntry *method)
 {
     assert(NULL != env && NULL != method);
 
@@ -129,6 +129,8 @@ void executeMethod(ExecEnv *env, const MethodEntry *method)
         inst = method->instTbl[i];
         instEnv.inst = (Instruction *)inst;
         instEnv.env  = env;
+        instEnv.method = method;
+        instEnv.method_pos = i;
 
         inst->handler(&instEnv);
     }
@@ -165,7 +167,7 @@ static void popOpdStackToLocalTbl(OperandStack* stack,
  *  the parameters will popped from OperandStack
  *  and placed in LocalTable, these will be done before enter INST_FUNCs
  */
-void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
+void executeMethod_spec(ExecEnv *env, MethodEntry *method)
 {
     assert(NULL != env && NULL != method);
 
@@ -240,6 +242,8 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
         inst = method->instTbl[i];
         instEnv.inst = (Instruction *)inst;
         instEnv.env  = env;
+        instEnv.method = method;
+        instEnv.method_pos = i;
 
         inst->handler(&instEnv);
     }
@@ -253,11 +257,10 @@ void executeMethod_spec(ExecEnv *env, const MethodEntry *method)
 void* engineRoutine(void *param)
 {
     assert(param);
-#if 0
     ExecEnv *env = (ExecEnv *)param;
     JavaStack *stack = env->javaStack;
     // TODO
+    printf("engineRoutine\n");
     printf("java stack top:%d\n", stack->top);
-#endif
     return NULL;
 }

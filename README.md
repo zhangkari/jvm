@@ -14,7 +14,5 @@ include:
 ----------------------
  dependency:   
 - **libz** ：used for unpacking jar；   
-- **CUnit** ：used for case testing     
-
 -------------------
 

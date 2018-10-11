@@ -31,8 +31,9 @@ int main(int argc, char *argv[]) {
     memset(&vm, 0, sizeof(vm));
     initVM(&initArgs, &vm);
 
-    char path[256];
-    strcpy(path, argv[1]);
+    char path[BUFSIZ];
+    memset(path, 0, BUFSIZ);
+    strncpy(path, argv[1], BUFSIZ - 1);
     strcat(path, ".class");
     Class *mainClass = loadClassFromFile(path, argv[1]);
     if (NULL == mainClass) {

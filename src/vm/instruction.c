@@ -2,7 +2,7 @@
  * file name:	instruction.c 
  * description:	define instruction set
  * mofications:
- *  1. rename ldiv to lDiv to avoid compilation errors in Mac OSX
+ *  1. rename ldiv to _ldiv to avoid compilation errors in Mac OSX
  ************************************/
 
 #include <assert.h>
@@ -136,7 +136,7 @@ enum {
     fmul,			// 0x6a
     dmul,			// 0x6b
     idiv,			// 0x6c
-    lDiv,			// 0x6d
+    _ldiv,			// 0x6d
     fdiv,			// 0x6e
     ddiv,			// 0x6f
     irem,			// 0x70
@@ -346,7 +346,7 @@ DECL_FUNC(lmul);
 DECL_FUNC(fmul);
 DECL_FUNC(dmul);
 DECL_FUNC(idiv);
-DECL_FUNC(lDiv);
+DECL_FUNC(_ldiv);
 DECL_FUNC(fdiv);
 DECL_FUNC(ddiv);
 DECL_FUNC(irem);
@@ -583,7 +583,7 @@ static Instruction sInstructionTable[] = {
     INIT_INST(fmul, 0),			// 0x6a
     INIT_INST(dmul, 0),			// 0x6b
     INIT_INST(idiv, 0),			// 0x6c
-    INIT_INST(lDiv, 0),			// 0x6d
+    INIT_INST(_ldiv, 0),		// 0x6d
     INIT_INST(fdiv, 0),			// 0x6e
     INIT_INST(ddiv, 0),			// 0x6f
     INIT_INST(irem,	0), 		// 0x70
@@ -1430,10 +1430,10 @@ DECL_FUNC(aload_1)
     assert(status);
 
 #ifdef LOG_DETAIL
-    printf("\t*aload_1\n");
+    printf("\taload_1\n");
 #endif
 
-    return FALSE;
+    return TRUE;
 }
 
 DECL_FUNC(aload_2)
@@ -2062,7 +2062,7 @@ DECL_FUNC(idiv)
     return FALSE;
 }
 
-DECL_FUNC(lDiv)
+DECL_FUNC(_ldiv)
 {
 #ifdef LOG_DETAIL
     printf("\t*ldiv\n");
@@ -2586,8 +2586,10 @@ DECL_FUNC(if_acmpne)
 
 DECL_FUNC(_goto)
 {
+    validate_inst_env(param);
+    int offset = inst->operand.u2;
 #ifdef LOG_DETAIL
-    printf("\t*goto\n");
+    printf("\t*goto %d [%s, cur:%d, total:%d]\n", offset, instEnv->method->name, instEnv->method_pos, instEnv->method->code_length);
 #endif
 
     return FALSE;
@@ -2718,9 +2720,9 @@ DECL_FUNC(getstatic)
     Class *cls = findClass((char *)slot.value, env);
     assert (NULL != cls);
 
-#ifdef LOG_TIME_COST_
+#ifdef LOG_TIME_COST
     uint64_t t2 = current_ms();
-    printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
+    printf("find %s cost %llu ms.\n", (char *)slot.value, t2 - t1);
 #endif
 
     bool status = linkClass(cls, env);
@@ -2863,7 +2865,7 @@ DECL_FUNC(invokevirtual)
 
 #ifdef LOG_TIME_COST
     uint64_t t2 = current_ms();
-    printf("find %s cost %lu ms.\n", (char *)slot.value, t2 - t1);
+    printf("find %s cost %llu ms.\n", clsname, t2 - t1);
 #endif
 
     bool status = linkClass(cls, env);
