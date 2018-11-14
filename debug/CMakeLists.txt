@@ -37,9 +37,9 @@ TARGET_LINK_LIBRARIES(jvm libminiz libvmbase)
 ADD_EXECUTABLE(jvmp ${src_dir}/jvmp.c)
 TARGET_LINK_LIBRARIES(jvmp libvmbase)
 
-# jar
-ADD_EXECUTABLE(jar ${src_dir}/jar.c)
-TARGET_LINK_LIBRARIES(jar libminiz libvmbase)
+# jarx
+ADD_EXECUTABLE(jarx ${src_dir}/jar.c)
+TARGET_LINK_LIBRARIES(jarx libminiz libvmbase)
 
 # jvmd
 ADD_EXECUTABLE(jvmd ${src_dir}/jvmd.c)

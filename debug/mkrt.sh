@@ -7,7 +7,7 @@ mk_absent_dir()
 
 delete_class()
 {
-    rm $1/*.class -rf
+    rm -rvf $1/*.class
 }
 
 compile_and_mv()
