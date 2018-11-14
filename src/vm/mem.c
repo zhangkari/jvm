@@ -15,12 +15,12 @@
 #include "utility.h"
 
 struct MemoryArea {
-	void *base;		// base address
-	void *current;		// address used currently
-	U4  used;		// memory area has used
-	U4  capability;		// area capability
-	void **free;		// space that user free
-	U4  freeCnt;		// count of free
+    void *base;		// base address
+    void *current;		// address used currently
+    U4  used;		// memory area has used
+    U4  capability;		// area capability
+    void **free;		// space that user free
+    U4  freeCnt;		// count of free
 };
 
 /*
@@ -28,29 +28,29 @@ struct MemoryArea {
  */
 MemoryArea* createMemoryArea(int cap)
 {
-	if (cap <= 0) {
-		return NULL;
-	}
+    if (cap <= 0) {
+        return NULL;
+    }
 
-	MemoryArea *area = (MemoryArea *)calloc(1, sizeof(MemoryArea));
-	if (NULL != area) {
-		area->base = calloc(1, cap);
-		if (NULL == area->base) {
-			free (area);
-			area = NULL;
-		}
-		else {
-			area->used = 0;
-			area->capability = cap;
-			area->current = area->base;
+    MemoryArea *area = (MemoryArea *)calloc(1, sizeof(MemoryArea));
+    if (NULL != area) {
+        area->base = calloc(1, cap);
+        if (NULL == area->base) {
+            free (area);
+            area = NULL;
+        }
+        else {
+            area->used = 0;
+            area->capability = cap;
+            area->current = area->base;
 #define MAX_FREE_CNT 64
-			area->free = (void **)calloc(MAX_FREE_CNT, sizeof(void *));
-			assert(NULL != area->free);
-			area->freeCnt = 0;
-		}
-	}
+            area->free = (void **)calloc(MAX_FREE_CNT, sizeof(void *));
+            assert(NULL != area->free);
+            area->freeCnt = 0;
+        }
+    }
 
-	return area;
+    return area;
 }
 
 /*
@@ -58,19 +58,19 @@ MemoryArea* createMemoryArea(int cap)
  */
 void destroyMemoryArea(MemoryArea* area)
 {
-	if (NULL != area) {
-		if (NULL != area->base) {
-			free (area->base);
-			area->base = NULL;
-			area->current = NULL;
-			area->used = 0;
-			area->capability = 0;
-			*area->free = NULL;
-			area->freeCnt = 0;
-		}
+    if (NULL != area) {
+        if (NULL != area->base) {
+            free (area->base);
+            area->base = NULL;
+            area->current = NULL;
+            area->used = 0;
+            area->capability = 0;
+            *area->free = NULL;
+            area->freeCnt = 0;
+        }
 
-		free (area);
-	}
+        free (area);
+    }
 }
 
 /**
@@ -83,27 +83,27 @@ void destroyMemoryArea(MemoryArea* area)
  *		if Error,	return NULL
  */
 static void* findFirstMatch(MemoryArea* area, int size) {
-	if (NULL == area || area->freeCnt <= 0 || size <= 0) {
-		return NULL;
-	}
+    if (NULL == area || area->freeCnt <= 0 || size <= 0) {
+        return NULL;
+    }
 
-	int i;
-	for (i = 0; i < area->freeCnt; ++i) {
-		void *base = *(area->free + i);
-		int *plen = (int *)((char *)base - 4);
-		int len = *plen;
-		if (len >= size + 4) {
-			// reassign the free node value
-			void *new_base = base + 4 + size;
-			int *new_len = (int *)((char *)base + size);
-			*new_len = len - size;
-			*(area->free +i) = new_base;
+    int i;
+    for (i = 0; i < area->freeCnt; ++i) {
+        void *base = *(area->free + i);
+        int *plen = (int *)((char *)base - 4);
+        int len = *plen;
+        if (len >= size + 4) {
+            // reassign the free node value
+            void *new_base = base + 4 + size;
+            int *new_len = (int *)((char *)base + size);
+            *new_len = len - size;
+            *(area->free +i) = new_base;
 
-			return base;
-		}
-	}
+            return base;
+        }
+    }
 
-	return NULL;
+    return NULL;
 }
 
 /*
@@ -120,37 +120,37 @@ static void* findFirstMatch(MemoryArea* area, int size) {
  */
 void* sysAlloc(MemoryArea* area, int size)
 {
-	if (NULL == area || size <= 0) {
+    if (NULL == area || size <= 0) {
 #ifdef LOG_DETAIL
-		LogD("Invalid parameters");
+        LogD("Invalid parameters");
 #endif
-		return NULL;
-	}
+        return NULL;
+    }
 
-	void *retAddr = NULL;
-	retAddr =  findFirstMatch(area, size);
-	if (NULL != retAddr) {
-		return retAddr;
-	}
+    void *retAddr = NULL;
+    retAddr =  findFirstMatch(area, size);
+    if (NULL != retAddr) {
+        return retAddr;
+    }
 
-	// 4 bytes used to indicate the length of the buffer will allocate
-	// It will be used in sysFree()
-	if (area->used + size + 4 > area->capability) {
+    // 4 bytes used to indicate the length of the buffer will allocate
+    // It will be used in sysFree()
+    if (area->used + size + 4 > area->capability) {
 #ifdef LOG_DETAIL
-		LogD("memory area is overflowed");
+        LogD("memory area is overflowed");
 #endif
-		return NULL;
-	}
+        return NULL;
+    }
 
-	int *curr = (int *)(area->current);
-	*curr = size;
-	area->current += 4;
-	retAddr = area->current;
-	area->current += size;
-	area->used += 4;
-	area->used += size;
+    int *curr = (int *)(area->current);
+    *curr = size;
+    area->current += 4;
+    retAddr = area->current;
+    area->current += size;
+    area->used += 4;
+    area->used += size;
 
-	return retAddr;
+    return retAddr;
 }
 
 /*
@@ -168,20 +168,20 @@ void* sysAlloc(MemoryArea* area, int size)
 
 void sysFree(MemoryArea* area, void *base)
 {
-	if (NULL == area || NULL == base) {
+    if (NULL == area || NULL == base) {
 #ifdef LOG_DETAIL
-		LogD("area is NULL or base is NULL");
+        LogD("area is NULL or base is NULL");
 #endif
-		return;
-	}
+        return;
+    }
 
-	area->free[area->freeCnt] = base;
-	++area->freeCnt;
+    area->free[area->freeCnt] = base;
+    ++area->freeCnt;
 
-	if (area->freeCnt >= MAX_FREE_CNT) {
+    if (area->freeCnt >= MAX_FREE_CNT) {
 #ifdef LOG_DETAIL
-		// collect memory fragment
-		LogD("Max Free Cnt! gc start work! "); 		
+        // collect memory fragment
+        LogD("Max Free Cnt! gc start work! "); 		
 #endif
-	}
+    }
 }

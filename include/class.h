@@ -31,12 +31,12 @@ typedef enum tag_value {
     CONST_MethodType	= 16,
     CONST_InvokeDynamic	= 18,
 
-	// this type not defined in JVM specification and exclude the
-	// primer type (such as int, float, long, double), but include the
-	// types all defined above.
-	// I use this type to distinguish primer type & reference type.
-	// Maybe this type will never be used.
-	ReferenceType		= 127
+    // this type not defined in JVM specification and exclude the
+    // primer type (such as int, float, long, double), but include the
+    // types all defined above.
+    // I use this type to distinguish primer type & reference type.
+    // Maybe this type will never be used.
+    ReferenceType		= 127
 } TypeTag;
 
 typedef enum access_flags {
@@ -50,7 +50,7 @@ typedef enum access_flags {
     ACC_VOLATILE    = 0x0040,
     ACC_BRIDGE      = 0x0040,
     ACC_TRANSLENT   = 0x0080,
-	ACC_VARARGS		= 0x0080, 
+    ACC_VARARGS		= 0x0080, 
     ACC_NATIVE      = 0x0100, 
     ACC_INTERFACE   = 0x0200,
     ACC_ABSTRACT    = 0x0400,
@@ -62,102 +62,102 @@ typedef enum access_flags {
 
 // Do not modify the assigned value !!!
 enum Class_State {
-	CLASS_BAD		= 0x00,
-	CLASS_LOADING	= 0x01,
-	CLASS_LOADED	= 0x02,
-	CLASS_LINKING	= 0x03,
-	CLASS_LINKED	= 0x04,
-	CLASS_RESOLVING	= 0x05,
-	CLASS_RESOLVED	= 0x06,
-	CLASS_INITING	= 0x07,
-	CLASS_INITED	= 0x08
+    CLASS_BAD		= 0x00,
+    CLASS_LOADING	= 0x01,
+    CLASS_LOADED	= 0x02,
+    CLASS_LINKING	= 0x03,
+    CLASS_LINKED	= 0x04,
+    CLASS_RESOLVING	= 0x05,
+    CLASS_RESOLVED	= 0x06,
+    CLASS_INITING	= 0x07,
+    CLASS_INITED	= 0x08
 };
 
 enum Prime_Class_Type {
-	PRIM_VOID		= 0x00,
-	PRIM_BYTE		= 0x01,
-	PRIM_BOOLEAN	= 0x02,
-	PRIM_CHAR		= 0x03,
-	PRIM_SHORT		= 0x04,
-	PRIM_INT		= 0x05,
-	PRIM_FLOAT		= 0x06,
-	PRIM_LONG		= 0x07,
-	PRIM_DOUBLE		= 0x08
+    PRIM_VOID		= 0x00,
+    PRIM_BYTE		= 0x01,
+    PRIM_BOOLEAN	= 0x02,
+    PRIM_CHAR		= 0x03,
+    PRIM_SHORT		= 0x04,
+    PRIM_INT		= 0x05,
+    PRIM_FLOAT		= 0x06,
+    PRIM_LONG		= 0x07,
+    PRIM_DOUBLE		= 0x08
 };
 
 typedef struct ConstPoolEntry {
-	U1 tag;
-	union {
-		struct {
-			U2 name_index;
-		} class_info;
+    U1 tag;
+    union {
+        struct {
+            U2 name_index;
+        } class_info;
 
-		struct {
-			U2 class_index;
-			U2 name_type_index;
-		} fieldref_info;
+        struct {
+            U2 class_index;
+            U2 name_type_index;
+        } fieldref_info;
 
-		struct {
-			U2 class_index;
-			U2 name_type_index;
-		} methodref_info;
+        struct {
+            U2 class_index;
+            U2 name_type_index;
+        } methodref_info;
 
-		struct {
-			U2 class_index;
-			U2 name_type_index;
-		} ifmethodref_info;
+        struct {
+            U2 class_index;
+            U2 name_type_index;
+        } ifmethodref_info;
 
-		struct {
-			U2 string_index;
-		} string_info;
+        struct {
+            U2 string_index;
+        } string_info;
 
-		struct {
-			U4 bytes;
-		} integer_info;
+        struct {
+            U4 bytes;
+        } integer_info;
 
-		struct {
-			U4 bytes;
-		} float_info;
+        struct {
+            U4 bytes;
+        } float_info;
 
-		struct {
-			U4 high_bytes;
-			U4 low_bytes;
-		} long_info;
+        struct {
+            U4 high_bytes;
+            U4 low_bytes;
+        } long_info;
 
-		struct {
-			U4 high_bytes;
-			U4 low_bytes;
-		} double_info;
+        struct {
+            U4 high_bytes;
+            U4 low_bytes;
+        } double_info;
 
-		struct {
-			U2 name_index;
-			U2 type_index;
-		} nametype_info;
+        struct {
+            U2 name_index;
+            U2 type_index;
+        } nametype_info;
 
-		struct {
-			U2 	 length;
-			char *bytes;
-		} utf8_info;
+        struct {
+            U2 	 length;
+            char *bytes;
+        } utf8_info;
 
-		struct {
-			U1 ref_kind;
-			U2 ref_index;
-		} methodhandle_info;
+        struct {
+            U1 ref_kind;
+            U2 ref_index;
+        } methodhandle_info;
 
-		struct {
-			U2 type_index;
-		} methodtype_info;
+        struct {
+            U2 type_index;
+        } methodtype_info;
 
-		struct {
-			U2 bootstrap_method_attr_index;
-			U2 name_type_index;
-		} invokedynamic_info;
-	} info;
+        struct {
+            U2 bootstrap_method_attr_index;
+            U2 name_type_index;
+        } invokedynamic_info;
+    } info;
 } ConstPoolEntry;
 
 typedef struct ConstPool {
-	U2 length;
-	ConstPoolEntry *entries;
+    U2 length;
+    ConstPoolEntry *entries;
 } ConstPool;
 
 typedef struct ExceptionEntry {
@@ -168,16 +168,16 @@ typedef struct ExceptionEntry {
 } ExceptionEntry;
 
 typedef struct ExceptionTable {
-	U4 length;
-	struct ExceptionEntry* entries;
+    U4 length;
+    struct ExceptionEntry* entries;
 } ExceptionTable;
 
 /*
- I need leave some explanations of jvm memory model.
- At first, I design a reference handle will hold the pointer of Class type. Therefore, Object struct will hold a Class struct pointer. This make Object struct and Class struct look the same. However, If use this memory model, the jvm GC will be very difficult to realize. So I change another memory model.
-In the new memory model, I use a Reference Handle to hold the Class struct and Object struct.
-Now I should redesign the Object struct.
- */
+   I need leave some explanations of jvm memory model.
+   At first, I design a reference handle will hold the pointer of Class type. Therefore, Object struct will hold a Class struct pointer. This make Object struct and Class struct look the same. However, If use this memory model, the jvm GC will be very difficult to realize. So I change another memory model.
+   In the new memory model, I use a Reference Handle to hold the Class struct and Object struct.
+   Now I should redesign the Object struct.
+   */
 
 typedef struct Object Object;
 typedef struct Object Class;
@@ -194,57 +194,57 @@ typedef struct Object Class;
  * cls pointed it's Class type in Object
  *******************************************/
 struct Object {
-	uintptr_t lock;			// this
-	Class *cls;			    // class type(may be NULL in Class type)
-	/* classEntry */		// classEntry ( see allocClass() )
+    uintptr_t lock;			// this
+    Class *cls;			    // class type(may be NULL in Class type)
+    /* classEntry */		// classEntry ( see allocClass() )
 }; 
 
 typedef struct Slot Slot;
 typedef struct FieldEntry {
-	Class *class;
-	char *name;	
-	char *type;
-	char *signature;
-	U2	acc_flags;
-	U2	constant;
+    Class *class;
+    char *name;	
+    char *type;
+    char *signature;
+    U2	acc_flags;
+    U2	constant;
     Slot *slot;
 } FieldEntry;
 
 typedef struct MethodEntry {
-	Class           *class;
-	char            *name;
-	char            *type;
-	char            *signature; 
-	U2	            acc_flags;
-	U2				max_stack;
-	U2				max_locals;
-	U2	            args_count;
-	U4	            code_length;
-	void            *code;
+    Class           *class;
+    char            *name;
+    char            *type;
+    char            *signature; 
+    U2	            acc_flags;
+    U2				max_stack;
+    U2				max_locals;
+    U2	            args_count;
+    U4	            code_length;
+    void            *code;
     U4              instCnt;
     Instruction     **instTbl;
-	ExceptionTable  excep_tbl;
+    ExceptionTable  excep_tbl;
 } MethodEntry;
 
 #define RESERVE_SIZE 4
 typedef struct ClassEntry {
-	uintptr_t reserve[RESERVE_SIZE];	// to keep version until now
-	char *name;							// class name
-	char *signature;					// class signature
-	char *super_name;					// super class name
-	char *source_file;					// file name of this class
-	Class *super;						// super class 
-	U1 state;							// class state
-	U2 acc_flags;						// class access flag
-	U2 fields_count;					// filed count
-	FieldEntry  *fields;				// fields
-	ConstPool *constPool;				// constant pool
-	U2 methods_count;					// methods count
-	MethodEntry *methods;				// methods
-	U2 interfaces_count;				// interface count
-	Class **interfaces;					// interfaces
-	U2 *interfaces_index;				//
-	Object *class_loader;				// 
+    uintptr_t reserve[RESERVE_SIZE];	// to keep version until now
+    char *name;							// class name
+    char *signature;					// class signature
+    char *super_name;					// super class name
+    char *source_file;					// file name of this class
+    Class *super;						// super class 
+    U1 state;							// class state
+    U2 acc_flags;						// class access flag
+    U2 fields_count;					// filed count
+    FieldEntry  *fields;				// fields
+    ConstPool *constPool;				// constant pool
+    U2 methods_count;					// methods count
+    MethodEntry *methods;				// methods
+    U2 interfaces_count;				// interface count
+    Class **interfaces;					// interfaces
+    U2 *interfaces_index;				//
+    Object *class_loader;				// 
 } ClassEntry;
 
 #define CLASS_CE(cls) ( (ClassEntry *) (cls + 1) )
@@ -297,7 +297,7 @@ extern void logConstPool(const ConstPool *pool);
  * Log the information of ConstPoolEntry
  */
 extern void logConstPoolEntry(const ConstPool *pool, 
-		const ConstPoolEntry* constEntry);
+        const ConstPoolEntry* constEntry);
 
 /**
  * Log the information of ClassEntry

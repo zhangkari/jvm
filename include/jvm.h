@@ -24,6 +24,6 @@
  */
 #define STACK_RED_ZONE_SIZE 1*KB
 
-#define JAVA_VERSION "0.0.1" 
+#define JVM_VERSION "0.0.1" 
 
 #endif

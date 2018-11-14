@@ -13,49 +13,51 @@
 
 #include "class.h"
 #include "comm.h"
+#include "gc.h"
 #include "mem.h"
+#include "Thread.h"
 
 /*
  * Store system property
  */
 typedef struct Property {
-	char *key;
-	char *value;
+    char *key;
+    char *value;
 } Property;
 
 /**
  * Initialization arguments
  */
 typedef struct InitArgs {
-	// ExecEnv not include me any more
-	// GC mark me as the root node in the future
-	Class *mainClass;           // class has static void main(String[])
-	char *bootpath;             // java.lang.*
-	U4 java_stack;              // java stack size that user specified
-	U4 min_heap;                // min heap size, generation area size 
-	U4 max_heap;                // max heap size, total starage size
-	Property *cmdline_props;    // system properties
-	int props_count;            // properties count
+    // ExecEnv not include me any more
+    // GC mark me as the root node in the future
+    Class *mainClass;           // class has static void main(String[])
+    char *bootpath;             // java.lang.*
+    U4 java_stack;              // java stack size that user specified
+    U4 min_heap;                // min heap size, generation area size 
+    U4 max_heap;                // max heap size, total starage size
+    Property *cmdline_props;    // system properties
+    int props_count;            // properties count
     FILE* in;
     FILE* out;
 
-	// System.out
-	int (*fprintf)(FILE *stream, const char *fmt, ...);
+    // System.out
+    int (*fprintf)(FILE *stream, const char *fmt, ...);
 
-	// System.in
-	int (*fscanf)(FILE *stream, const char *fmt, ...);
+    // System.in
+    int (*fscanf)(FILE *stream, const char *fmt, ...);
 
     // System.exit()
-	void (*exit)(int status);
+    void (*exit)(int status);
 
     // System.abort()
-	void (*abort)(void);
+    void (*abort)(void);
 } InitArgs;
 
 typedef struct ReferenceHandle {
-	U1	use;			// 0 free, 1 used
-	Class  *cls_ptr;
-	Object *obj_ptr;
+    U1	use;			// 0 free, 1 used
+    Class  *cls_ptr;
+    Object *obj_ptr;
 } RefHandle;
 
 // Slot store type and value
@@ -70,8 +72,8 @@ typedef struct Slot {
 typedef struct SlotBuffer {
     Slot *slots;	// slot list
     U4    validCnt;	// valid slot count
-	U4	  capacity;	// capacity of slot list
-	U1	  use;		// 1 means in use, 0 means free
+    U4	  capacity;	// capacity of slot list
+    U1	  use;		// 1 means in use, 0 means free
 #ifdef DEBUG
     U2    id;       // used for debugger
 #endif
@@ -84,37 +86,37 @@ typedef SlotBuffer OperandStack;
  * SlotBufferPool
  */
 typedef struct SlotBufferPool {
-	U4			capacity;
-	SlotBuffer *slotbufs;
+    U4			capacity;
+    SlotBuffer *slotbufs;
 } SlotBufferPool;
 
 typedef struct StackFrame {
-	U1			  use;			// used in StackFramePool for recycling
-	LocalVarTable *localTbl;
-	OperandStack  *opdStack;
-	ConstPool	  *constPool;	// for dynamic linking 
-	int32		  pc_reg;		// pc register, -1 means invalid
+    U1			  use;			// used in StackFramePool for recycling
+    LocalVarTable *localTbl;
+    OperandStack  *opdStack;
+    ConstPool	  *constPool;	// for dynamic linking 
+    int32		  regPC;		// pc register, -1 means invalid
 #ifdef DEBUG
     U2            id;           // used for debugger
 #endif
 } StackFrame;
 
 typedef struct StackFramePool {
-	U4			capacity;
-	StackFrame *frames;
+    U4			capacity;
+    StackFrame *frames;
 } StackFramePool;
 
 typedef struct RefHandlePool {
-	U4		   capacity;
-	RefHandle *handles;
+    U4		   capacity;
+    RefHandle *handles;
 } RefHandlePool;
 
 /**
  * Java stack
  */
 typedef struct JavaStack {
-	int top;
-	StackFrame **frames;
+    int top;
+    StackFrame **frames;
 } JavaStack;
 
 /*
@@ -131,6 +133,9 @@ typedef struct ExecEnv {
     Class **rtClsArea;	    // runtime class address list
     MethodEntry *mainMethod;// user class main()
     void* dl_handle;	    // dynamic link library handle 
+    Thread* gcThread;       // garbage collector thread
+    Thread* ngThread;       // engine thread
+    gc_context* gcctx;      // gc context
 } ExecEnv;
 
 typedef struct VM {

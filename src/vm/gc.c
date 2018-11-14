@@ -28,7 +28,7 @@ gc_context* gcCreate(MemoryArea *mem) {
     assert (NULL != mem);
     gc_context *gc = (gc_context *)calloc(1, sizeof(gc_context));
     if (NULL != gc) {
-	gc->mem = mem;
+        gc->mem = mem;
     }
 
     return gc;
@@ -39,8 +39,8 @@ gc_context* gcCreate(MemoryArea *mem) {
  */
 void gcDestroy(gc_context* gc) {
     if (NULL != gc) {
-	free (gc);
-	gc = NULL;
+        free (gc);
+        gc = NULL;
     }
 }
 
@@ -48,5 +48,20 @@ void gcDestroy(gc_context* gc) {
  * gc start to work
  */
 extern void gcWork(gc_context* gc) {
+    // TODO
+    printf("gc works!\n");
+}
 
+extern void* gcRoutine(void *param)
+{
+    assert(param);
+#if 0
+    ExecEnv* env = (ExecEnv *)param;
+    if (env->gcctx == NULL){
+        env->gcctx = gcCreate(env->heapArea);
+    }
+    gcWork(env->gcctx);
+#endif
+
+    return NULL;
 }

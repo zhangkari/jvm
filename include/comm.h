@@ -17,6 +17,7 @@
 
 #define TRUE  1
 #define FALSE 0
+
 #define bool char
 
 typedef uint8_t  U1;

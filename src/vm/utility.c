@@ -14,11 +14,11 @@
 #include "utility.h"
 
 uint64_t current_ms() {
-	struct timeval tv;
-	if (gettimeofday(&tv, NULL) < 0) {
-		printf("Failed get current_ms().\n");
-		exit(1);
-	}
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL) < 0) {
+        printf("Failed get current_ms().\n");
+        exit(1);
+    }
 
-	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
