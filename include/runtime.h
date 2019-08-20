@@ -16,6 +16,8 @@
 #include "gc.h"
 #include "mem.h"
 #include "Thread.h"
+#include "Mutex.h"
+#include "Cond.h"
 
 /*
  * Store system property
@@ -133,6 +135,8 @@ typedef struct ExecEnv {
     Class **rtClsArea;	    // runtime class address list
     MethodEntry *mainMethod;// user class main()
     void* dl_handle;	    // dynamic link library handle 
+    Mutex* mutex;           // mutex
+    Cond* cond;             // cond
     Thread* gcThread;       // garbage collector thread
     Thread* ngThread;       // engine thread
     gc_context* gcctx;      // gc context

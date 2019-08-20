@@ -55,6 +55,11 @@ void initVM(InitArgs *args, VM *vm) {
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
+    env->cond = cond_create();
+    assert(NULL != env->cond);
+    env->mutex = mutex_create();
+    assert(NULL != env->mutex);
+
 #ifdef LOG_TIME_COST
     uint64_t t1 = current_ms();
 #endif
