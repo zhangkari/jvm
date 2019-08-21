@@ -55,6 +55,7 @@ void initVM(InitArgs *args, VM *vm) {
     env->javaStack->frames = (StackFrame **)calloc(STACK_MAX_DEPTH, sizeof(StackFrame *));
     assert(NULL != env->javaStack->frames);
 
+    env->exitFlag = FALSE;
     env->cond = cond_create();
     assert(NULL != env->cond);
     env->mutex = mutex_create();
@@ -173,10 +174,13 @@ void startVM(VM *vm) {
 }
 
 void destroyVM(VM *vm) {
+    vm->execEnv->exitFlag = TRUE;
+    cond_signal(vm->execEnv->cond);
     destroySlotBufferPool();
     destroyStackFramePool();
     destroyInstPool();
     destroyRefHandlePool();
+    joinThread(getThreadId(vm->execEnv->ngThread), NULL);
     destroyThread(vm->execEnv->gcThread);
     destroyThread(vm->execEnv->ngThread);
     assert (NULL != vm);

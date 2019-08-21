@@ -12,6 +12,10 @@
 #include <pthread.h>
 #endif
 
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 #include "Thread.h"
 
 typedef struct ThreadLock {
@@ -68,7 +72,7 @@ void destroyThread(Thread* thread)
     assert(thread && "thread must not be NULL !");
 }
 
-bool joinThread(pthread_t pid, void** retval)
+bool joinThread(U8 pid, void** retval)
 {
     int status = pthread_join(pid, retval);
     return status == 0 ? TRUE : FALSE;
@@ -86,4 +90,8 @@ U8 getThreadId(const Thread* thread)
 {
     assert(thread && "thread must not be NULL !");
     return thread->pid;
+}
+
+U8 getCurrentThreadId() {
+    return pthread_self();
 }

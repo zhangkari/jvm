@@ -2591,6 +2591,9 @@ DECL_FUNC(_goto)
 #ifdef LOG_DETAIL
     printf("\t*goto %d [%s, cur:%d, total:%d]\n", offset, instEnv->method->name, instEnv->method_pos, instEnv->method->code_length);
 #endif
+    
+    // becase reg_pc has +1 in engine
+    env->reg_pc = (offset - 1);
 
     return FALSE;
 }
@@ -2688,6 +2691,7 @@ DECL_FUNC(_return)
 {
     validate_inst_env(param);
     frame = popJavaStack(jstack); 
+    env->reg_pc = frame->retAddr;
     recycleSlotBuffer(localTbl);
     recycleSlotBuffer(opdStack);
     recycleStackFrame(frame);

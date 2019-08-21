@@ -97,7 +97,8 @@ typedef struct StackFrame {
     LocalVarTable *localTbl;
     OperandStack  *opdStack;
     ConstPool	  *constPool;	// for dynamic linking 
-    int32		  regPC;		// pc register, -1 means invalid
+    MethodEntry   *method;      // method
+    U4            retAddr;      // return address of last invocation
 #ifdef DEBUG
     U2            id;           // used for debugger
 #endif
@@ -129,14 +130,16 @@ typedef struct ExecEnv {
     MemoryArea *heapArea;   // java heap memory area
     MemoryArea *stackArea;  // java stack memory area
     JavaStack  *javaStack;  // JavaStack to store stack frames
-    U2 userClsCnt;	    // user class count
+    U2 userClsCnt;	        // user class count
     Class **userClsArea;    // user class list exclude entry main()
-    U2 rtClsCnt;	    // runtime class count
+    U2 rtClsCnt;	        // runtime class count
     Class **rtClsArea;	    // runtime class address list
     MethodEntry *mainMethod;// user class main()
     void* dl_handle;	    // dynamic link library handle 
     Mutex* mutex;           // mutex
     Cond* cond;             // cond
+    int32 reg_pc;           // pc register, -1 means invalid
+    bool exitFlag;          // exit flag
     Thread* gcThread;       // garbage collector thread
     Thread* ngThread;       // engine thread
     gc_context* gcctx;      // gc context

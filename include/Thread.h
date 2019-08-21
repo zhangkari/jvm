@@ -39,11 +39,16 @@ bool isThreadAlive(const Thread* thread);
  * Params:
  *  retVal: the return code of pid
  */
-bool joinThread(pthread_t pid, void ** retval);
+bool joinThread(U8 pid, void ** retval);
 
 /**
  * get the thread id
  */
 U8 getThreadId(const Thread* thread);
+
+/**
+ * get the current thread id
+ **/
+U8 getCurrentThreadId();
 
 #endif

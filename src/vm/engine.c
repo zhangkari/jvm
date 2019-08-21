@@ -79,7 +79,7 @@ void executeMethod(ExecEnv *env, MethodEntry *method)
 
 #ifdef LOG_DETAIL
     char* clsname = CLASS_CE(method->class)->name;
-    printf("\t  [++ %s.%s ++]\n", clsname, method->name);
+    printf("\t  [+*** %s.%s +***]\n", clsname, method->name);
 #endif
 
     StackFrame *frame = obtainStackFrame();
@@ -105,8 +105,10 @@ void executeMethod(ExecEnv *env, MethodEntry *method)
         exit(-1);
     }
 
-    frame->localTbl  = localTbl;
-    frame->opdStack  = oprdStack;
+    frame->retAddr = env->reg_pc;
+    frame->method = method;
+    frame->localTbl = localTbl;
+    frame->opdStack = oprdStack;
     frame->constPool = CLASS_CE(method->class)->constPool;
 
     if (!pushJavaStack(env->javaStack, frame)) {
@@ -114,10 +116,14 @@ void executeMethod(ExecEnv *env, MethodEntry *method)
         exit (1);
     }
 
+    cond_signal(env->cond);
+
 #ifdef LOG_DETAIL
-    printf("\t  [++ stack frame:%d ++]\n", frame->id);
+    printf("\t  [+... stack frame:%d +...]\n", frame->id);
 #endif
 
+
+#if 0
     // extract & parse instructions from the byte code
     extractInstructions((MethodEntry *)method);
 
@@ -134,9 +140,10 @@ void executeMethod(ExecEnv *env, MethodEntry *method)
 
         inst->handler(&instEnv);
     }
+#endif
 
 #ifdef LOG_DETAIL
-    printf("\t  [-- %s.%s --]\n", clsname, method->name);
+    printf("\t  [-*** %s.%s -***]\n", clsname, method->name);
 #endif
 
 }
@@ -184,7 +191,7 @@ void executeMethod_spec(ExecEnv *env, MethodEntry *method)
 
 #ifdef LOG_DETAIL
     char* clsname = CLASS_CE(method->class)->name;
-    printf("\t  {++ %s.%s ++}\n", clsname, method->name);
+    printf("\t  {+*** %s.%s +***}\n", clsname, method->name);
 #endif
 
     StackFrame *frame = obtainStackFrame();
@@ -210,8 +217,10 @@ void executeMethod_spec(ExecEnv *env, MethodEntry *method)
         exit(-1);
     }
 
-    frame->localTbl  = localTbl;
-    frame->opdStack  = oprdStack;
+    frame->retAddr = env->reg_pc;
+    frame->method = method;
+    frame->localTbl = localTbl;
+    frame->opdStack = oprdStack;
     frame->constPool = CLASS_CE(method->class)->constPool;
 
     /* pop operands from statck to local table */
@@ -225,31 +234,14 @@ void executeMethod_spec(ExecEnv *env, MethodEntry *method)
         printf ("Failed push stack frame to java stack.\n");
         exit (1);
     }
+    cond_signal(env->cond);
 
 #ifdef LOG_DETAIL
-    printf("\t  [++ stack frame:%d ++]\n", frame->id);
+    printf("\t  [+... stack frame:%d +...]\n", frame->id);
 #endif
 
-    // extract & parse instructions from the byte code
-    extractInstructions((MethodEntry *)method);
-
-    InstExecEnv instEnv;
-    const Instruction *inst = NULL;
-    int i;
-
-    for (i = 0;  i < method->instCnt; i++) {
-        memset(&instEnv, 0, sizeof(instEnv));
-        inst = method->instTbl[i];
-        instEnv.inst = (Instruction *)inst;
-        instEnv.env  = env;
-        instEnv.method = method;
-        instEnv.method_pos = i;
-
-        inst->handler(&instEnv);
-    }
-
 #ifdef LOG_DETAIL
-    printf("\t  {-- %s.%s --}\n", clsname, method->name);
+    printf("\t  {-*** %s.%s -***}\n", clsname, method->name);
 #endif
 
 }
@@ -259,8 +251,30 @@ void* engineRoutine(void *param)
     assert(param);
     ExecEnv *env = (ExecEnv *)param;
     JavaStack *stack = env->javaStack;
-    // TODO
-    printf("engineRoutine\n");
-    printf("java stack top:%d\n", stack->top);
+    while (!env->exitFlag) {
+        while (isJavaStackEmpty(stack)) {
+            cond_wait(env->cond, env->mutex);
+        }
+
+        printf("engine routine...\n");
+
+        MethodEntry* method = peekJavaStack(env->javaStack)->method;
+        // extract & parse instructions from the byte code
+        extractInstructions((MethodEntry *)method);
+
+        InstExecEnv instEnv;
+        const Instruction *inst = NULL;
+        for (; env->reg_pc < method->instCnt; env->reg_pc++) {
+            printf("reg_pc:%d\n", env->reg_pc);
+            memset(&instEnv, 0, sizeof(instEnv));
+            inst = method->instTbl[env->reg_pc];
+            instEnv.inst = (Instruction *)inst;
+            instEnv.env  = env;
+            instEnv.method = method;
+            instEnv.method_pos = env->reg_pc;
+            inst->handler(&instEnv);
+        }
+    }
+    printf("exit engineRoutine .\n");
     return NULL;
 }
