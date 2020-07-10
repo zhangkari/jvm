@@ -174,13 +174,14 @@ void startVM(VM *vm) {
 }
 
 void destroyVM(VM *vm) {
+    joinThread(getThreadId(vm->execEnv->ngThread), NULL);
+    printf("destroyVM");
     vm->execEnv->exitFlag = TRUE;
     cond_signal(vm->execEnv->cond);
     destroySlotBufferPool();
     destroyStackFramePool();
     destroyInstPool();
     destroyRefHandlePool();
-    joinThread(getThreadId(vm->execEnv->ngThread), NULL);
     destroyThread(vm->execEnv->gcThread);
     destroyThread(vm->execEnv->ngThread);
     assert (NULL != vm);

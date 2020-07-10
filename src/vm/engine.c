@@ -248,6 +248,10 @@ void executeMethod_spec(ExecEnv *env, MethodEntry *method)
 
 void* engineRoutine(void *param)
 {
+//#ifdef LOG_DETAIL
+	printf("engineRoutine\n");
+//#endif
+
     assert(param);
     ExecEnv *env = (ExecEnv *)param;
     JavaStack *stack = env->javaStack;
@@ -256,8 +260,14 @@ void* engineRoutine(void *param)
             cond_wait(env->cond, env->mutex);
         }
 
-        printf("engine routine...\n");
+        StackFrame* frame = popJavaStack(stack);
 
+//#ifdef LOG_DETAIL
+        printf("engine routine runing...\n");
+		printf("reg PC:%d\n", env->reg_pc);
+//#endif
+
+#if 0
         MethodEntry* method = peekJavaStack(env->javaStack)->method;
         // extract & parse instructions from the byte code
         extractInstructions((MethodEntry *)method);
@@ -274,6 +284,8 @@ void* engineRoutine(void *param)
             instEnv.method_pos = env->reg_pc;
             inst->handler(&instEnv);
         }
+#endif
+
     }
     printf("exit engineRoutine .\n");
     return NULL;
